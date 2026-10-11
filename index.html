@@ -742,6 +742,7 @@ p { margin: 0; }
 .foot-links a:hover { border-bottom-color: var(--pen); }
 .src.src-wide { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .src.src-wide a { font-weight: 700; }
+#sec-crowd .linkbtn { margin-left: 8px; }
 
 </style>
 <script>window.TWKIDS = {"target":"web","siteUrl":"https://jasontzeng123.github.io/next-gen/","repoUrl":"https://github.com/jasontzeng123/next-gen","sb":{"url":"https://yzmqgrtxbibufjmllimv.supabase.co","key":"sb_publishable_BOnfiTrQN53RzycO4nffGg_b8o-i0Nk"}};</script>
@@ -751,13 +752,13 @@ p { margin: 0; }
   <header id="topbar" class="topbar"></header>
   <main id="main" class="main" tabindex="-1"></main>
   <footer class="foot">
-    <div class="foot-credit"><span class="foot-k">製作</span><a href="https://www.threads.com/@jason890827" target="_blank" rel="noopener noreferrer">jason890827</a><span class="foot-x">×</span><span>Claude</span><a class="foot-th" href="https://www.threads.com/@jason890827" target="_blank" rel="noopener noreferrer">在 Threads 上追蹤 @jason890827</a></div>
+    <div class="foot-credit"><span class="foot-k">製作</span><a href="https://www.threads.com/@popo890827" target="_blank" rel="noopener noreferrer">popo890827</a><span class="foot-x">×</span><span>Claude</span><a class="foot-th" href="https://www.threads.com/@popo890827" target="_blank" rel="noopener noreferrer">在 Threads 上追蹤 @popo890827</a></div>
     <div class="foot-links"><a href="https://github.com/jasontzeng123/next-gen" target="_blank" rel="noopener noreferrer">原始碼與資料來源</a><a href="https://github.com/jasontzeng123/next-gen/issues/new" target="_blank" rel="noopener noreferrer">回報錯誤</a><span>程式碼 MIT・內容 CC BY 4.0</span></div>
     <div class="foot-meta"><span>依 2026 年 10 月公開資料試算，不是理財建議。</span><span>主計總處・內政部・勞動部・衛福部・財政部・樂居・591</span></div>
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-11T16:51', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-11T17:10', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -2231,16 +2232,24 @@ var COMM = (function () {
       // 連不上資料庫是預期內的狀況（離線、專案暫停）：只記錄，不跳出錯誤提示
       try { if (window.__diag) window.__diag.errors.push('load: ' + st.loadErr); } catch (x) { /* 忽略 */ } st.stats = aggregate([]); emit(); });
   }
-  function submit(doc) {
+  // 分享規則：只有「第一次送出申請書」會自動分享；之後重新送出或在報告裡調整設定都不會更新，
+  // 要更新必須在報告的「其他申請人怎麼選？」按「更新」（避免一直覆蓋成參考價值較低的試玩設定）
+  function sig(o) {
+    var norm = function (v) { if (Array.isArray(v)) return v.map(norm); if (v && typeof v === 'object') { var r = {}; Object.keys(v).sort().forEach(function (k) { if (k !== '__norm') r[k] = norm(v[k]); }); return r; } return v; };
+    try { return JSON.stringify(norm(o)); } catch (e) { return ''; }
+  }
+  function shared() { return U.store.get('shared', null); }
+  function hasShared() { return !!shared() || !!mine(); }
+  function submit(doc, from) {
     if (!st.db || !st.uid) return Promise.resolve(false);
-    return st.db.doc('submissions/' + st.uid).set(doc).then(function () { return load().then(function () { return true; }); }, function (e) {
+    return st.db.doc('submissions/' + st.uid).set(doc).then(function () { U.store.set('shared', { ts: Date.now(), sig: from ? sig(from) : '' }); return load().then(function () { return true; }); }, function (e) {
       if (e && (e.code === 'invalid_argument' || e.code === 'not_granted' || e.code === 'revoked')) { st.canShare = false; st.canWrite = false; }
       st.shareErr = e && e.code; emit(); return false;
     });
   }
   function withdraw() {
     if (!st.db || !st.uid) return Promise.resolve(false);
-    return st.db.doc('submissions/' + st.uid).delete().then(function () { return load().then(function () { return true; }); }, function () { return false; });
+    return st.db.doc('submissions/' + st.uid).delete().then(function () { U.store.set('shared', null); return load().then(function () { return true; }); }, function () { return false; });
   }
   function mine() { if (!st.uid) return null; for (var i = 0; i < st.rows.length; i++) if (st.rows[i]._id === st.uid) return st.rows[i]; return null; }
 
@@ -2353,7 +2362,7 @@ var COMM = (function () {
     }
   }
 
-  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, rankOf: rankOf, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote };
+  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, rankOf: rankOf, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote, sig: sig, shared: shared, hasShared: hasShared };
 })();
 
 /* ---- globe.js ---- */
@@ -3963,6 +3972,7 @@ APP.screens.cover = function (main) {
       box.appendChild(h('ul', {},
         h('li', {}, '會分享：縣市與區域、孩子數、每一題的選擇、收入 PR（四捨五入到 5）、年齡區間（每 5 歲一組）、審查結果。'),
         h('li', {}, '不會分享：姓名、帳號資料、確切年齡、確切年薪與存款金額。'),
+        h('li', {}, '只會分享這次送出的申請書。之後修改或在報告裡調整設定都不會覆蓋，除非你在報告裡按「更新」。'),
         h('li', {}, COMM.st.backend === 'web' ? '隨時可以在報告頁取消分享，資料會刪除（請用同一台裝置的同一個瀏覽器）。' : '隨時可以在報告頁取消分享，資料會刪除。')));
       box.appendChild(h('div', { class: 'actions' },
         h('button', { class: 'btn ghost', onclick: function () { A.consent = false; U.store.set('consent', false); close(); after(); } }, '不分享'),
@@ -4061,7 +4071,8 @@ APP.screens.cover = function (main) {
       A.submitted = JSON.parse(JSON.stringify(A.strip(A.s)));
       U.store.set('submitted', A.submitted);
     }, 'store');
-    U.safe(function () { if (A.consent && COMM.st.canShare) COMM.submit(COMM.buildDoc(s, res, th)); }, 'submit');
+    // 只有第一次送出會自動分享；之後要在報告裡按「更新」
+    U.safe(function () { if (A.consent && COMM.st.canShare && !COMM.hasShared()) COMM.submit(COMM.buildDoc(s, res, th), A.submitted); }, 'submit');
     COMM.diag('reveal');
 
     var rows = res.years.slice(0, res.Tv + 1);
@@ -4562,6 +4573,12 @@ APP.screens.cover = function (main) {
   }
   function applyComp(id) { pushUndo(); applyOne(id); A.persist(); A.redrawReport(); U.toast('已套用，報告已重算'); window.scrollTo({ top: 0, behavior: U.reduceMotion() ? 'auto' : 'smooth' }); }
 
+  function submittedDoc() {
+    var s = ENGINE.normalize(JSON.parse(JSON.stringify(A.submitted || A.strip(A.s)))); s.__norm = true;
+    var th = ENGINE.threshold(s);
+    var res = s.incomeMode === 'full' ? ENGINE.full(s) : ENGINE.atPR(s, 50);
+    return COMM.buildDoc(s, res, th);
+  }
   function crowdSection() {
     var sec = h('section', { class: 'rsec', id: 'sec-crowd' });
     sec.appendChild(h('div', { class: 'rsec-k num' }));
@@ -4574,8 +4591,14 @@ APP.screens.cover = function (main) {
     var ctl = h('p', { class: 'sm', style: { marginBottom: '12px' } });
     var mine = COMM.mine();
     if (st.canShare) {
-      if (mine) { ctl.appendChild(document.createTextNode(st.backend === 'web' ? '你已匿名分享設定（要取消，請用同一台裝置的同一個瀏覽器）。' : '你已匿名分享設定。')); ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.withdraw().then(function () { A.consent = false; U.store.set('consent', false); U.toast('已取消分享並刪除資料'); }); } }, '取消分享')); }
-      else { ctl.appendChild(document.createTextNode('你目前沒有分享設定。')); ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { A.consentModal(function () { if (A.consent) COMM.submit(COMM.buildDoc(s, res, A.th)).then(function (ok) { U.toast(ok ? '已匿名分享' : (COMM.st.backend === 'web' ? '分享失敗，請稍後再試' : '分享失敗，你可能只有檢視權限')); }); }); } }, '匿名分享')); }
+      var failTxt = st.backend === 'web' ? '分享失敗，請稍後再試' : '分享失敗，你可能只有檢視權限';
+      if (mine) {
+        var sh = COMM.shared(), newer = A.submitted && (!sh || !sh.sig || sh.sig !== COMM.sig(A.submitted));
+        ctl.appendChild(document.createTextNode('你已匿名分享' + (newer ? '之前送出的申請書。' : '這份申請書。') + '在報告裡調整設定不會改到分享的資料' + (st.backend === 'web' ? '；要取消，請用同一台裝置的同一個瀏覽器' : '') + '。'));
+        if (newer) ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.submit(submittedDoc(), A.submitted).then(function (ok) { U.toast(ok ? '已更新成最新送出的申請書' : failTxt); }); } }, '更新成最新送出的申請書'));
+        ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.withdraw().then(function () { A.consent = false; U.store.set('consent', false); U.toast('已取消分享並刪除資料'); }); } }, '取消分享'));
+      }
+      else { ctl.appendChild(document.createTextNode('你目前沒有分享設定。')); ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { A.consentModal(function () { if (A.consent) COMM.submit(submittedDoc(), A.submitted).then(function (ok) { U.toast(ok ? '已匿名分享' : failTxt); }); }); } }, '匿名分享')); }
     } else ctl.appendChild(document.createTextNode('你可以看到大家分享的統計；不過從公開連結進來的訪客無法加入自己的資料，你的選擇只會存在這台裝置上。'));
     sec.appendChild(ctl);
     if (st.demoOn) sec.appendChild(h('p', { class: 'xs muted demo-note', style: { marginBottom: '12px' } }, COMM.demoNote()));
@@ -5558,7 +5581,7 @@ APP.screens.method = function (main) {
   inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO, target: '_blank', rel: 'noopener' }, '原始碼（GitHub）'), h('span', {}, '計算引擎在 src/engine.js，所有參數在 src/data.js')));
   inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO + '/blob/main/docs/資料來源.md', target: '_blank', rel: 'noopener' }, '資料來源清單'), h('span', {}, '每個來源的名稱、連結與資料時間')));
   inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO + '/issues/new', target: '_blank', rel: 'noopener' }, '回報錯誤'), h('span', {}, '在 GitHub 留言，需要 GitHub 帳號')));
-  inn.appendChild(p('授權：程式碼採 <a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">MIT 授權</a>；本作品自己撰寫的文字、圖表與整理後的資料採 <a href="https://creativecommons.org/licenses/by/4.0/deed.zh-hant" target="_blank" rel="noopener">CC BY 4.0</a>，轉用時請標明出處「jason890827《你有資格生下一代嗎？》」。引用的原始資料仍屬各來源，依各自的條款使用。'));
+  inn.appendChild(p('授權：程式碼採 <a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">MIT 授權</a>；本作品自己撰寫的文字、圖表與整理後的資料採 <a href="https://creativecommons.org/licenses/by/4.0/deed.zh-hant" target="_blank" rel="noopener">CC BY 4.0</a>，轉用時請標明出處「popo890827《你有資格生下一代嗎？》」。引用的原始資料仍屬各來源，依各自的條款使用。'));
   inn.appendChild(h('div', { class: 'cover-cta', style: { marginTop: '28px' } }, h('button', { class: 'btn', onclick: function () { if (APP.unlocked) APP.compute(true); APP.go(APP.unlocked ? 'report' : 'cover'); } }, U.icon('back'), APP.unlocked ? '回到審查報告' : '回到封面')));
   sheet.appendChild(inn); wrap.appendChild(sheet); main.appendChild(wrap);
 };

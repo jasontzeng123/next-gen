@@ -714,3 +714,4 @@ p { margin: 0; }
 .foot-links a:hover { border-bottom-color: var(--pen); }
 .src.src-wide { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .src.src-wide a { font-weight: 700; }
+#sec-crowd .linkbtn { margin-left: 8px; }

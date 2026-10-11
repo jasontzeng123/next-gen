@@ -107,7 +107,7 @@ APP.screens.method = function (main) {
   inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO, target: '_blank', rel: 'noopener' }, '原始碼（GitHub）'), h('span', {}, '計算引擎在 src/engine.js，所有參數在 src/data.js')));
   inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO + '/blob/main/docs/資料來源.md', target: '_blank', rel: 'noopener' }, '資料來源清單'), h('span', {}, '每個來源的名稱、連結與資料時間')));
   inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO + '/issues/new', target: '_blank', rel: 'noopener' }, '回報錯誤'), h('span', {}, '在 GitHub 留言，需要 GitHub 帳號')));
-  inn.appendChild(p('授權：程式碼採 <a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">MIT 授權</a>；本作品自己撰寫的文字、圖表與整理後的資料採 <a href="https://creativecommons.org/licenses/by/4.0/deed.zh-hant" target="_blank" rel="noopener">CC BY 4.0</a>，轉用時請標明出處「jason890827《你有資格生下一代嗎？》」。引用的原始資料仍屬各來源，依各自的條款使用。'));
+  inn.appendChild(p('授權：程式碼採 <a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">MIT 授權</a>；本作品自己撰寫的文字、圖表與整理後的資料採 <a href="https://creativecommons.org/licenses/by/4.0/deed.zh-hant" target="_blank" rel="noopener">CC BY 4.0</a>，轉用時請標明出處「popo890827《你有資格生下一代嗎？》」。引用的原始資料仍屬各來源，依各自的條款使用。'));
   inn.appendChild(h('div', { class: 'cover-cta', style: { marginTop: '28px' } }, h('button', { class: 'btn', onclick: function () { if (APP.unlocked) APP.compute(true); APP.go(APP.unlocked ? 'report' : 'cover'); } }, U.icon('back'), APP.unlocked ? '回到審查報告' : '回到封面')));
   sheet.appendChild(inn); wrap.appendChild(sheet); main.appendChild(wrap);
 };

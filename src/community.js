@@ -120,16 +120,24 @@ var COMM = (function () {
       // 連不上資料庫是預期內的狀況（離線、專案暫停）：只記錄，不跳出錯誤提示
       try { if (window.__diag) window.__diag.errors.push('load: ' + st.loadErr); } catch (x) { /* 忽略 */ } st.stats = aggregate([]); emit(); });
   }
-  function submit(doc) {
+  // 分享規則：只有「第一次送出申請書」會自動分享；之後重新送出或在報告裡調整設定都不會更新，
+  // 要更新必須在報告的「其他申請人怎麼選？」按「更新」（避免一直覆蓋成參考價值較低的試玩設定）
+  function sig(o) {
+    var norm = function (v) { if (Array.isArray(v)) return v.map(norm); if (v && typeof v === 'object') { var r = {}; Object.keys(v).sort().forEach(function (k) { if (k !== '__norm') r[k] = norm(v[k]); }); return r; } return v; };
+    try { return JSON.stringify(norm(o)); } catch (e) { return ''; }
+  }
+  function shared() { return U.store.get('shared', null); }
+  function hasShared() { return !!shared() || !!mine(); }
+  function submit(doc, from) {
     if (!st.db || !st.uid) return Promise.resolve(false);
-    return st.db.doc('submissions/' + st.uid).set(doc).then(function () { return load().then(function () { return true; }); }, function (e) {
+    return st.db.doc('submissions/' + st.uid).set(doc).then(function () { U.store.set('shared', { ts: Date.now(), sig: from ? sig(from) : '' }); return load().then(function () { return true; }); }, function (e) {
       if (e && (e.code === 'invalid_argument' || e.code === 'not_granted' || e.code === 'revoked')) { st.canShare = false; st.canWrite = false; }
       st.shareErr = e && e.code; emit(); return false;
     });
   }
   function withdraw() {
     if (!st.db || !st.uid) return Promise.resolve(false);
-    return st.db.doc('submissions/' + st.uid).delete().then(function () { return load().then(function () { return true; }); }, function () { return false; });
+    return st.db.doc('submissions/' + st.uid).delete().then(function () { U.store.set('shared', null); return load().then(function () { return true; }); }, function () { return false; });
   }
   function mine() { if (!st.uid) return null; for (var i = 0; i < st.rows.length; i++) if (st.rows[i]._id === st.uid) return st.rows[i]; return null; }
 
@@ -242,5 +250,5 @@ var COMM = (function () {
     }
   }
 
-  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, rankOf: rankOf, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote };
+  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, rankOf: rankOf, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote, sig: sig, shared: shared, hasShared: hasShared };
 })();

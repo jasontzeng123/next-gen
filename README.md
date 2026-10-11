@@ -3,7 +3,7 @@
 用你心中養孩子的標準，加上台灣真實的房價、薪資、補助與稅制，從孩子出生一路算到他獨立，看看存款撐不撐得過去，或者收入要在前百分之幾才撐得住。
 
 - 網站：<https://jasontzeng123.github.io/next-gen/>
-- 製作：[jason890827](https://www.threads.com/@jason890827) × Claude
+- 製作：[popo890827](https://www.threads.com/@popo890827) × Claude
 - 授權：程式碼 [MIT](LICENSE)；文字、圖表與整理的資料 [CC BY 4.0](LICENSE-CONTENT.md)
 
 ## 想驗證計算？

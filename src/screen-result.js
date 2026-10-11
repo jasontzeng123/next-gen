@@ -86,7 +86,8 @@
       A.submitted = JSON.parse(JSON.stringify(A.strip(A.s)));
       U.store.set('submitted', A.submitted);
     }, 'store');
-    U.safe(function () { if (A.consent && COMM.st.canShare) COMM.submit(COMM.buildDoc(s, res, th)); }, 'submit');
+    // 只有第一次送出會自動分享；之後要在報告裡按「更新」
+    U.safe(function () { if (A.consent && COMM.st.canShare && !COMM.hasShared()) COMM.submit(COMM.buildDoc(s, res, th), A.submitted); }, 'submit');
     COMM.diag('reveal');
 
     var rows = res.years.slice(0, res.Tv + 1);
@@ -587,6 +588,12 @@
   }
   function applyComp(id) { pushUndo(); applyOne(id); A.persist(); A.redrawReport(); U.toast('已套用，報告已重算'); window.scrollTo({ top: 0, behavior: U.reduceMotion() ? 'auto' : 'smooth' }); }
 
+  function submittedDoc() {
+    var s = ENGINE.normalize(JSON.parse(JSON.stringify(A.submitted || A.strip(A.s)))); s.__norm = true;
+    var th = ENGINE.threshold(s);
+    var res = s.incomeMode === 'full' ? ENGINE.full(s) : ENGINE.atPR(s, 50);
+    return COMM.buildDoc(s, res, th);
+  }
   function crowdSection() {
     var sec = h('section', { class: 'rsec', id: 'sec-crowd' });
     sec.appendChild(h('div', { class: 'rsec-k num' }));
@@ -599,8 +606,14 @@
     var ctl = h('p', { class: 'sm', style: { marginBottom: '12px' } });
     var mine = COMM.mine();
     if (st.canShare) {
-      if (mine) { ctl.appendChild(document.createTextNode(st.backend === 'web' ? '你已匿名分享設定（要取消，請用同一台裝置的同一個瀏覽器）。' : '你已匿名分享設定。')); ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.withdraw().then(function () { A.consent = false; U.store.set('consent', false); U.toast('已取消分享並刪除資料'); }); } }, '取消分享')); }
-      else { ctl.appendChild(document.createTextNode('你目前沒有分享設定。')); ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { A.consentModal(function () { if (A.consent) COMM.submit(COMM.buildDoc(s, res, A.th)).then(function (ok) { U.toast(ok ? '已匿名分享' : (COMM.st.backend === 'web' ? '分享失敗，請稍後再試' : '分享失敗，你可能只有檢視權限')); }); }); } }, '匿名分享')); }
+      var failTxt = st.backend === 'web' ? '分享失敗，請稍後再試' : '分享失敗，你可能只有檢視權限';
+      if (mine) {
+        var sh = COMM.shared(), newer = A.submitted && (!sh || !sh.sig || sh.sig !== COMM.sig(A.submitted));
+        ctl.appendChild(document.createTextNode('你已匿名分享' + (newer ? '之前送出的申請書。' : '這份申請書。') + '在報告裡調整設定不會改到分享的資料' + (st.backend === 'web' ? '；要取消，請用同一台裝置的同一個瀏覽器' : '') + '。'));
+        if (newer) ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.submit(submittedDoc(), A.submitted).then(function (ok) { U.toast(ok ? '已更新成最新送出的申請書' : failTxt); }); } }, '更新成最新送出的申請書'));
+        ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.withdraw().then(function () { A.consent = false; U.store.set('consent', false); U.toast('已取消分享並刪除資料'); }); } }, '取消分享'));
+      }
+      else { ctl.appendChild(document.createTextNode('你目前沒有分享設定。')); ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { A.consentModal(function () { if (A.consent) COMM.submit(submittedDoc(), A.submitted).then(function (ok) { U.toast(ok ? '已匿名分享' : failTxt); }); }); } }, '匿名分享')); }
     } else ctl.appendChild(document.createTextNode('你可以看到大家分享的統計；不過從公開連結進來的訪客無法加入自己的資料，你的選擇只會存在這台裝置上。'));
     sec.appendChild(ctl);
     if (st.demoOn) sec.appendChild(h('p', { class: 'xs muted demo-note', style: { marginBottom: '12px' } }, COMM.demoNote()));

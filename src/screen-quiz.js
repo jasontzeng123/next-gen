@@ -422,6 +422,7 @@
       box.appendChild(h('ul', {},
         h('li', {}, '會分享：縣市與區域、孩子數、每一題的選擇、收入 PR（四捨五入到 5）、年齡區間（每 5 歲一組）、審查結果。'),
         h('li', {}, '不會分享：姓名、帳號資料、確切年齡、確切年薪與存款金額。'),
+        h('li', {}, '只會分享這次送出的申請書。之後修改或在報告裡調整設定都不會覆蓋，除非你在報告裡按「更新」。'),
         h('li', {}, COMM.st.backend === 'web' ? '隨時可以在報告頁取消分享，資料會刪除（請用同一台裝置的同一個瀏覽器）。' : '隨時可以在報告頁取消分享，資料會刪除。')));
       box.appendChild(h('div', { class: 'actions' },
         h('button', { class: 'btn ghost', onclick: function () { A.consent = false; U.store.set('consent', false); close(); after(); } }, '不分享'),

@@ -7,7 +7,7 @@
 
 ## 轉用時請這樣標示
 
-> 資料來源：jason890827《你有資格生下一代嗎？》https://jasontzeng123.github.io/next-gen/
+> 資料來源：popo890827《你有資格生下一代嗎？》https://jasontzeng123.github.io/next-gen/
 
 如果有修改或只取其中一部分，請說明改了什麼。商業用途也可以。
 
