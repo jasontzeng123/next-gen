@@ -736,6 +736,7 @@ p { margin: 0; }
 .foot-credit .foot-th:hover { border-bottom-color: var(--pen); }
 @media (max-width: 640px) { .foot-credit .foot-th { margin-left: 0; flex-basis: 100%; } }
 .foot-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; justify-content: space-between; font-size: 12.5px; color: var(--ink-3); }
+.demo-note { margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--warn); line-height: 1.6; }
 
 </style>
 <script>window.TWKIDS = {"target":"web","siteUrl":"https://jasontzeng123.github.io/next-gen/","sb":{"url":"https://yzmqgrtxbibufjmllimv.supabase.co","key":"sb_publishable_BOnfiTrQN53RzycO4nffGg_b8o-i0Nk"}};</script>
@@ -750,7 +751,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-11T15:38', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-11T16:05', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -2211,7 +2212,12 @@ var COMM = (function () {
     if (!st.db) return Promise.resolve();
     return st.db.collection('submissions').orderBy('ts', 'desc').limit(st.backend === 'web' ? 3000 : 1000).get().then(function (snap) {
       // 雲端讀回的資料是唯讀的，一律複製一份再使用
-      st.rows = snap.docs.map(function (d) { var o = JSON.parse(JSON.stringify(d.data() || {})); o._id = d.id; return o; }).filter(function (o) { return o.v >= 2; });
+      var all = snap.docs.map(function (d) { var o = JSON.parse(JSON.stringify(d.data() || {})); o._id = d.id; return o; }).filter(function (o) { return o.v >= 2; });
+      // 示範資料（作者產生、不是真的申請人）：畫面上一律註明；真實分享滿 DEMO_OFF 筆後就不再計入
+      var real = all.filter(function (o) { return !o.demo; });
+      st.realN = real.length; st.demoN = all.length - real.length;
+      st.demoOn = st.demoN > 0 && real.length < DEMO_OFF;
+      st.rows = st.demoOn ? all : real;
       st.loaded = true; st.loadErr = null; st.stats = aggregate(st.rows); emit();
     }).catch(function (e) { st.loadErr = (e && (e.code || e.message)) || 'error'; U.report(e, 'load'); st.stats = aggregate([]); emit(); });
   }
@@ -2244,6 +2250,7 @@ var COMM = (function () {
     d.childSubs = Math.round((res.childSubs || 0) / 1e5) * 1e5;
     return d;
   }
+  function demoNote() { return st.demoOn ? '目前的統計含 ' + st.demoN + ' 筆作者產生的示範資料（不是真的申請人）；真實分享滿 ' + DEMO_OFF + ' 筆後，示範資料就不再計入。' : ''; }
   function median(a) { if (!a.length) return null; var b = a.slice().sort(function (x, y) { return x - y; }); var m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; }
   function aggregate(rows) {
     var by = {};
@@ -2265,7 +2272,7 @@ var COMM = (function () {
     if (tot < MIN_N) return null;
     return { pct: (m[String(value)] || 0) / tot * 100, n: tot };
   }
-  var MIN_N = 5;
+  var MIN_N = 5, DEMO_OFF = 20;
   function rankOf(arr, v) { if (!arr || !arr.length) return null; var below = arr.filter(function (x) { return x < v; }).length; return below / arr.length * 100; }
 
   // 個人存檔（雲端：每人私有路徑；本機：localStorage）
@@ -2336,7 +2343,7 @@ var COMM = (function () {
     }
   }
 
-  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, rankOf: rankOf, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N };
+  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, rankOf: rankOf, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote };
 })();
 
 /* ---- globe.js ---- */
@@ -3657,6 +3664,7 @@ APP.screens.cover = function (main) {
         list.appendChild(optEl(q, o, checked, function () { pick(o.v); }, isSeen(q)));
       });
       body.appendChild(list);
+      if (isSeen(q) && COMM.st.demoOn && list.querySelector('.crowd')) body.appendChild(h('p', { class: 'xs muted demo-note' }, '「其他申請人」的比例目前含作者產生的示範資料。'));
       if (q.subs) q.subs.forEach(function (sq) {
         if (sq.when && !sq.when(s)) return;
         if (!isSeen(q)) return;
@@ -4490,13 +4498,14 @@ APP.screens.cover = function (main) {
       else { ctl.appendChild(document.createTextNode('你目前沒有分享設定。')); ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { A.consentModal(function () { if (A.consent) COMM.submit(COMM.buildDoc(s, res, A.th)).then(function (ok) { U.toast(ok ? '已匿名分享' : (COMM.st.backend === 'web' ? '分享失敗，請稍後再試' : '分享失敗，你可能只有檢視權限')); }); }); } }, '匿名分享')); }
     } else ctl.appendChild(document.createTextNode('你可以看到大家分享的統計；不過從公開連結進來的訪客無法加入自己的資料，你的選擇只會存在這台裝置上。'));
     sec.appendChild(ctl);
+    if (st.demoOn) sec.appendChild(h('p', { class: 'xs muted demo-note', style: { marginBottom: '12px' } }, COMM.demoNote()));
     if (n < COMM.MIN_N) {
       sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + n + ' 位申請人分享'), '累積到 ' + COMM.MIN_N + ' 位以上，這裡就會顯示大家的選擇、門檻 PR 的分布，以及你在其中的位置。'));
       return sec;
     }
     var tiles = h('div', { class: 'tiles' });
     var thRank = A.th.pr != null ? COMM.rankOf(S.ths, A.th.pr) : 100;
-    tiles.appendChild(tile('申請人數', U.sep(n), n >= (st.backend === 'web' ? 3000 : 1000) ? '最近 ' + U.sep(n) + ' 筆' : '所有匿名分享的人', false));
+    tiles.appendChild(tile('申請人數', U.sep(n), st.demoOn ? '含 ' + st.demoN + ' 筆示範資料' : n >= (st.backend === 'web' ? 3000 : 1000) ? '最近 ' + U.sep(n) + ' 筆' : '所有匿名分享的人', false));
     tiles.appendChild(tile('門檻 PR 中位數', U.pr(S.thMedian), '你的門檻比 ' + Math.round(thRank) + '% 的人高', false));
     if (S.perChildMedian) tiles.appendChild(tile('每個孩子的淨成本（中位數）', U.wan(S.perChildMedian), '你的是 ' + U.wan(res.perChild), false));
     var vb = S.by.verdict || {}, vtot = 0; for (var k in vb) vtot += vb[k];
@@ -5313,6 +5322,7 @@ APP.screens.cover = function (main) {
     sec.appendChild(h('h2', {}, '所有申請人的門檻分布'));
     panel.appendChild(sec);
     if (!st.db || (st.backend === 'web' && st.loadErr)) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, st.backend === 'web' ? '暫時連不上資料庫' : '這個檢視無法讀取共享資料'), st.backend === 'web' ? '請稍後再試；你的試算不受影響。' : '在 claude.ai 登入後開啟，就能看到所有申請人的資料。')); return; }
+    if (st.demoOn) sec.appendChild(h('p', { class: 'xs muted demo-note', style: { marginBottom: '10px' } }, COMM.demoNote()));
     if (!S || S.n < COMM.MIN_N) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + (S ? S.n : 0) + ' 位申請人分享'), '累積到 ' + COMM.MIN_N + ' 位以上就會顯示。完成申請書時選擇「匿名分享」，就能加入統計。')); return; }
     var th = A.th && A.th.pr;
     var bins = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];

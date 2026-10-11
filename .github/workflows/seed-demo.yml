@@ -1,0 +1,19 @@
+name: 放入示範資料
+on:
+  push:
+    paths:
+      - 'seed/**'
+  workflow_dispatch:
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 送出示範資料
+        run: node seed/seed.js
+        env:
+          SB_URL: https://yzmqgrtxbibufjmllimv.supabase.co
+          SB_KEY: sb_publishable_BOnfiTrQN53RzycO4nffGg_b8o-i0Nk
