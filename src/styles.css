@@ -723,3 +723,16 @@ p { margin: 0; }
   .cover .cvd-toggle { order: 3; }
   .cover .cover-lede { font-size: 16px; }
 }
+/* 意見與回報 */
+.fb { margin-top: 26px; padding: 18px 18px 14px; border: 1px solid var(--rule-soft); border-radius: 6px; background: var(--sheet-2); }
+.fb h3 { font-size: 16px; margin-bottom: 6px; }
+.fb .fb-kinds { margin: 10px 0; }
+.fb .fb-text { width: 100%; min-height: 96px; resize: vertical; font: inherit; line-height: 1.6; }
+.fb .fb-ctx { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; color: var(--ink-2); }
+.fb .fb-ctx input { margin-top: 3px; }
+.fb .fb-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.fb .fb-msg { color: var(--ink-2); }
+.fb .fb-alt { margin-top: 10px; }
+.fb .fb-alt a, .verify-links a { color: var(--pen); }
+.verify-callout { margin: 14px 0 6px; padding: 12px 14px; border-left: 3px solid var(--pen); background: var(--pen-soft); border-radius: 0 6px 6px 0; font-size: 14.5px; }
+.verify-links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 6px; }

@@ -163,3 +163,50 @@ begin
 end;
 $$;
 grant execute on function public.withdraw_choice(text, text) to anon, authenticated;
+
+-- ---------- 意見與回報 ----------
+-- 玩家在網站上寫的意見只有你看得到（Table Editor → feedback），不會公開
+create table if not exists public.feedback (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  kind text not null,          -- calc 計算有誤／data 資料有誤或過時／bug 畫面或操作／idea 建議／other 其他
+  message text not null,
+  context jsonb,               -- 玩家勾選時附上的設定（縣市、各題選擇、收入 PR 區間），方便重現問題
+  page text                    -- 從哪一頁送出
+);
+alter table public.feedback enable row level security;
+revoke all on table public.feedback from anon, authenticated;
+
+create or replace function public.submit_feedback(p_kind text, p_message text, p_context jsonb default null, p_page text default null)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  ip text;
+  iph text;
+  msg text := btrim(coalesce(p_message, ''));
+begin
+  if p_kind is null or p_kind not in ('calc', 'data', 'bug', 'idea', 'other') then raise exception 'bad kind'; end if;
+  if char_length(msg) < 2 or char_length(msg) > 1000 then raise exception 'bad message'; end if;
+  if p_context is not null and (jsonb_typeof(p_context) <> 'object' or octet_length(p_context::text) > 3000) then raise exception 'bad context'; end if;
+  if p_page is not null and char_length(p_page) > 40 then raise exception 'bad page'; end if;
+  -- 同一個連線位址 10 分鐘內最多 5 則（只存雜湊值，24 小時後刪除）
+  begin
+    ip := split_part(coalesce(current_setting('request.headers', true)::json->>'x-forwarded-for', ''), ',', 1);
+  exception when others then ip := '';
+  end;
+  if ip <> '' then
+    iph := encode(sha256(convert_to('next-gen-feedback:' || trim(ip), 'UTF8')), 'hex');
+    delete from public.rate_log where at < now() - interval '24 hours';
+    if (select count(*) from public.rate_log where ip_hash = iph and at > now() - interval '10 minutes') >= 5 then
+      raise exception 'rate limited';
+    end if;
+    insert into public.rate_log (ip_hash) values (iph);
+  end if;
+  insert into public.feedback (kind, message, context, page) values (p_kind, msg, p_context, p_page);
+  return true;
+end;
+$$;
+grant execute on function public.submit_feedback(text, text, jsonb, text) to anon, authenticated;

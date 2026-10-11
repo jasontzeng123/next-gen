@@ -603,6 +603,49 @@
   }
   function applyComp(id) { pushUndo(); applyOne(id); A.persist(); A.redrawReport(); U.toast('已套用，報告已重算'); window.scrollTo({ top: 0, behavior: U.reduceMotion() ? 'auto' : 'smooth' }); }
 
+  // ---------- 意見與回報（報告「存檔與分享」和「方法與資料」頁共用） ----------
+  var FB_KINDS = [['calc', '計算有誤'], ['data', '資料有誤或過時'], ['bug', '畫面或操作問題'], ['idea', '建議'], ['other', '其他']];
+  A.feedbackBox = function (opts) {
+    opts = opts || {};
+    var REPO = (window.TWKIDS && window.TWKIDS.repoUrl) || 'https://github.com/jasontzeng123/next-gen';
+    var box = h('div', { class: 'fb' });
+    box.appendChild(h('h3', {}, opts.title || '意見與回報'));
+    var links = h('p', { class: 'xs muted fb-alt', html: '也可以在 Threads 找 <a href="https://www.threads.com/@popo890827" target="_blank" rel="noopener">@popo890827</a>，或到 <a href="' + REPO + '/issues/new" target="_blank" rel="noopener">GitHub 回報</a>（需要帳號，內容會公開）。' });
+    if (!COMM.canFeedback()) {
+      box.appendChild(h('p', { class: 'sm' }, '發現計算有誤、資料過時，或有任何想法，歡迎告訴作者。'));
+      box.appendChild(links); return box;
+    }
+    box.appendChild(h('p', { class: 'sm muted' }, '發現計算有誤、資料過時，或有任何想法，都可以寫在這裡。只有作者看得到，不會公開，也不用登入。'));
+    var kind = 'calc';
+    var chips = h('div', { class: 'chips fb-kinds', role: 'radiogroup', 'aria-label': '意見類型' });
+    FB_KINDS.forEach(function (k) {
+      var b = h('button', { type: 'button', class: 'chip', role: 'radio', 'aria-checked': k[0] === kind ? 'true' : 'false', onclick: function () { kind = k[0]; Array.prototype.forEach.call(chips.children, function (c) { c.setAttribute('aria-checked', c === b ? 'true' : 'false'); }); } }, k[1]);
+      chips.appendChild(b);
+    });
+    box.appendChild(chips);
+    var ta = h('textarea', { class: 'input fb-text', rows: 4, maxlength: 1000, 'aria-label': '你的意見', placeholder: '例如：台中市的托育補助好像少算了，官方公告是……（附上來源連結更好）' });
+    box.appendChild(ta);
+    var ctx = opts.context ? h('input', { type: 'checkbox', checked: true }) : null;
+    if (ctx) box.appendChild(h('label', { class: 'fb-ctx xs' }, ctx, h('span', {}, '附上我目前的設定，方便重現問題（縣市、各題選擇、收入 PR 區間；不含姓名、年薪與存款）')));
+    var msg = h('p', { class: 'xs fb-msg', role: 'status', 'aria-live': 'polite' });
+    var btn = h('button', { type: 'button', class: 'btn small', onclick: function () {
+      var t = ta.value.trim();
+      if (t.length < 2) { msg.textContent = '請先寫下你的意見。'; ta.focus(); return; }
+      btn.disabled = true; msg.textContent = '送出中…';
+      var c = null; if (ctx && ctx.checked) { try { c = opts.context(); } catch (e) { c = null; } }
+      COMM.sendFeedback(kind, t, c, opts.page || null).then(function () {
+        U.clear(box);
+        box.appendChild(h('h3', {}, '謝謝，已經收到了'));
+        box.appendChild(h('p', { class: 'sm muted' }, '作者會逐一看過。如果是計算或資料的錯誤，修正後會在 Threads 和 GitHub 上說明。'));
+      }, function (e) {
+        btn.disabled = false;
+        msg.textContent = e && /rate/.test(String(e.message || '')) ? '送出太多次了，請過幾分鐘再試。' : '暫時送不出去，請稍後再試，或用下面的方式告訴作者。';
+      });
+    } }, '送出意見');
+    box.appendChild(h('div', { class: 'fb-row' }, btn, msg));
+    box.appendChild(links);
+    return box;
+  };
   function submittedDoc() {
     var s = ENGINE.normalize(JSON.parse(JSON.stringify(A.submitted || A.strip(A.s)))); s.__norm = true;
     var th = ENGINE.threshold(s);
@@ -712,6 +755,8 @@
     // 畫好就先轉成圖檔備用：手機的分享選單必須在點擊當下立刻打開，來不及等轉檔
     var draw = function () { drawCard(cv, s, res, th); cv.__blob = null; try { cv.toBlob(function (b) { cv.__blob = b; }, 'image/png'); } catch (e) { /* 忽略 */ } };
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw); else draw();
+    // 意見與回報（附上目前報告的設定，方便重現問題）
+    sec.appendChild(A.feedbackBox({ page: 'report', context: function () { var d = COMM.buildDoc(A.res.s, A.res, A.th); d.view = A.viewMode || null; return d; } }));
     return sec;
   }
   // 分享出去的網址：在 claude.ai 上是這個作品的公開連結；若搬到自己的網站，就用當下網址

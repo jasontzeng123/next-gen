@@ -8,6 +8,15 @@ APP.screens.method = function (main) {
   function p(t) { return h('p', { html: t }); }
   function ul(items) { var u = h('ul'); items.forEach(function (t) { u.appendChild(h('li', { html: t })); }); return u; }
   inn.appendChild(p('這不是理財建議，而是一個盡量貼近現實的試算。每個數字都有出處；查不到可靠資料的地方，我們標成估計值，並寫出理由。你可以在報告「調整設定」裡的「進階假設」調整大部分假設。'));
+  // 頁首就放驗算與回報的入口，不用滑到最底
+  var REPO0 = (window.TWKIDS && window.TWKIDS.repoUrl) || 'https://github.com/jasontzeng123/next-gen';
+  inn.appendChild(h('div', { class: 'verify-callout' },
+    h('b', {}, '想檢查我們怎麼算、資料從哪來，或發現錯誤？'),
+    h('div', { class: 'verify-links' },
+      h('button', { type: 'button', class: 'linkbtn', onclick: function () { var el = document.getElementById('verify'); if (el) el.scrollIntoView({ behavior: U.reduceMotion() ? 'auto' : 'smooth', block: 'start' }); } }, '驗算方式與意見回報'),
+      h('a', { href: REPO0 + '/blob/main/docs/資料來源.md', target: '_blank', rel: 'noopener' }, '資料來源清單'),
+      h('a', { href: REPO0, target: '_blank', rel: 'noopener' }, '原始碼'))));
+  function A_feedback() { return APP.feedbackBox({ page: 'method', context: APP.res ? function () { return COMM.buildDoc(APP.res.s, APP.res, APP.th); } : null }); }
 
   inn.appendChild(h('h2', {}, '一、怎麼算'));
   inn.appendChild(ul([
@@ -93,7 +102,7 @@ APP.screens.method = function (main) {
   inn.appendChild(p(COMM.st.backend === 'local'
     ? '這個版本不會上傳任何資料：你的選擇與存檔只留在自己的瀏覽器裡，所有試算都在你的裝置上完成。'
     : COMM.st.backend === 'web'
-    ? '分享的資料存放在 Supabase 資料庫（亞太地區的機房）。每台裝置會隨機產生一個匿名代號，和一段只有這台裝置知道的密語；要取消分享，請用同一台裝置的同一個瀏覽器。為了防止有人灌資料，送出時會暫存連線位址的雜湊值（無法還原成位址），24 小時後自動刪除。你的存檔只留在自己的瀏覽器裡。所有試算都在你的裝置上完成，只有你同意分享的那幾個欄位會上傳。'
+    ? '分享的資料存放在 Supabase 資料庫（亞太地區的機房）。每台裝置會隨機產生一個匿名代號，和一段只有這台裝置知道的密語；要取消分享，請用同一台裝置的同一個瀏覽器。為了防止有人灌資料，送出時會暫存連線位址的雜湊值（無法還原成位址），24 小時後自動刪除。你在「意見與回報」寫的內容只有作者看得到，不會公開。你的存檔只留在自己的瀏覽器裡。所有試算都在你的裝置上完成，只有你同意分享的那幾個欄位會上傳。'
     : '分享與雲端存檔需要 claude.ai 的寫入權限：作者本人（以及同一個組織的成員）可以加入統計；從公開連結進來的訪客可以看到大家分享的統計，但無法加入自己的資料，存檔也只會留在自己的瀏覽器裡。所有試算都在你的裝置上完成，不會上傳。'));
 
   inn.appendChild(h('h2', {}, '九、資料來源'));
@@ -101,12 +110,13 @@ APP.screens.method = function (main) {
   Object.keys(D.SOURCES).forEach(function (k) { var s = D.SOURCES[k]; src.appendChild(h('div', { class: 'src' }, h('a', { href: s.u, target: '_blank', rel: 'noopener' }, s.t), h('span', {}, s.d))); });
   inn.appendChild(src);
 
-  inn.appendChild(h('h2', {}, '十、自己驗算、回報錯誤與授權'));
+  inn.appendChild(h('h2', { id: 'verify' }, '十、自己驗算、回報錯誤與授權'));
   var REPO = (window.TWKIDS && window.TWKIDS.repoUrl) || 'https://github.com/jasontzeng123/next-gen';
   inn.appendChild(p('這個作品的程式碼、每個數字的出處與研究筆記，都公開在 GitHub。想自己驗算的話，可以在報告「你的存摺」段落按「下載逐年明細」，用 Excel 或 Google 試算表一年一年對帳：每一年的年底存款，都等於年初存款加上可用收入、再減掉支出。'));
   inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO, target: '_blank', rel: 'noopener' }, '原始碼（GitHub）'), h('span', {}, '計算引擎在 src/engine.js，所有參數在 src/data.js')));
   inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO + '/blob/main/docs/資料來源.md', target: '_blank', rel: 'noopener' }, '資料來源清單'), h('span', {}, '每個來源的名稱、連結與資料時間')));
   inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO + '/issues/new', target: '_blank', rel: 'noopener' }, '回報錯誤'), h('span', {}, '在 GitHub 留言，需要 GitHub 帳號')));
+  inn.appendChild(A_feedback());
   inn.appendChild(p('授權：程式碼採 <a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">MIT 授權</a>；本作品自己撰寫的文字、圖表與整理後的資料採 <a href="https://creativecommons.org/licenses/by/4.0/deed.zh-hant" target="_blank" rel="noopener">CC BY 4.0</a>，轉用時請標明出處「popo890827《你有資格生下一代嗎？》」。引用的原始資料仍屬各來源，依各自的條款使用。'));
   inn.appendChild(h('div', { class: 'cover-cta', style: { marginTop: '28px' } }, h('button', { class: 'btn', onclick: function () { if (APP.unlocked) APP.compute(true); APP.go(APP.unlocked ? 'report' : 'cover'); } }, U.icon('back'), APP.unlocked ? '回到審查報告' : '回到封面')));
   sheet.appendChild(inn); wrap.appendChild(sheet); main.appendChild(wrap);

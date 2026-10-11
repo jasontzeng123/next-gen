@@ -55,3 +55,4 @@ python3 test/pg_bridge.py  # 接上本機 PostgreSQL，用真正的 supabase/*.s
 
 - 免費方案的 Supabase 閒置一週會暫停。`.github/workflows/keepalive.yml` 每 3 天讀一次資料庫，避免暫停。萬一暫停了，到 Supabase 專案頁按 **Restore project** 即可，資料不會遺失；暫停期間網站仍可正常試算。
 - 查看或匯出資料：Supabase → Table Editor → `submissions` → Export → CSV。
+- 玩家的意見與回報：Supabase → Table Editor → `feedback`（只有你看得到；玩家勾選時會附上當時的設定，方便重現問題）。

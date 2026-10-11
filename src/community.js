@@ -178,6 +178,16 @@ var COMM = (function () {
     d.childSubs = Math.round((res.childSubs || 0) / 1e5) * 1e5;
     return d;
   }
+  // 意見與回報：送到資料庫的 feedback 表（只有作者看得到）
+  function canFeedback() { return sbOn(); }
+  function sendFeedback(kind, message, context, page) {
+    if (!canFeedback()) return Promise.reject({ code: 'unavailable' });
+    return rpc('submit_feedback', { p_kind: kind, p_message: message, p_context: context || null, p_page: page || null }).then(function (r) {
+      if (r && typeof r === 'object' && 'submit_feedback' in r) r = r.submit_feedback;
+      if (r !== true && r !== 'true') throw { code: 'failed' };
+      return true;
+    });
+  }
   function demoNote() { return st.demoOn ? '目前的統計含 ' + st.demoN + ' 筆作者產生的示範資料（不是真的申請人）；真實分享滿 ' + DEMO_OFF + ' 筆後，示範資料就不再計入。' : ''; }
   function median(a) { if (!a.length) return null; var b = a.slice().sort(function (x, y) { return x - y; }); var m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; }
   function aggregate(rows) {
@@ -307,5 +317,5 @@ var COMM = (function () {
     }
   }
 
-  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, thRank: thRank, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote, sig: sig, shared: shared, hasShared: hasShared };
+  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, thRank: thRank, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote, canFeedback: canFeedback, sendFeedback: sendFeedback, sig: sig, shared: shared, hasShared: hasShared };
 })();
