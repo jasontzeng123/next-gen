@@ -622,7 +622,7 @@
       return sec;
     }
     var tiles = h('div', { class: 'tiles' });
-    var thRank = A.th.pr != null ? COMM.rankOf(S.ths, A.th.pr) : 100;
+    var thRank = A.th.pr != null ? (COMM.thRank(A.th.pr) || 0) : 100;
     tiles.appendChild(tile('申請人數', U.sep(n), st.demoOn ? '含 ' + st.demoN + ' 筆示範資料' : n >= (st.backend === 'web' ? 3000 : 1000) ? '最近 ' + U.sep(n) + ' 筆' : '所有匿名分享的人', false));
     tiles.appendChild(tile('門檻 PR 中位數', U.pr(S.thMedian), '你的門檻比 ' + Math.round(thRank) + '% 的人高', false));
     if (S.perChildMedian) tiles.appendChild(tile('每個孩子的淨成本（中位數）', U.wan(S.perChildMedian), '你的是 ' + U.wan(res.perChild), false));

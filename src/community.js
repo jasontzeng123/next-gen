@@ -107,6 +107,22 @@ var COMM = (function () {
   }
   function load() {
     if (!st.db) return Promise.resolve();
+    if (st.backend === 'web') {
+      return rpc('crowd_stats', { p_id: st.uid }).then(function (r) {
+        if (!r || typeof r !== 'object' || r.n == null) throw { code: 'bad_stats' };
+        st.server = true; st.rows = []; st.mineFlag = !!r.mine;
+        st.realN = r.realN || 0; st.demoN = r.demoN || 0; st.demoOn = !!r.demoOn;
+        st.stats = { n: r.n, by: r.by || {}, thHist: r.thHist || [], thMedian: r.thMedian, perChildMedian: r.perChildMedian, byCounty: r.byCounty || {} };
+        st.loaded = true; st.loadErr = null; emit();
+      }).catch(function (e) {
+        // 資料庫還沒升級（沒有 crowd_stats）或暫時失敗：改讀原始資料
+        st.server = false; st.mineFlag = undefined;
+        return loadRows();
+      });
+    }
+    return loadRows();
+  }
+  function loadRows() {
     return st.db.collection('submissions').orderBy('ts', 'desc').limit(st.backend === 'web' ? 3000 : 1000).get().then(function (snap) {
       // 雲端讀回的資料是唯讀的，一律複製一份再使用
       var all = snap.docs.map(function (d) { var o = JSON.parse(JSON.stringify(d.data() || {})); o._id = d.id; return o; }).filter(function (o) { return o.v >= 2; });
@@ -130,16 +146,21 @@ var COMM = (function () {
   function hasShared() { return !!shared() || !!mine(); }
   function submit(doc, from) {
     if (!st.db || !st.uid) return Promise.resolve(false);
-    return st.db.doc('submissions/' + st.uid).set(doc).then(function () { U.store.set('shared', { ts: Date.now(), sig: from ? sig(from) : '' }); return load().then(function () { return true; }); }, function (e) {
+    return st.db.doc('submissions/' + st.uid).set(doc).then(function () { U.store.set('shared', { ts: Date.now(), sig: from ? sig(from) : '' }); return load().then(function () { if (st.server) { st.mineFlag = true; emit(); } }).then(function () { return true; }); }, function (e) {
       if (e && (e.code === 'invalid_argument' || e.code === 'not_granted' || e.code === 'revoked')) { st.canShare = false; st.canWrite = false; }
       st.shareErr = e && e.code; emit(); return false;
     });
   }
   function withdraw() {
     if (!st.db || !st.uid) return Promise.resolve(false);
-    return st.db.doc('submissions/' + st.uid).delete().then(function () { U.store.set('shared', null); return load().then(function () { return true; }); }, function () { return false; });
+    return st.db.doc('submissions/' + st.uid).delete().then(function () { U.store.set('shared', null); return load().then(function () { if (st.server) { st.mineFlag = false; emit(); } }).then(function () { return true; }); }, function () { return false; });
   }
-  function mine() { if (!st.uid) return null; for (var i = 0; i < st.rows.length; i++) if (st.rows[i]._id === st.uid) return st.rows[i]; return null; }
+  function mine() {
+    if (!st.uid) return null;
+    if (st.mineFlag !== undefined) return st.mineFlag ? { _id: st.uid } : null;
+    for (var i = 0; i < st.rows.length; i++) if (st.rows[i]._id === st.uid) return st.rows[i];
+    return null;
+  }
 
   // 只保留粗略、無法識別個人的欄位
   var KEYS = ['county', 'district', 'partner', 'kids', 'spacing', 'room', 'housing', 'buyWhen', 'build', 'loan', 'reno', 'postpartum', 'leave', 'care', 'quitUntil', 'preschool', 'school', 'after', 'cram', 'uni', 'uniAway', 'support', 'transport', 'lifestyle', 'travel', 'elder', 'elderCare', 'incomeMode'];
@@ -170,7 +191,12 @@ var COMM = (function () {
     });
     var ths = rows.map(function (r) { return r.th; }).filter(function (x) { return typeof x === 'number'; });
     var pcs = rows.map(function (r) { return r.perChild; }).filter(function (x) { return typeof x === 'number' && x > 0; });
-    return { n: rows.length, by: by, ths: ths, thMedian: median(ths), perChild: pcs, perChildMedian: median(pcs), expPR: rows.map(function (r) { return r.expPR; }).filter(function (x) { return typeof x === 'number'; }) };
+    var hist = []; for (var i = 0; i <= 100; i++) hist.push(0);
+    ths.forEach(function (v) { hist[Math.max(0, Math.min(100, Math.floor(v)))]++; });
+    var byC = {}, byCounty = {};
+    rows.forEach(function (r) { if (typeof r.th === 'number' && r.county) (byC[r.county] = byC[r.county] || []).push(r.th); });
+    Object.keys(byC).forEach(function (k) { byCounty[k] = { n: byC[k].length, med: median(byC[k]) }; });
+    return { n: rows.length, by: by, thHist: hist, thMedian: median(ths), perChildMedian: median(pcs), byCounty: byCounty };
   }
   function share(key, value) {
     var S = st.stats; if (!S || S.n < MIN_N) return null;
@@ -180,7 +206,15 @@ var COMM = (function () {
     return { pct: (m[String(value)] || 0) / tot * 100, n: tot };
   }
   var MIN_N = 5, DEMO_OFF = 20;
-  function rankOf(arr, v) { if (!arr || !arr.length) return null; var below = arr.filter(function (x) { return x < v; }).length; return below / arr.length * 100; }
+  // 門檻 PR 比多少比例的申請人高（用 1 PR 一格的分布估算）
+  function thRank(v) {
+    var S = st.stats; if (!S || !S.thHist || !S.thHist.length) return null;
+    var tot = 0, below = 0, b = Math.max(0, Math.min(100, Math.floor(v)));
+    S.thHist.forEach(function (c, i) { tot += c; if (i < b) below += c; });
+    if (!tot) return null;
+    below += S.thHist[b] * (v - b);
+    return below / tot * 100;
+  }
 
   // 個人存檔（雲端：每人私有路徑；本機：localStorage）
   function loadSaves() {
@@ -250,5 +284,5 @@ var COMM = (function () {
     }
   }
 
-  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, rankOf: rankOf, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote, sig: sig, shared: shared, hasShared: hasShared };
+  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, thRank: thRank, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote, sig: sig, shared: shared, hasShared: hasShared };
 })();

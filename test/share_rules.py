@@ -18,6 +18,7 @@ def rpc(route):
         i=body['p_id']; ok=i in DB and DB[i]['secret']==hs(body['p_secret'])
         if ok: del DB[i]
         return route.fulfill(status=200, content_type='application/json', body='true' if ok else 'false')
+    return route.fulfill(status=404, body='no such function')
 d={'county':'KHH','housing':'rent','partner':True,'incomeMode':'threshold','kids':2,'ageA':28,'ageB':30,'firstBirthAge':31}
 seen={k:True for k in ['country','county','family','ages','plan','room','housing','buy','postpartum','care','leave','preschool','school','after','cram','uni','support','transport','lifestyle','travel','elder','mode','jobA','jobB','money']}
 with sync_playwright() as p:

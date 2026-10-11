@@ -474,7 +474,7 @@
     if (!S || S.n < COMM.MIN_N) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + (S ? S.n : 0) + ' 位申請人分享'), '累積到 ' + COMM.MIN_N + ' 位以上就會顯示。完成申請書時選擇「匿名分享」，就能加入統計。')); return; }
     var th = A.th && A.th.pr;
     var bins = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    S.ths.forEach(function (v) { bins[Math.min(10, Math.floor(v / 10))]++; });
+    (S.thHist || []).forEach(function (c, v) { bins[Math.min(10, Math.floor(v / 10))] += c; });
     var mx = Math.max.apply(null, bins.concat([1]));
     var Wd = 640, Hh = 200, bw = Wd / 11;
     var svg = U.svg('svg', { viewBox: '0 0 ' + Wd + ' ' + (Hh + 30), role: 'img', 'aria-label': '申請人門檻 PR 分布' });
@@ -487,9 +487,8 @@
     sec.appendChild(h('p', { class: 'rsec-lede' }, S.n + ' 位申請人，各自心中的養育標準需要的收入 PR。藍色是你所在的區間。'));
     sec.appendChild(h('div', { class: 'chart-box' }, svg));
     // 各縣市
-    var byC = {};
-    st.rows.forEach(function (r) { if (typeof r.th !== 'number') return; (byC[r.county] = byC[r.county] || []).push(r.th); });
-    var rows = Object.keys(byC).filter(function (k) { return byC[k].length >= 3; }).map(function (k) { return [k, COMM.median(byC[k]), byC[k].length]; }).sort(function (a, b) { return a[1] - b[1]; });
+    var byC = S.byCounty || {};
+    var rows = Object.keys(byC).filter(function (k) { return D.COUNTY[k] && byC[k].n >= 3; }).map(function (k) { return [k, byC[k].med, byC[k].n]; }).sort(function (a, b) { return a[1] - b[1]; });
     if (rows.length) {
       var sec2 = h('div', { class: 'rsec' });
       sec2.appendChild(h('h2', {}, '各縣市申請人的門檻中位數'));

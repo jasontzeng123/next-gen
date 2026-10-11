@@ -36,6 +36,7 @@ node build/build.js        # 組裝網站：產生 index.html 與 docs/資料來
 node test/sanity.js        # 計算引擎的檢查
 python3 test/ledger_csv.py # 下載逐年明細並逐列對帳
 python3 test/web.py        # 分享、取消分享、連線失敗等流程（用模擬的資料庫）
+python3 test/pg_bridge.py  # 接上本機 PostgreSQL，用真正的 supabase/*.sql 端到端測試
 ```
 
 網站設定在 `build/web.config.json`（網址與 Supabase 的公開金鑰）。`index.html` 是組裝出來的成品，請改 `src/` 再重新組裝，不要直接改它。
@@ -44,7 +45,7 @@ python3 test/web.py        # 分享、取消分享、連線失敗等流程（用
 
 ## 玩家的資料
 
-只有玩家同意「匿名分享」後，才會把選擇送到 Supabase 的 `submissions` 表格。內容是各題的選擇、收入 PR（四捨五入到 5）、年齡區間（每 5 歲一組）與審查結果，**不含**姓名、帳號、確切年齡、年薪與存款。每台裝置用隨機的匿名代號，加上一組只有那台裝置知道的密語，所以只有本人能更新或取消自己的分享。資料庫的設定在 [supabase/setup.sql](supabase/setup.sql)。
+只有玩家同意「匿名分享」後，才會把選擇送到 Supabase 的 `submissions` 表格。內容是各題的選擇、收入 PR（四捨五入到 5）、年齡區間（每 5 歲一組）與審查結果，**不含**姓名、帳號、確切年齡、年薪與存款。每台裝置用隨機的匿名代號，加上一組只有那台裝置知道的密語，所以只有本人能更新或取消自己的分享。資料庫的設定在 [supabase/setup.sql](supabase/setup.sql)，之後的升級在 [supabase/upgrade-2.sql](supabase/upgrade-2.sql)：統計改由資料庫算好再傳（每次只傳幾 KB），並限制同一個連線位址 10 分鐘內最多新增 20 筆（位址只存雜湊值，24 小時後刪除）。
 
 ### 示範資料
 
