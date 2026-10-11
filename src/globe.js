@@ -1,0 +1,171 @@
+/* =========================================================================
+   GLOBE — 點陣地球（正射投影、可拖曳旋轉）
+   ========================================================================= */
+var Globe = (function () {
+  'use strict';
+  var grid = null, W = 0, H = 0, IDX = {};
+  function decode() {
+    if (grid) return;
+    W = GEO.w; H = GEO.h; grid = new Uint8Array(W * H);
+    var rows = GEO.rle.split('|'), p = 0;
+    for (var y = 0; y < rows.length; y++) {
+      var toks = rows[y].split(';');
+      for (var i = 0; i < toks.length; i++) {
+        var t = toks[i], star = t.indexOf('*');
+        var v = star >= 0 ? t.slice(0, star) : t, n = star >= 0 ? parseInt(t.slice(star + 1), 16) : 1;
+        var val = v ? parseInt(v, 16) : 0;
+        for (var j = 0; j < n; j++) grid[p++] = val;
+      }
+    }
+    GEO.countries.forEach(function (c, i) { IDX[c.a3] = i + 1; });
+  }
+  var D2R = Math.PI / 180;
+
+  function create(canvas, opts) {
+    decode();
+    opts = opts || {};
+    var ctx = canvas.getContext('2d');
+    var st = { lon: opts.lon != null ? opts.lon : 105, lat: opts.lat != null ? opts.lat : 18, zoom: opts.zoom || 1, vx: 0, auto: opts.auto !== false, hover: 0, sel: opts.selected || 'TWN', dragging: false, anim: null };
+    var colors = {};
+    function readColors() {
+      colors = { ocean: U.cssVar('--rule-soft'), land: U.cssVar('--ink-3'), landHi: U.cssVar('--ink'), tw: U.cssVar('--seal'), sel: U.cssVar('--pen'), sheet: U.cssVar('--sheet'), ring: U.cssVar('--rule') };
+    }
+    readColors();
+    var mq; try { mq = window.matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('change', function () { readColors(); }); } catch (e) { /* 舊瀏覽器 */ }
+    var mo = new MutationObserver(function () { readColors(); });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    var size = 0, dpr = 1;
+    function resize() {
+      var w = canvas.clientWidth || 400; dpr = Math.min(2, window.devicePixelRatio || 1);
+      size = w; canvas.width = Math.round(w * dpr); canvas.height = Math.round(w * dpr);
+    }
+    function inv(px, py) {
+      var R = size / 2 * 0.9 * st.zoom, cx = size / 2, cy = size / 2;
+      var x = (px - cx) / R, y = (cy - py) / R, r2 = x * x + y * y;
+      if (r2 > 1) return null;
+      var z = Math.sqrt(1 - r2), p0 = st.lat * D2R;
+      var lat = Math.asin(y * Math.cos(p0) + z * Math.sin(p0));
+      var lon = st.lon * D2R + Math.atan2(x, z * Math.cos(p0) - y * Math.sin(p0));
+      return [lon / D2R, lat / D2R, z];
+    }
+    function fwd(lon, lat) {
+      var R = size / 2 * 0.9 * st.zoom, l = (lon - st.lon) * D2R, p = lat * D2R, p0 = st.lat * D2R;
+      var x = Math.cos(p) * Math.sin(l), y = Math.cos(p0) * Math.sin(p) - Math.sin(p0) * Math.cos(p) * Math.cos(l);
+      var z = Math.sin(p0) * Math.sin(p) + Math.cos(p0) * Math.cos(p) * Math.cos(l);
+      return [size / 2 + x * R, size / 2 - y * R, z];
+    }
+    function cell(lon, lat) {
+      lon = ((lon + 180) % 360 + 360) % 360; var gx = Math.floor(lon / 360 * W), gy = Math.floor((90 - lat) / 180 * H);
+      if (gy < 0) gy = 0; if (gy >= H) gy = H - 1;
+      return grid[gy * W + gx];
+    }
+    function draw() {
+      if (!size) resize();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, size, size);
+      var R = size / 2 * 0.9 * st.zoom, cx = size / 2, cy = size / 2;
+      // 外框
+      if (R * 2 <= size * 1.02) { ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = colors.ring; ctx.lineWidth = 1; ctx.globalAlpha = .6; ctx.stroke(); ctx.globalAlpha = 1; }
+      var step = Math.max(4.2, size / 96);
+      var twIdx = IDX.TWN, selIdx = IDX[st.sel], hovIdx = st.hover;
+      var colorFor = opts.colorFor;
+      for (var py = step / 2; py < size; py += step) {
+        for (var px = step / 2; px < size; px += step) {
+          var g = inv(px, py); if (!g) continue;
+          var v = cell(g[0], g[1]);
+          var shade = 0.35 + 0.65 * g[2];
+          var r, col;
+          if (!v) { r = step * 0.16; col = colors.ocean; ctx.globalAlpha = 0.5 + 0.5 * shade; }
+          else {
+            var a3 = GEO.countries[v - 1].a3;
+            var cc = colorFor ? colorFor(a3) : null;
+            r = step * (0.24 + 0.12 * shade);
+            if (v === twIdx) { col = cc || colors.tw; r = step * 0.46; ctx.globalAlpha = 1; }
+            else if (v === hovIdx) { col = colors.landHi; ctx.globalAlpha = 1; }
+            else { col = cc || colors.land; ctx.globalAlpha = 0.45 + 0.55 * shade; }
+            if (v === selIdx && v !== twIdx) col = colors.sel;
+          }
+          ctx.fillStyle = col; ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+      // 台灣標記
+      var tw = fwd(120.95, 23.7);
+      if (tw[2] > 0.05) {
+        var t = (performance.now() / 1000) % 1.6 / 1.6;
+        ctx.strokeStyle = colorFor && colorFor('TWN') ? colorFor('TWN') : colors.tw; ctx.lineWidth = 1.6;
+        ctx.globalAlpha = 1 - t; ctx.beginPath(); ctx.arc(tw[0], tw[1], 8 + t * 18, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+        ctx.beginPath(); ctx.arc(tw[0], tw[1], 8, 0, Math.PI * 2); ctx.stroke();
+        ctx.font = '700 13px ' + U.cssVar('--f-sans'); ctx.fillStyle = colors.landHi; ctx.textAlign = 'left';
+        ctx.fillStyle = colors.sheet; ctx.globalAlpha = .85; var lw = ctx.measureText('台灣').width; ctx.fillRect(tw[0] + 13, tw[1] - 10, lw + 10, 20); ctx.globalAlpha = 1;
+        ctx.fillStyle = colors.landHi; ctx.fillText('台灣', tw[0] + 18, tw[1] + 5);
+      }
+    }
+    var raf = 0, last = 0, alive = true;
+    function loop(ts) {
+      if (!alive) return;
+      var dt = last ? Math.min(50, ts - last) : 16; last = ts;
+      if (st.anim) {
+        var a = st.anim, k = Math.min(1, (ts - a.t0) / a.dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        st.lon = a.lon0 + (a.lon1 - a.lon0) * e; st.lat = a.lat0 + (a.lat1 - a.lat0) * e; st.zoom = a.z0 + (a.z1 - a.z0) * e;
+        if (k >= 1) { st.anim = null; if (a.done) a.done(); }
+      } else if (!st.dragging) {
+        if (Math.abs(st.vx) > 0.001) { st.lon -= st.vx * dt; st.vx *= 0.94; }
+        else if (st.auto) st.lon += dt * 0.006;
+      }
+      draw();
+      raf = requestAnimationFrame(loop);
+    }
+    // 互動
+    var lastX = 0, lastY = 0, lastT = 0, moved = 0;
+    canvas.addEventListener('pointerdown', function (e) { st.dragging = true; st.auto = false; st.anim = null; lastX = e.clientX; lastY = e.clientY; lastT = performance.now(); moved = 0; canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('pointermove', function (e) {
+      var rect = canvas.getBoundingClientRect();
+      if (st.dragging) {
+        var dx = e.clientX - lastX, dy = e.clientY - lastY, now = performance.now();
+        moved += Math.abs(dx) + Math.abs(dy);
+        var k = 0.32 / st.zoom;
+        st.lon -= dx * k; st.lat = Math.max(-70, Math.min(70, st.lat + dy * k));
+        st.vx = dx * k / Math.max(8, now - lastT);
+        lastX = e.clientX; lastY = e.clientY; lastT = now;
+      }
+      var g = inv(e.clientX - rect.left, e.clientY - rect.top);
+      var v = g ? cell(g[0], g[1]) : 0;
+      st.hover = v;
+      if (opts.onHover) opts.onHover(v ? GEO.countries[v - 1] : null, e.clientX - rect.left, e.clientY - rect.top);
+    });
+    function up(e) {
+      if (!st.dragging) return; st.dragging = false;
+      if (moved < 6) {
+        var rect = canvas.getBoundingClientRect();
+        var g = inv(e.clientX - rect.left, e.clientY - rect.top);
+        var v = g ? cell(g[0], g[1]) : 0;
+        // 台灣很小：點在台灣附近也算
+        var tw = fwd(120.95, 23.7), dx = e.clientX - rect.left - tw[0], dy = e.clientY - rect.top - tw[1];
+        if (tw[2] > 0 && dx * dx + dy * dy < 22 * 22) v = IDX.TWN;
+        if (v && opts.onPick) opts.onPick(GEO.countries[v - 1]);
+      }
+    }
+    canvas.addEventListener('pointerup', up);
+    canvas.addEventListener('pointercancel', function () { st.dragging = false; });
+    canvas.addEventListener('pointerleave', function () { st.hover = 0; if (opts.onHover) opts.onHover(null); });
+    var ro = new ResizeObserver(function () { resize(); });
+    ro.observe(canvas);
+    resize();
+    if (U.reduceMotion()) st.auto = false;
+    raf = requestAnimationFrame(loop);
+    return {
+      st: st,
+      flyTo: function (lon, lat, zoom, dur, done) {
+        var dl = ((lon - st.lon) % 360 + 540) % 360 - 180;
+        st.anim = { t0: performance.now(), dur: U.reduceMotion() ? 1 : (dur || 1200), lon0: st.lon, lon1: st.lon + dl, lat0: st.lat, lat1: lat, z0: st.zoom, z1: zoom || st.zoom, done: done };
+        st.auto = false;
+      },
+      select: function (a3) { st.sel = a3; },
+      destroy: function () { alive = false; cancelAnimationFrame(raf); ro.disconnect(); mo.disconnect(); },
+      redraw: draw
+    };
+  }
+  return { create: create };
+})();

@@ -737,9 +737,14 @@ p { margin: 0; }
 @media (max-width: 640px) { .foot-credit .foot-th { margin-left: 0; flex-basis: 100%; } }
 .foot-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; justify-content: space-between; font-size: 12.5px; color: var(--ink-3); }
 .demo-note { margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--warn); line-height: 1.6; }
+.foot-links { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; font-size: 13px; color: var(--ink-3); }
+.foot-links a { color: var(--pen); text-decoration: none; border-bottom: 1px solid transparent; }
+.foot-links a:hover { border-bottom-color: var(--pen); }
+.src.src-wide { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+.src.src-wide a { font-weight: 700; }
 
 </style>
-<script>window.TWKIDS = {"target":"web","siteUrl":"https://jasontzeng123.github.io/next-gen/","sb":{"url":"https://yzmqgrtxbibufjmllimv.supabase.co","key":"sb_publishable_BOnfiTrQN53RzycO4nffGg_b8o-i0Nk"}};</script>
+<script>window.TWKIDS = {"target":"web","siteUrl":"https://jasontzeng123.github.io/next-gen/","repoUrl":"https://github.com/jasontzeng123/next-gen","sb":{"url":"https://yzmqgrtxbibufjmllimv.supabase.co","key":"sb_publishable_BOnfiTrQN53RzycO4nffGg_b8o-i0Nk"}};</script>
 </head>
 <body>
 <div id="app">
@@ -747,11 +752,12 @@ p { margin: 0; }
   <main id="main" class="main" tabindex="-1"></main>
   <footer class="foot">
     <div class="foot-credit"><span class="foot-k">製作</span><a href="https://www.threads.com/@jason890827" target="_blank" rel="noopener noreferrer">jason890827</a><span class="foot-x">×</span><span>Claude</span><a class="foot-th" href="https://www.threads.com/@jason890827" target="_blank" rel="noopener noreferrer">在 Threads 上追蹤 @jason890827</a></div>
+    <div class="foot-links"><a href="https://github.com/jasontzeng123/next-gen" target="_blank" rel="noopener noreferrer">原始碼與資料來源</a><a href="https://github.com/jasontzeng123/next-gen/issues/new" target="_blank" rel="noopener noreferrer">回報錯誤</a><span>程式碼 MIT・內容 CC BY 4.0</span></div>
     <div class="foot-meta"><span>依 2026 年 10 月公開資料試算，不是理財建議。</span><span>主計總處・內政部・勞動部・衛福部・財政部・樂居・591</span></div>
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-11T16:05', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-11T16:51', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -2038,6 +2044,8 @@ var U = (function () {
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     report: '<path d="M6 3h9l4 4v14H6z"/><path d="M14.5 3v4.5H19"/><path d="M9 12h7M9 15.5h7M9 8.5h3"/>',
     external: '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+    download: '<path d="M12 4v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/>',
+    code: '<path d="M8.5 7L3.5 12l5 5M15.5 7l5 5-5 5"/>',
     share: '<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.9l7.6-3.8M8.2 13.1l7.6 3.8"/>'
   };
   function icon(name, cls) {
@@ -2219,7 +2227,9 @@ var COMM = (function () {
       st.demoOn = st.demoN > 0 && real.length < DEMO_OFF;
       st.rows = st.demoOn ? all : real;
       st.loaded = true; st.loadErr = null; st.stats = aggregate(st.rows); emit();
-    }).catch(function (e) { st.loadErr = (e && (e.code || e.message)) || 'error'; U.report(e, 'load'); st.stats = aggregate([]); emit(); });
+    }).catch(function (e) { st.loadErr = (e && (e.code || e.message)) || 'error';
+      // 連不上資料庫是預期內的狀況（離線、專案暫停）：只記錄，不跳出錯誤提示
+      try { if (window.__diag) window.__diag.errors.push('load: ' + st.loadErr); } catch (x) { /* 忽略 */ } st.stats = aggregate([]); emit(); });
   }
   function submit(doc) {
     if (!st.db || !st.uid) return Promise.resolve(false);
@@ -4357,8 +4367,78 @@ APP.screens.cover = function (main) {
     det.addEventListener('toggle', function () { A.ledgerOpen = det.open; if (det.open) fill(); });
     if (A.ledgerOpen) fill();
     sec.appendChild(det);
+    // 逐年明細（CSV）：任何人都能用 Excel 或 Google 試算表一年一年對帳
+    var csvBtn = h('button', { type: 'button', class: 'btn ghost small', hidden: true, style: { marginTop: '12px' }, onclick: function () { downloadCsv(res, s); } }, U.icon('download'), '下載逐年明細（Excel 可開）');
+    sec.appendChild(csvBtn);
+    COMM.downloads().then(function (d) { if (d) csvBtn.hidden = false; });
     return sec;
   }
+  function csvCell(v) {
+    if (v == null) return '';
+    if (typeof v === 'number') return String(Math.round(v));
+    var t = String(v);
+    return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  }
+  function yearsCsv(res, s) {
+    var thMode = s.incomeMode !== 'full', atTh = thMode && A.viewMode === 'threshold' && A.thView === res;
+    var par = res.parallel, rows = res.years.slice(0, Math.min(res.years.length, 65 - s.ageA + 1));
+    var cols = [
+      ['年份', function (y) { return String(y.year); }],
+      ['你的年齡', function (y) { return String(y.ageA); }]
+    ];
+    if (s.partner) cols.push(['伴侶年齡', function (y) { return String(y.ageB); }]);
+    cols = cols.concat([
+      ['孩子年齡', function (y) { return y.kids.filter(function (k) { return k >= 0; }).join('、'); }],
+      ['這一年發生的事', function (y) { return y.events.map(Charts.evtText).filter(Boolean).join('、'); }],
+      ['年初存款', function (y) { return y.Sstart; }],
+      ['你的稅前薪資', function (y) { return y.gA; }]
+    ]);
+    if (s.partner) cols.push(['伴侶的稅前薪資', function (y) { return y.gB; }]);
+    cols = cols.concat([
+      ['勞健保自付（扣除）', function (y) { return y.si; }],
+      ['所得稅（扣除）', function (y) { return y.tax; }],
+      ['政府現金補助', function (y) { return y.transfers; }],
+      ['長輩資助', function (y) { return y.gift; }],
+      ['存款利息', function (y) { return y.Sstart >= 0 ? y.interest : 0; }],
+      ['可用收入合計', function (y) { return y.net; }],
+      ['住房（房租，或房貸本息＋管理費＋房屋稅）', function (y) { return y.exp.housing; }],
+      ['買房一次付清（頭期款、稅費、裝潢）', function (y) { return y.exp.housingOnce; }],
+      ['大人的生活費（含水電）', function (y) { return y.exp.living; }],
+      ['生產與坐月子', function (y) { return y.exp.kidsBirth; }],
+      ['0–2 歲托育', function (y) { return y.exp.kidsCare; }],
+      ['教育（幼兒園到大學、補習才藝）', function (y) { return y.exp.kidsEdu; }],
+      ['孩子的生活費', function (y) { return y.exp.kidsLife; }],
+      ['交通', function (y) { return y.exp.transport; }],
+      ['孝親費', function (y) { return y.exp.elder; }],
+      ['旅遊', function (y) { return y.exp.travel; }],
+      ['借款利息', function (y) { return y.exp.debtInterest; }],
+      ['支出合計', function (y) { return y.expTotal; }],
+      ['年底存款', function (y) { return y.S; }]
+    ]);
+    if (par) cols.push(['不生小孩的平行世界：年底存款', function (y, i) { var p = par.years[i]; return p ? p.S : null; }]);
+    if (res.house) { cols.push(['房屋價值', function (y) { return y.homeValue; }]); cols.push(['房貸餘額', function (y) { return y.loanBal; }]); }
+    var incTxt = thMode ? (atTh ? '門檻收入（PR ' + U.pr(A.th && A.th.pr != null ? A.th.pr : 99.9) + '）' : '收入在中間（PR 50）') : '你填寫的收入';
+    var head = [
+      ['你有資格生下一代嗎？逐年明細'],
+      ['設定', A.expName(s) + '；' + A.incName(s) + '；試算收入：' + incTxt],
+      ['金額', '新台幣元，已換算成 2026 年的幣值，四捨五入到元'],
+      ['對帳方式', '每一年：年底存款 ＝ 年初存款 ＋ 可用收入合計 － 支出合計'],
+      ['計算方法與原始碼', REPO_URL],
+      []
+    ];
+    var lines = head.map(function (r) { return r.map(csvCell).join(','); });
+    lines.push(cols.map(function (c) { return csvCell(c[0]); }).join(','));
+    rows.forEach(function (y, i) { lines.push(cols.map(function (c) { return csvCell(c[1](y, i)); }).join(',')); });
+    return '\ufeff' + lines.join('\r\n') + '\r\n';
+  }
+  function downloadCsv(res, s) {
+    COMM.downloads().then(function (d) {
+      if (!d) { U.toast('這個檢視無法儲存檔案'); return; }
+      var blob = new Blob([yearsCsv(res, s)], { type: 'text/csv;charset=utf-8' });
+      d.save({ filename: '生育資格審查-逐年明細.csv', data: blob }).then(function (m) { U.toast(m === 'shared' ? '完成' : m === 'downloaded' ? '已下載逐年明細' : '已儲存'); }, function (e) { if (e && e.code === 'declined') return; U.toast('無法儲存：' + ((e && e.message) || '請稍後再試')); });
+    });
+  }
+  var REPO_URL = (window.TWKIDS && window.TWKIDS.repoUrl) || 'https://github.com/jasontzeng123/next-gen';
 
   // 第二組顏色（Okabe-Ito）給色盲友善模式
   var CATS = [
@@ -5471,6 +5551,14 @@ APP.screens.method = function (main) {
   var src = h('div');
   Object.keys(D.SOURCES).forEach(function (k) { var s = D.SOURCES[k]; src.appendChild(h('div', { class: 'src' }, h('a', { href: s.u, target: '_blank', rel: 'noopener' }, s.t), h('span', {}, s.d))); });
   inn.appendChild(src);
+
+  inn.appendChild(h('h2', {}, '十、自己驗算、回報錯誤與授權'));
+  var REPO = (window.TWKIDS && window.TWKIDS.repoUrl) || 'https://github.com/jasontzeng123/next-gen';
+  inn.appendChild(p('這個作品的程式碼、每個數字的出處與研究筆記，都公開在 GitHub。想自己驗算的話，可以在報告「你的存摺」段落按「下載逐年明細」，用 Excel 或 Google 試算表一年一年對帳：每一年的年底存款，都等於年初存款加上可用收入、再減掉支出。'));
+  inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO, target: '_blank', rel: 'noopener' }, '原始碼（GitHub）'), h('span', {}, '計算引擎在 src/engine.js，所有參數在 src/data.js')));
+  inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO + '/blob/main/docs/資料來源.md', target: '_blank', rel: 'noopener' }, '資料來源清單'), h('span', {}, '每個來源的名稱、連結與資料時間')));
+  inn.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: REPO + '/issues/new', target: '_blank', rel: 'noopener' }, '回報錯誤'), h('span', {}, '在 GitHub 留言，需要 GitHub 帳號')));
+  inn.appendChild(p('授權：程式碼採 <a href="' + REPO + '/blob/main/LICENSE" target="_blank" rel="noopener">MIT 授權</a>；本作品自己撰寫的文字、圖表與整理後的資料採 <a href="https://creativecommons.org/licenses/by/4.0/deed.zh-hant" target="_blank" rel="noopener">CC BY 4.0</a>，轉用時請標明出處「jason890827《你有資格生下一代嗎？》」。引用的原始資料仍屬各來源，依各自的條款使用。'));
   inn.appendChild(h('div', { class: 'cover-cta', style: { marginTop: '28px' } }, h('button', { class: 'btn', onclick: function () { if (APP.unlocked) APP.compute(true); APP.go(APP.unlocked ? 'report' : 'cover'); } }, U.icon('back'), APP.unlocked ? '回到審查報告' : '回到封面')));
   sheet.appendChild(inn); wrap.appendChild(sheet); main.appendChild(wrap);
 };

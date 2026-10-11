@@ -1,0 +1,11 @@
+# 組裝出來給 claude.ai 用的舊版
+dist/
+# 測試時自動產生的檔案與截圖
+test/page.html
+test/web.html
+test/shots/
+# 第三方地圖原始檔（太大，需要時另外下載，見 README）
+vendor-src/
+node_modules/
+__pycache__/
+.DS_Store

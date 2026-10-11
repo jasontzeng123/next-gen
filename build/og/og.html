@@ -1,0 +1,42 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1200px;height:630px;background:#e9eee9;font-family:"Noto Sans CJK TC",sans-serif;color:#1b2420;overflow:hidden}
+.sheet{position:absolute;left:44px;top:40px;right:44px;bottom:40px;background:#fbfcfa;box-shadow:0 1px 0 rgba(27,36,32,.06),0 26px 50px -30px rgba(27,36,32,.5);padding:44px 56px 40px}
+.sheet:before,.sheet:after{content:"";position:absolute;left:30px;right:30px;height:2px;background:#8ea79a}
+.sheet:before{top:16px}.sheet:after{top:22px;height:1px}
+.k{font-size:21px;letter-spacing:.18em;color:#65716b;margin-top:6px}
+h1{font-family:"Noto Serif CJK TC",serif;font-weight:900;font-size:112px;line-height:1.08;letter-spacing:.01em;margin-top:22px}
+h1 i{font-style:normal;color:#c0302b}
+.sub{font-size:27px;line-height:1.6;color:#47534d;margin-top:22px;max-width:640px}
+.right{position:absolute;right:56px;top:96px;width:330px}
+.big{font-family:"Noto Serif CJK TC",serif;font-weight:900;font-size:78px;line-height:1;letter-spacing:-.01em}
+.lbl{font-size:20px;color:#65716b;margin-top:10px}
+.down{font-size:22px;color:#c0302b;font-weight:700;margin-top:8px}
+svg.ch{display:block;margin-top:18px}
+.seal{position:absolute;right:62px;bottom:46px;transform:rotate(-8deg)}
+.url{position:absolute;left:56px;bottom:34px;font-size:19px;color:#65716b;letter-spacing:.04em}
+</style></head><body>
+<div class="sheet">
+  <div class="k">台灣・生育資格審查申請書　2026 年版</div>
+  <h1>你有資格<br>生下一代嗎<i>？</i></h1>
+  <p class="sub">用你心中養孩子的標準，加上台灣真實的房價、薪資、補助與稅制，算算存款撐不撐得過去。</p>
+  <div class="right">
+    <div class="big">107,812</div>
+    <div class="lbl">2025 年台灣出生的嬰兒</div>
+    <div class="down">↓ 65%　比 2000 年的 30.5 萬</div>
+    <svg class="ch" id="ch" width="330" height="120"></svg>
+  </div>
+  <svg class="seal" width="132" height="132" viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="4" fill="none" stroke="#c0302b" stroke-width="2.4"/><text x="20" y="27.2" text-anchor="middle" font-family="Noto Serif CJK TC" font-weight="900" font-size="19" fill="#c0302b">審</text></svg>
+  <div class="url" id="url"></div>
+</div>
+<script>
+const B=[[2000,305312],[2001,260354],[2002,247530],[2003,227070],[2004,216419],[2005,205854],[2006,204459],[2007,204414],[2008,198733],[2009,191310],[2010,166886],[2011,196627],[2012,229481],[2013,199113],[2014,210383],[2015,213598],[2016,208440],[2017,193844],[2018,181601],[2019,177767],[2020,165249],[2021,153820],[2022,138986],[2023,135571],[2024,134856],[2025,107812]];
+const W=330,H=120,X=y=>6+(y-2000)/25*(W-14),Y=v=>8+(1-v/320000)*(H-18);
+const NS='http://www.w3.org/2000/svg',s=document.getElementById('ch');
+const mk=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);s.appendChild(e);return e;};
+mk('line',{x1:X(2000),x2:X(2025),y1:Y(0),y2:Y(0),stroke:'#b9c4bd','stroke-dasharray':'2 4','stroke-width':1.5});
+mk('path',{d:B.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join(''),fill:'none',stroke:'#1b2420','stroke-width':2.6,'stroke-linejoin':'round'});
+mk('circle',{cx:X(2000),cy:Y(305312),r:4.5,fill:'#fbfcfa',stroke:'#1b2420','stroke-width':2});
+mk('circle',{cx:X(2025),cy:Y(107812),r:5.5,fill:'#c0302b'});
+document.getElementById('url').textContent=decodeURIComponent((location.hash||'#').slice(1));
+</script></body></html>
