@@ -767,7 +767,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-11T18:16', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-11T18:48', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -3627,7 +3627,10 @@ APP.screens.cover = function (main) {
   function needsAnswer(q) { return (q.key && q.options) || q.type === 'county'; }
   function isSeen(q) { return !!A.seen[q.id]; }
 
+  // 第一次填寫時不顯示「其他申請人」的比例，避免影響作答；送出過一次之後回來修改才顯示
+  function crowdAllowed() { return !!(A.submitted || U.store.get('submitted', null)); }
   function crowdFor(key, v) {
+    if (!crowdAllowed()) return null;
     var c = COMM.share(key, v); if (!c || Math.round(c.pct) < 1) return null;
     return h('div', { class: 'crowd' }, h('span', { class: 'crowd-bar' }, h('i', { style: { width: Math.max(2, c.pct).toFixed(0) + '%' } })), h('span', {}, '其他申請人 ' + Math.round(c.pct) + '%'));
   }
@@ -3788,7 +3791,7 @@ APP.screens.cover = function (main) {
         chips.appendChild(chipEl({ label: v ? U.sep(v) + ' 元' : '不用給' }, s.elder === v, function () { A.set('elder', v); refresh(); }, s, 'elder:' + v));
       });
       grp.appendChild(chips); body.appendChild(grp);
-      var c = COMM.share('elder', s.elder);
+      var c = crowdAllowed() ? COMM.share('elder', s.elder) : null;
       if (c && Math.round(c.pct) >= 1) body.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } }, '其他申請人中有 ' + Math.round(c.pct) + '% 選了一樣的金額。'));
       var g2 = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, '長輩未來需要照顧時'));
       var ch2 = h('div', { class: 'chips', role: 'radiogroup' });
@@ -3813,7 +3816,7 @@ APP.screens.cover = function (main) {
       body.appendChild(box);
       body.appendChild(timeline(s));
     }
-    function crowdLine(key, v) { var c = COMM.share(key, v); return c && Math.round(c.pct) >= 1 ? '其他申請人 ' + Math.round(c.pct) + '% 也選這個' : ''; }
+    function crowdLine(key, v) { var c = crowdAllowed() ? COMM.share(key, v) : null; return c && Math.round(c.pct) >= 1 ? '其他申請人 ' + Math.round(c.pct) + '% 也選這個' : ''; }
     function timeline(s) {
       var end = ENGINE.supportEndAge(s.support);
       var births = []; for (var i = 0; i < s.kids; i++) births.push(s.firstBirthAge + i * s.spacing);
