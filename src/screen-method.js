@@ -7,7 +7,7 @@ APP.screens.method = function (main) {
   inn.appendChild(h('div', { class: 'form-head' }, h('div', {}, h('div', { class: 'form-kicker' }, '附件三'), h('h1', { style: { fontSize: 'clamp(28px, 4vw, 38px)', fontWeight: 900, marginTop: '4px' } }, '方法與資料')), h('div', { class: 'form-no' }, '資料查核：2026-10')));
   function p(t) { return h('p', { html: t }); }
   function ul(items) { var u = h('ul'); items.forEach(function (t) { u.appendChild(h('li', { html: t })); }); return u; }
-  inn.appendChild(p('這不是理財建議，而是一個盡量貼近現實的試算。每個數字都有出處；查不到可靠資料的地方，我們標成估計值，並寫出理由。你可以在報告左側的「進階假設」調整大部分假設。'));
+  inn.appendChild(p('這不是理財建議，而是一個盡量貼近現實的試算。每個數字都有出處；查不到可靠資料的地方，我們標成估計值，並寫出理由。你可以在報告「調整設定」裡的「進階假設」調整大部分假設。'));
 
   inn.appendChild(h('h2', {}, '一、怎麼算'));
   inn.appendChild(ul([

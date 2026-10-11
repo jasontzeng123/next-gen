@@ -258,8 +258,12 @@ var COMM = (function () {
   function webDownloads() {
     if (typeof document === 'undefined' || typeof URL === 'undefined' || !URL.createObjectURL) return null;
     var touch = (typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches);
+    // Threads（Barcelona）、Instagram、Facebook、LINE 的內建瀏覽器常常會忽略下載
+    var inApp = /Barcelona|Threads|Instagram|FBAN|FBAV|FB_IAB|Line\//i.test(navigator.userAgent || '');
     return {
+      inApp: inApp,
       save: function (o) {
+        if (inApp) return inAppSave(o);
         var file = null;
         try { file = new File([o.data], o.filename, { type: o.data.type || 'image/png' }); } catch (e) { file = null; }
         if (touch && file && navigator.canShare && navigator.share) {
@@ -275,6 +279,25 @@ var COMM = (function () {
         return direct(o);
       }
     };
+    // 內建瀏覽器：圖片直接顯示出來讓人長按儲存；其他檔案請對方改用一般瀏覽器開啟
+    function inAppSave(o) {
+      var isImg = /^image\//.test((o.data && o.data.type) || '');
+      return new Promise(function (resolve) {
+        U.modal(function (box, close) {
+          var done = function () { close(); resolve('shown'); };
+          if (isImg) {
+            var url = URL.createObjectURL(o.data);
+            box.appendChild(U.h('h3', {}, '長按圖片，就能儲存'));
+            box.appendChild(U.h('p', { class: 'sm muted' }, '在 App 內建的瀏覽器裡沒辦法直接下載。長按下面的圖片，選「儲存影像」或「下載圖片」。'));
+            box.appendChild(U.h('img', { src: url, alt: '審查結果圖卡', style: { width: '100%', borderRadius: '8px', marginTop: '10px', border: '1px solid var(--rule-soft)' } }));
+          } else {
+            box.appendChild(U.h('h3', {}, '請用瀏覽器開啟再下載'));
+            box.appendChild(U.h('p', { class: 'sm' }, 'App 內建的瀏覽器沒辦法下載檔案。請按右上角的「⋯」，選「在瀏覽器中開啟」（Safari 或 Chrome），再按一次「下載逐年明細」。'));
+          }
+          box.appendChild(U.h('div', { class: 'actions' }, U.h('button', { class: 'btn', onclick: done }, '好')));
+        });
+      });
+    }
     function direct(o) {
       var url = URL.createObjectURL(o.data), a = document.createElement('a');
       a.href = url; a.download = o.filename; a.rel = 'noopener'; a.style.display = 'none';

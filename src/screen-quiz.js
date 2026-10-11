@@ -8,7 +8,7 @@
   function isSeen(q) { return !!A.seen[q.id]; }
 
   function crowdFor(key, v) {
-    var c = COMM.share(key, v); if (!c) return null;
+    var c = COMM.share(key, v); if (!c || Math.round(c.pct) < 1) return null;
     return h('div', { class: 'crowd' }, h('span', { class: 'crowd-bar' }, h('i', { style: { width: Math.max(2, c.pct).toFixed(0) + '%' } })), h('span', {}, '其他申請人 ' + Math.round(c.pct) + '%'));
   }
   function optEl(q, o, checked, onPick, showCrowd) {
@@ -68,6 +68,11 @@
       var ae = document.activeElement; focusKey = ae && ae.getAttribute && ae.getAttribute('data-focus');
       A.go('quiz', { keepScroll: true });
       if (focusKey) { var el = document.querySelector('[data-focus="' + focusKey.replace(/"/g, '') + '"]'); if (el) el.focus({ preventScroll: true }); }
+    }
+    // 輸入框失去焦點時（例如直接按「下一題」）不要馬上重畫：重畫會把按鈕換掉，第一次點擊就會落空
+    function softRefresh() {
+      var qi0 = A.qi;
+      setTimeout(function () { if (A.screen === 'quiz' && A.qi === qi0 && !U.modalOpen()) refresh(); }, 300);
     }
     function setNote() {
       U.clear(noteBox);
@@ -164,7 +169,7 @@
       });
       grp.appendChild(chips); body.appendChild(grp);
       var c = COMM.share('elder', s.elder);
-      if (c) body.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } }, '其他申請人中有 ' + Math.round(c.pct) + '% 選了一樣的金額。'));
+      if (c && Math.round(c.pct) >= 1) body.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } }, '其他申請人中有 ' + Math.round(c.pct) + '% 選了一樣的金額。'));
       var g2 = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, '長輩未來需要照顧時'));
       var ch2 = h('div', { class: 'chips', role: 'radiogroup' });
       ch2.appendChild(chipEl({ label: '不另外分擔' }, !s.elderCare, function () { A.set('elderCare', false); refresh(); }, s, 'ec:0'));
@@ -188,7 +193,7 @@
       body.appendChild(box);
       body.appendChild(timeline(s));
     }
-    function crowdLine(key, v) { var c = COMM.share(key, v); return c ? '其他申請人 ' + Math.round(c.pct) + '% 也選這個' : ''; }
+    function crowdLine(key, v) { var c = COMM.share(key, v); return c && Math.round(c.pct) >= 1 ? '其他申請人 ' + Math.round(c.pct) + '% 也選這個' : ''; }
     function timeline(s) {
       var end = ENGINE.supportEndAge(s.support);
       var births = []; for (var i = 0; i < s.kids; i++) births.push(s.firstBirthAge + i * s.spacing);
@@ -238,7 +243,7 @@
       });
       var prevC = A.cleanup; A.cleanup = function () { g.destroy(); if (prevC) prevC(); };
       setTimeout(function () { g.flyTo(121, 23.7, 1.6, 1800); }, 400);
-      function selectTW() { A.set('country', 'TW'); picked.textContent = '已選擇：台灣。右側是台灣目前的養育補助。'; g.flyTo(121, 23.7, 3.2, 1100); }
+      function selectTW() { A.set('country', 'TW'); picked.textContent = '已選擇：台灣。台灣目前的養育補助列在旁邊（手機版在下方）。'; g.flyTo(121, 23.7, 3.2, 1100); }
       picked.textContent = '已選擇：台灣';
       // 側欄：台灣福利
       var card = h('div', { class: 'card' });
@@ -332,7 +337,7 @@
           var out = h('p', { class: 'sm', style: { marginTop: '6px' } });
           var upd = function () { var v = Math.max(0, +inp.value || 0) * 10000; if (!v) { out.innerHTML = '年薪 0：以沒有薪資收入計算。'; return; } var p = ENGINE.prFromSalary(job.industry, age, v); out.innerHTML = '同產業、同年齡約 <b>PR ' + U.pr(p) + '</b>；在全體受僱者中約 PR ' + U.pr(ENGINE.overallPR(v)) + '。'; };
           inp.addEventListener('input', upd);
-          inp.addEventListener('change', function () { A.set(key + '.salary', Math.max(0, +inp.value || 0) * 10000); A.set(key + '.mode', 'salary'); refresh(); });
+          inp.addEventListener('change', function () { A.set(key + '.salary', Math.max(0, +inp.value || 0) * 10000); A.set(key + '.mode', 'salary'); A.persist(); softRefresh(); });
           upd();
           body.appendChild(h('div', { class: 'field' }, h('label', { for: key + '-sal' }, '全年總薪資（萬元，含年終與獎金）'), inp, out));
         }
@@ -366,7 +371,7 @@
         values.forEach(function (v) { chips.appendChild(chipEl({ label: fmt(v) }, A.s[key] === v, function () { A.set(key, v); refresh(); }, A.s, key + ':' + v)); });
         var custom = values.indexOf(A.s[key]) < 0;
         var inp = h('input', { type: 'number', class: 'input', min: 0, step: 1, inputmode: 'numeric', style: { width: '9em', padding: '6px 10px' }, 'aria-label': title + '（萬元）', value: custom ? Math.round(A.s[key] / 10000) : '', placeholder: '其他（萬）' });
-        inp.addEventListener('change', function () { A.set(key, Math.max(0, +inp.value || 0) * 10000); refresh(); });
+        inp.addEventListener('change', function () { A.set(key, Math.max(0, +inp.value || 0) * 10000); A.persist(); softRefresh(); });
         chips.appendChild(inp);
         grp.appendChild(chips); body.appendChild(grp);
       }

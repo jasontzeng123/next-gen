@@ -23,7 +23,8 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=LXGW+WenKai+TC:wght@400;700&family=DotGothic16&display=swap">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=LXGW+WenKai+TC:wght@400;700&family=DotGothic16&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=LXGW+WenKai+TC:wght@400;700&family=DotGothic16&display=swap"></noscript>
 <style>body{margin:0}[hidden]{display:none!important}</style>
 <style>
 /* 版面概念：一張「生育資格審查申請書」放在桌上——表單格線、藍色原子筆填寫、紅色印泥審查章、存摺點陣列印。 */
@@ -743,6 +744,14 @@ p { margin: 0; }
 .src.src-wide { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .src.src-wide a { font-weight: 700; }
 #sec-crowd .linkbtn { margin-left: 8px; }
+/* 手機：「開始填寫」按鈕移到申請書欄位前面，第一屏就看得到 */
+@media (max-width: 560px) {
+  .cover .sheet-in { display: flex; flex-direction: column; }
+  .cover .cover-cta { order: 1; margin-top: 20px; }
+  .cover .cover-fields { order: 2; margin: 24px 0 18px; }
+  .cover .cvd-toggle { order: 3; }
+  .cover .cover-lede { font-size: 16px; }
+}
 
 </style>
 <script>window.TWKIDS = {"target":"web","siteUrl":"https://jasontzeng123.github.io/next-gen/","repoUrl":"https://github.com/jasontzeng123/next-gen","sb":{"url":"https://yzmqgrtxbibufjmllimv.supabase.co","key":"sb_publishable_BOnfiTrQN53RzycO4nffGg_b8o-i0Nk"}};</script>
@@ -758,7 +767,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-11T17:40', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-11T18:16', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -1616,6 +1625,8 @@ var ENGINE = (function (D) {
         for (var key2 in e) totals[key2] = (totals[key2] || 0) + e[key2];
         for (var key3 in tr) subs[key3] += tr[key3];
       }
+      // 事件記下總共幾個孩子，文字才能寫「老大」或只有一個時寫「孩子」
+      events.forEach(function (ev) { if (ev && ev.n) ev.of = nK; });
       years.push({
         t: t, year: D.BASE_YEAR + t, ageA: ageA, ageB: ageB, kids: kAges, events: events,
         gA: gA, gB: gB, gross: gross, si: si, tax: tax, transfers: transfers, tr: tr, gift: gift, interest: interest,
@@ -2370,8 +2381,12 @@ var COMM = (function () {
   function webDownloads() {
     if (typeof document === 'undefined' || typeof URL === 'undefined' || !URL.createObjectURL) return null;
     var touch = (typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches);
+    // Threads（Barcelona）、Instagram、Facebook、LINE 的內建瀏覽器常常會忽略下載
+    var inApp = /Barcelona|Threads|Instagram|FBAN|FBAV|FB_IAB|Line\//i.test(navigator.userAgent || '');
     return {
+      inApp: inApp,
       save: function (o) {
+        if (inApp) return inAppSave(o);
         var file = null;
         try { file = new File([o.data], o.filename, { type: o.data.type || 'image/png' }); } catch (e) { file = null; }
         if (touch && file && navigator.canShare && navigator.share) {
@@ -2387,6 +2402,25 @@ var COMM = (function () {
         return direct(o);
       }
     };
+    // 內建瀏覽器：圖片直接顯示出來讓人長按儲存；其他檔案請對方改用一般瀏覽器開啟
+    function inAppSave(o) {
+      var isImg = /^image\//.test((o.data && o.data.type) || '');
+      return new Promise(function (resolve) {
+        U.modal(function (box, close) {
+          var done = function () { close(); resolve('shown'); };
+          if (isImg) {
+            var url = URL.createObjectURL(o.data);
+            box.appendChild(U.h('h3', {}, '長按圖片，就能儲存'));
+            box.appendChild(U.h('p', { class: 'sm muted' }, '在 App 內建的瀏覽器裡沒辦法直接下載。長按下面的圖片，選「儲存影像」或「下載圖片」。'));
+            box.appendChild(U.h('img', { src: url, alt: '審查結果圖卡', style: { width: '100%', borderRadius: '8px', marginTop: '10px', border: '1px solid var(--rule-soft)' } }));
+          } else {
+            box.appendChild(U.h('h3', {}, '請用瀏覽器開啟再下載'));
+            box.appendChild(U.h('p', { class: 'sm' }, 'App 內建的瀏覽器沒辦法下載檔案。請按右上角的「⋯」，選「在瀏覽器中開啟」（Safari 或 Chrome），再按一次「下載逐年明細」。'));
+          }
+          box.appendChild(U.h('div', { class: 'actions' }, U.h('button', { class: 'btn', onclick: done }, '好')));
+        });
+      });
+    }
     function direct(o) {
       var url = URL.createObjectURL(o.data), a = document.createElement('a');
       a.href = url; a.download = o.filename; a.rel = 'noopener'; a.style.display = 'none';
@@ -2776,7 +2810,9 @@ var Charts = (function () {
     if (a >= 1e4) return Math.round(v / 1e4).toLocaleString('en-US') + '萬';
     return v === 0 ? '0' : Math.round(v).toLocaleString('en-US');
   }
-  var EVT = { birth: function (e) { return '第' + e.n + '胎出生'; }, buy: function () { return '買房'; }, kg: function (e) { return '老' + U.cn(e.n) + '上幼兒園'; }, es: function (e) { return '老' + U.cn(e.n) + '上小學'; }, jh: function (e) { return '老' + U.cn(e.n) + '上國中'; }, sh: function (e) { return '老' + U.cn(e.n) + '上高中'; }, uni: function (e) { return '老' + U.cn(e.n) + '上大學'; }, master: function (e) { return '老' + U.cn(e.n) + '讀研究所'; }, abroad: function (e) { return '老' + U.cn(e.n) + '出國留學'; }, indep: function (e) { return '老' + U.cn(e.n) + '獨立'; }, car: function () { return '買車'; }, car2: function () { return '換車'; }, grace: function () { return '房貸寬限期結束'; }, quit: function (e) { return (e.who === 'A' ? '你' : '伴侶') + '離職照顧'; }, back: function (e) { return (e.who === 'A' ? '你' : '伴侶') + '回到職場'; } };
+  // 孩子的稱呼：只有一個孩子時叫「孩子」，否則第一個叫「老大」，其他叫「老二」「老三」……
+  function kid(e) { return e.of === 1 ? '孩子' : e.n === 1 ? '老大' : '老' + U.cn(e.n); }
+  var EVT = { birth: function (e) { return e.of === 1 ? '孩子出生' : '第' + e.n + '胎出生'; }, buy: function () { return '買房'; }, kg: function (e) { return kid(e) + '上幼兒園'; }, es: function (e) { return kid(e) + '上小學'; }, jh: function (e) { return kid(e) + '上國中'; }, sh: function (e) { return kid(e) + '上高中'; }, uni: function (e) { return kid(e) + '上大學'; }, master: function (e) { return kid(e) + '讀研究所'; }, abroad: function (e) { return kid(e) + '出國留學'; }, indep: function (e) { return kid(e) + '獨立'; }, car: function () { return '買車'; }, car2: function () { return '換車'; }, grace: function () { return '房貸寬限期結束'; }, quit: function (e) { return (e.who === 'A' ? '你' : '伴侶') + '離職照顧'; }, back: function (e) { return (e.who === 'A' ? '你' : '伴侶') + '回到職場'; } };
   function evtText(e) { return typeof e === 'string' ? e : (EVT[e.k] ? EVT[e.k](e) : ''); }
   function income(y) { return y.gross - y.si - y.tax + y.transfers + y.gift; }
   function expense(y) { return y.expTotal - y.exp.debtInterest; }
@@ -3592,7 +3628,7 @@ APP.screens.cover = function (main) {
   function isSeen(q) { return !!A.seen[q.id]; }
 
   function crowdFor(key, v) {
-    var c = COMM.share(key, v); if (!c) return null;
+    var c = COMM.share(key, v); if (!c || Math.round(c.pct) < 1) return null;
     return h('div', { class: 'crowd' }, h('span', { class: 'crowd-bar' }, h('i', { style: { width: Math.max(2, c.pct).toFixed(0) + '%' } })), h('span', {}, '其他申請人 ' + Math.round(c.pct) + '%'));
   }
   function optEl(q, o, checked, onPick, showCrowd) {
@@ -3652,6 +3688,11 @@ APP.screens.cover = function (main) {
       var ae = document.activeElement; focusKey = ae && ae.getAttribute && ae.getAttribute('data-focus');
       A.go('quiz', { keepScroll: true });
       if (focusKey) { var el = document.querySelector('[data-focus="' + focusKey.replace(/"/g, '') + '"]'); if (el) el.focus({ preventScroll: true }); }
+    }
+    // 輸入框失去焦點時（例如直接按「下一題」）不要馬上重畫：重畫會把按鈕換掉，第一次點擊就會落空
+    function softRefresh() {
+      var qi0 = A.qi;
+      setTimeout(function () { if (A.screen === 'quiz' && A.qi === qi0 && !U.modalOpen()) refresh(); }, 300);
     }
     function setNote() {
       U.clear(noteBox);
@@ -3748,7 +3789,7 @@ APP.screens.cover = function (main) {
       });
       grp.appendChild(chips); body.appendChild(grp);
       var c = COMM.share('elder', s.elder);
-      if (c) body.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } }, '其他申請人中有 ' + Math.round(c.pct) + '% 選了一樣的金額。'));
+      if (c && Math.round(c.pct) >= 1) body.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } }, '其他申請人中有 ' + Math.round(c.pct) + '% 選了一樣的金額。'));
       var g2 = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, '長輩未來需要照顧時'));
       var ch2 = h('div', { class: 'chips', role: 'radiogroup' });
       ch2.appendChild(chipEl({ label: '不另外分擔' }, !s.elderCare, function () { A.set('elderCare', false); refresh(); }, s, 'ec:0'));
@@ -3772,7 +3813,7 @@ APP.screens.cover = function (main) {
       body.appendChild(box);
       body.appendChild(timeline(s));
     }
-    function crowdLine(key, v) { var c = COMM.share(key, v); return c ? '其他申請人 ' + Math.round(c.pct) + '% 也選這個' : ''; }
+    function crowdLine(key, v) { var c = COMM.share(key, v); return c && Math.round(c.pct) >= 1 ? '其他申請人 ' + Math.round(c.pct) + '% 也選這個' : ''; }
     function timeline(s) {
       var end = ENGINE.supportEndAge(s.support);
       var births = []; for (var i = 0; i < s.kids; i++) births.push(s.firstBirthAge + i * s.spacing);
@@ -3822,7 +3863,7 @@ APP.screens.cover = function (main) {
       });
       var prevC = A.cleanup; A.cleanup = function () { g.destroy(); if (prevC) prevC(); };
       setTimeout(function () { g.flyTo(121, 23.7, 1.6, 1800); }, 400);
-      function selectTW() { A.set('country', 'TW'); picked.textContent = '已選擇：台灣。右側是台灣目前的養育補助。'; g.flyTo(121, 23.7, 3.2, 1100); }
+      function selectTW() { A.set('country', 'TW'); picked.textContent = '已選擇：台灣。台灣目前的養育補助列在旁邊（手機版在下方）。'; g.flyTo(121, 23.7, 3.2, 1100); }
       picked.textContent = '已選擇：台灣';
       // 側欄：台灣福利
       var card = h('div', { class: 'card' });
@@ -3916,7 +3957,7 @@ APP.screens.cover = function (main) {
           var out = h('p', { class: 'sm', style: { marginTop: '6px' } });
           var upd = function () { var v = Math.max(0, +inp.value || 0) * 10000; if (!v) { out.innerHTML = '年薪 0：以沒有薪資收入計算。'; return; } var p = ENGINE.prFromSalary(job.industry, age, v); out.innerHTML = '同產業、同年齡約 <b>PR ' + U.pr(p) + '</b>；在全體受僱者中約 PR ' + U.pr(ENGINE.overallPR(v)) + '。'; };
           inp.addEventListener('input', upd);
-          inp.addEventListener('change', function () { A.set(key + '.salary', Math.max(0, +inp.value || 0) * 10000); A.set(key + '.mode', 'salary'); refresh(); });
+          inp.addEventListener('change', function () { A.set(key + '.salary', Math.max(0, +inp.value || 0) * 10000); A.set(key + '.mode', 'salary'); A.persist(); softRefresh(); });
           upd();
           body.appendChild(h('div', { class: 'field' }, h('label', { for: key + '-sal' }, '全年總薪資（萬元，含年終與獎金）'), inp, out));
         }
@@ -3950,7 +3991,7 @@ APP.screens.cover = function (main) {
         values.forEach(function (v) { chips.appendChild(chipEl({ label: fmt(v) }, A.s[key] === v, function () { A.set(key, v); refresh(); }, A.s, key + ':' + v)); });
         var custom = values.indexOf(A.s[key]) < 0;
         var inp = h('input', { type: 'number', class: 'input', min: 0, step: 1, inputmode: 'numeric', style: { width: '9em', padding: '6px 10px' }, 'aria-label': title + '（萬元）', value: custom ? Math.round(A.s[key] / 10000) : '', placeholder: '其他（萬）' });
-        inp.addEventListener('change', function () { A.set(key, Math.max(0, +inp.value || 0) * 10000); refresh(); });
+        inp.addEventListener('change', function () { A.set(key, Math.max(0, +inp.value || 0) * 10000); A.persist(); softRefresh(); });
         chips.appendChild(inp);
         grp.appendChild(chips); body.appendChild(grp);
       }
@@ -4038,16 +4079,29 @@ APP.screens.cover = function (main) {
     t.innerHTML = '<svg viewBox="0 0 200 200" aria-hidden="true"><defs><filter id="' + id + '" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="' + (uidN * 7) + '" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.05 1.32" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter></defs><g filter="url(#' + id + ')" opacity=".92">' + shape + txt + '</g></svg>';
     return t.content.firstChild;
   }
+  // 門檻是不是被「買房那年的頭期款」卡住：在門檻收入下，存款最低點就在買房那年（第一胎之前或當年）
+  // 這種時候門檻反映的主要是買房，不是養孩子本身；要老實告訴玩家
+  function houseBound(s, th) {
+    if (s.incomeMode === 'full' || s.housing !== 'buy') return null;
+    var r = A.thView;
+    if (!r || !r.house || r.minT == null || r.minT > r.house.tb) return null;
+    var h = r.house;
+    return { year: 2026 + h.tb, age: s.ageA + h.tb, cash: h.down + h.closing + h.reno, savings: +s.savings || 0, beforeKid: h.tb < r.t0 };
+  }
+  A.houseBound = houseBound;
   function verdictInfo(s, res, th) {
     var you = s.partner ? '你們' : '你';
     if (s.incomeMode !== 'full') {
+      var hb = houseBound(s, th);
+      var hbLine = hb ? '門檻其實是被頭期款卡住的：' + hb.year + ' 年（你 ' + hb.age + ' 歲）買房，那年頭期款、稅費和裝潢要一次拿出約 <b>' + U.wan(hb.cash) + '</b>，' + (hb.beforeKid ? '那時孩子都還沒出生，' : '') + '所以生幾個孩子，門檻差不多。把買房時間延後，或在「長輩資助」填入頭期款支援，門檻就會不同。' : '';
+      if (th.pr == null && hb) return { stamp: { k: 'square', l: ['駁回'] }, title: '卡在頭期款，收入再高也來不及存。', line: you + '打算在 ' + hb.year + ' 年買房，那年要一次拿出約 <b>' + U.wan(hb.cash) + '</b>（頭期款、稅費與裝潢），目前存款只有 ' + U.wan(hb.savings) + '。就算收入是同齡同業的前 0.1%，也來不及存到。把買房時間延後，或在「長輩資助」填入頭期款支援試試看。', tone: 'bad', hb: hb };
       if (th.pr == null) return { stamp: { k: 'square', l: ['駁回'] }, title: '再高的收入，也撐不住這組標準。', line: '就算' + you + '的收入是同齡同業的前 0.1%，存款還是會在孩子獨立前跌破零。', tone: 'bad' };
       if (th.pr <= 1) return { stamp: { k: 'square', l: ['核准'] }, title: '幾乎任何收入都養得起。', line: '這組標準在' + D.COUNTY[s.county].name + '的花費，絕大多數受僱者都負擔得了。', tone: 'good' };
       return {
         stamp: { k: 'round', l: ['門檻'], sub: 'PR ' + U.pr(th.pr) },
         title: th.pr < 50 ? '收入贏過 ' + U.pr(th.pr) + '% 的人，就養得起。' : '收入要在前 ' + U.topPct(th.pr) + '%，才養得起。',
-        line: (s.partner ? '夫妻雙方' : '你') + '的收入，都要贏過 <b>' + U.pr(th.pr) + '%</b> 的同齡、同產業受僱者。生第一胎那年，' + (s.partner ? '夫妻合計' : '') + '稅前年收入約 <b>' + U.wan(th.grossBirth) + '</b>。',
-        tone: th.pr >= 80 ? 'bad' : th.pr >= 55 ? 'warn' : 'good'
+        line: (s.partner ? '夫妻雙方的收入，都要贏過 <b>' : '你的收入要贏過 <b>') + U.pr(th.pr) + '%</b> 的同齡、同產業受僱者。生第一胎那年，' + (s.partner ? '夫妻合計' : '') + '稅前年收入約 <b>' + U.wan(th.grossBirth) + '</b>。' + (hbLine ? '<br>' + hbLine : ''),
+        tone: th.pr >= 80 ? 'bad' : th.pr >= 55 ? 'warn' : 'good', hb: hb
       };
     }
     // 年齡一律用「那一年你幾歲」（與存摺明細相同）
@@ -4117,7 +4171,7 @@ APP.screens.cover = function (main) {
     inn.appendChild(h('div', { class: 'form-head' },
       h('div', {}, h('div', { class: 'form-kicker' }, '審查程序'),
         h('h2', { class: 'phase-wrap', style: { fontSize: '24px', marginTop: '4px' } }, h('span', { class: 'phase-a' }, '正在逐年試算你的存摺…'), h('span', { class: 'phase-b' }, '審查完成'))),
-      h('div', { class: 'form-no' }, '收件 ' + new Date().toISOString().slice(0, 10), h('br'), skip)));
+      h('div', { class: 'form-no' }, '收件 ' + (function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); })(new Date()), h('br'), skip)));
     var vi = verdictInfo(s, res, th);
     var st = h('div', { class: 'stamp drop' }); st.appendChild(stampSVG(vi.stamp.k, vi.stamp.l, vi.stamp.sub));
     var thMode = s.incomeMode !== 'full';
@@ -4222,7 +4276,9 @@ APP.screens.cover = function (main) {
     view = view || res;
     var vi = verdictInfo(s, res, th);
     var sec = h('section', { class: 'rsec', id: 'sec-head' });
-    var changed = A.submitted && JSON.stringify(A.pick(A.strip(A.s), A.EXP_KEYS.concat(A.INC_KEYS))) !== JSON.stringify(A.pick(A.submitted, A.EXP_KEYS.concat(A.INC_KEYS)));
+    // 比較時忽略欄位順序與補上的預設值（送出後重新整理，欄位順序可能不同）
+    var keysAll = A.EXP_KEYS.concat(A.INC_KEYS);
+    var changed = A.submitted && COMM.sig(A.pick(A.strip(A.s), keysAll)) !== COMM.sig(A.pick(ENGINE.normalize(JSON.parse(JSON.stringify(A.submitted))), keysAll));
     sec.appendChild(h('div', { class: 'rsec-k' }, '審查報告' + (changed ? '・已依調整後的設定重算' : '')));
     var stp = h('div', { class: 'stamp still', style: { width: '150px', height: '150px' } }); stp.appendChild(stampSVG(vi.stamp.k, vi.stamp.l, vi.stamp.sub));
     sec.appendChild(h('div', { class: 'verdict-head' }, stp, h('div', { class: 'verdict-text' }, h('h1', { class: 'verdict-title' }, vi.title), h('p', { class: 'verdict-line', html: vi.line }), h('p', { class: 'sm muted', style: { marginTop: '8px' } }, summaryLine(s)))));
@@ -4480,7 +4536,7 @@ APP.screens.cover = function (main) {
     COMM.downloads().then(function (d) {
       if (!d) { U.toast('這個檢視無法儲存檔案'); return; }
       var blob = new Blob([yearsCsv(res, s)], { type: 'text/csv;charset=utf-8' });
-      d.save({ filename: '生育資格審查-逐年明細.csv', data: blob }).then(function (m) { U.toast(m === 'shared' ? '完成' : m === 'downloaded' ? '已下載逐年明細' : '已儲存'); }, function (e) { if (e && e.code === 'declined') return; U.toast('無法儲存：' + ((e && e.message) || '請稍後再試')); });
+      d.save({ filename: '生育資格審查-逐年明細.csv', data: blob }).then(function (m) { if (m !== 'shown') U.toast(m === 'shared' ? '完成' : m === 'downloaded' ? '已下載逐年明細' : '已儲存'); }, function (e) { if (e && e.code === 'declined') return; U.toast('無法儲存：' + ((e && e.message) || '請稍後再試')); });
     });
   }
   var REPO_URL = (window.TWKIDS && window.TWKIDS.repoUrl) || 'https://github.com/jasontzeng123/next-gen';
@@ -4531,7 +4587,7 @@ APP.screens.cover = function (main) {
     subRows.forEach(function (r) { bars.appendChild(h('div', { class: 'bar-row' }, h('span', { class: 'bl' }, r[0]), h('span', { class: 'bt' }, h('i', { style: { width: (r[1] / mx * 100).toFixed(1) + '%', background: 'var(--good)' } })), h('span', { class: 'bv' }, U.wan(r[1])))); });
     sbBox.appendChild(bars);
     var pct = res.childSubs / Math.max(1, total + res.feeSubs) * 100;
-    sbBox.appendChild(h('p', { class: 'sm muted', style: { marginTop: '10px' } }, '補助約佔養育成本（含已折抵部分）的 ' + pct.toFixed(0) + '%。' + (s.adv.pending ? '已計入尚未通過的 0–18 歲成長津貼。' : '尚未計入審議中的 0–18 歲成長津貼（每月 5,000 元），可在左側「進階假設」打開。') + '幼兒園繳費上限、高中職免學費等「少繳的錢」已反映在學費裡，沒有另外列出。'));
+    sbBox.appendChild(h('p', { class: 'sm muted', style: { marginTop: '10px' } }, '補助約佔養育成本（含已折抵部分）的 ' + pct.toFixed(0) + '%。' + (s.adv.pending ? '已計入尚未通過的 0–18 歲成長津貼。' : '尚未計入審議中的 0–18 歲成長津貼（每月 5,000 元），可在「調整設定」的「進階假設」打開。') + '幼兒園繳費上限、高中職免學費等「少繳的錢」已反映在學費裡，沒有另外列出。'));
     sec.appendChild(sbBox);
     return sec;
   }
@@ -4564,7 +4620,7 @@ APP.screens.cover = function (main) {
       box.appendChild(h('p', { class: 'rsec-lede' }, full ? '一次只改一個條件，其他都不變。綠色勾勾代表光改這一項，存款就不會跌破零。' : '一次只改一個條件，看看收入門檻會降到多少。'));
       var items = cp.list.filter(function (it) { return full ? it.gain >= 5000 : it.gain >= 0.5; });
       if (!items.length) {
-        box.appendChild(h('div', { class: 'empty' }, h('b', {}, full ? '找不到明顯能改善的地方' : '放棄任何單一項目，門檻仍高於 PR 99.9'), full ? '你的標準已經很精簡了。' : '試試左側一次調整多個條件，或到實驗室比較不同縣市與住房方式。'));
+        box.appendChild(h('div', { class: 'empty' }, h('b', {}, full ? '找不到明顯能改善的地方' : '放棄任何單一項目，門檻仍高於 PR 99.9'), full ? '你的標準已經很精簡了。' : '試試在「調整設定」一次調整多個條件，或到實驗室比較不同縣市與住房方式。'));
       } else {
       var list = h('div', { class: 'comp' });
       items.slice(0, 8).forEach(function (it) {
@@ -4750,10 +4806,12 @@ APP.screens.cover = function (main) {
   function shareText(s, res, th) {
     var where = D.COUNTY[s.county].name + (s.housing === 'buy' ? '買房' : s.housing === 'rent' ? '租屋' : '住長輩家') + '、生 ' + s.kids + ' 個孩子';
     var n = People.count(th.pr), line;
-    if (th.pr == null) line = '就算收入是同齡同業的前 0.1%，也撐不住我心中的養育標準。';
+    var hb = houseBound(s, th);
+    if (th.pr == null && hb) line = '光是買房那年要拿出的 ' + U.wan(hb.cash) + ' 頭期款，收入再高也來不及存。';
+    else if (th.pr == null) line = '就算收入是同齡同業的前 0.1%，也撐不住我心中的養育標準。';
     else if (th.pr <= 1) line = '幾乎任何收入都養得起。';
     else if (th.pr < 50) line = (s.partner ? '夫妻雙方' : '我') + '的收入只要贏過同齡同業的 ' + U.pr(th.pr) + '%（PR ' + U.pr(th.pr) + '）就養得起，100 個人裡有 ' + n + ' 個做得到。';
-    else line = (s.partner ? '夫妻雙方' : '我') + '的收入都要在同齡同業的前 ' + U.topPct(th.pr) + '%（PR ' + U.pr(th.pr) + '）才養得起，' + (n > 0 ? '100 個人裡只有 ' + n + ' 個做得到。' : '100 個人裡連 1 個都不到。');
+    else line = (s.partner ? '夫妻雙方的收入都要在' : '我的收入要在') + '同齡同業的前 ' + U.topPct(th.pr) + '%（PR ' + U.pr(th.pr) + '）才養得起，' + (n > 0 ? '100 個人裡只有 ' + n + ' 個做得到。' : '100 個人裡連 1 個都不到。') + (hb ? '真正卡住的是買房那年的頭期款。' : '');
     var v = s.incomeMode === 'full' ? (s.partner ? '以我們現在的收入：' : '以我現在的收入：') + ({ pass: '核准', tight: '附條件核准', fail: '駁回', broke: '駁回' }[res.verdict]) + '。' : '';
     var W = A.waitMid || A.wait, w = '';
     if (W) {
@@ -4813,7 +4871,7 @@ APP.screens.cover = function (main) {
       c.fillStyle = css('--ink'); c.font = '900 58px ' + F_SERIF;
       fitText(c, vi.title, X, cy + 86, CW);
       y = cy + 86;
-      var sub = th.pr != null && th.grossBirth ? '生第一胎那年，' + (s.partner ? '夫妻合計' : '') + '稅前年收入要約 ' + U.wan(th.grossBirth) + '。' : vi.line.replace(/<br>/g, '').replace(/<[^>]+>/g, '');
+      var sub = vi.hb ? (th.pr != null ? '卡在 ' + vi.hb.year + ' 年買房：頭期款、稅費與裝潢一次要 ' + U.wan(vi.hb.cash) + '。' : '光是 ' + vi.hb.year + ' 年買房要拿出的 ' + U.wan(vi.hb.cash) + '，就來不及存。') : th.pr != null && th.grossBirth ? '生第一胎那年，' + (s.partner ? '夫妻合計' : '') + '稅前年收入要約 ' + U.wan(th.grossBirth) + '。' : vi.line.replace(/<br>/g, '').replace(/<[^>]+>/g, '');
       c.fillStyle = css('--ink-2'); c.font = '400 32px ' + F_SANS;
       y += 56; fitText(c, sub, X, y, CW);
     } else {
@@ -4833,10 +4891,14 @@ APP.screens.cover = function (main) {
     var fy = Math.min(Math.max(y + 56, 1200), 1222);
     c.fillStyle = css('--pen'); c.font = '400 32px ' + F_HAND; fitText(c, setting, X, fy, CW);
     c.fillStyle = css('--ink-3'); c.font = '400 24px ' + F_SANS;
-    c.fillText('依 2026 年台灣房價、薪資、補助與稅制試算', X, fy + 46);
+    c.fillText('依 2026 年台灣真實資料試算', X, fy + 46);
+    // 網址：圖卡被轉傳時，看到的人知道去哪裡玩
+    var host = String((window.TWKIDS && window.TWKIDS.siteUrl) || shareUrl()).replace(/^https?:\/\//, '').replace(/\/$/, '');
+    c.fillStyle = css('--pen'); c.font = '500 26px ' + F_SANS; c.textAlign = 'right';
+    c.fillText(host, W - X, fy + 46); c.textAlign = 'left';
     // 印章最後蓋上去（兩種印章一樣大）；門檻模式往上移，騰出中間放 100 人，壓到一點也沒關係
     if (thMode) stamp(c, vi, 852, 432, 172, css);
-    else stamp(c, vi, 792, 606, 172, css);
+    else stamp(c, vi, 800, 572, 172, css);
   }
   function stamp(c, vi, x, y, R, css) {
     c.save(); c.translate(x, y); c.rotate(-0.16); c.globalAlpha = 0.94;
@@ -4881,7 +4943,7 @@ APP.screens.cover = function (main) {
     COMM.downloads().then(function (d) {
       if (!d) { U.toast('這個檢視無法儲存檔案'); return; }
       withBlob(cv, function (blob) {
-        d.save({ filename: '生育資格審查結果.png', data: blob }).then(function (m) { U.toast(m === 'shared' ? '完成' : m === 'downloaded' ? '已下載圖卡' : '已儲存'); }, function (e) { if (e && e.code === 'declined') return; U.toast('無法儲存：' + ((e && e.message) || '請稍後再試')); });
+        d.save({ filename: '生育資格審查結果.png', data: blob }).then(function (m) { if (m !== 'shown') U.toast(m === 'shared' ? '完成' : m === 'downloaded' ? '已下載圖卡' : '已儲存'); }, function (e) { if (e && e.code === 'declined') return; U.toast('無法儲存：' + ((e && e.message) || '請稍後再試')); });
       });
     });
   }
@@ -5514,7 +5576,7 @@ APP.screens.method = function (main) {
   inn.appendChild(h('div', { class: 'form-head' }, h('div', {}, h('div', { class: 'form-kicker' }, '附件三'), h('h1', { style: { fontSize: 'clamp(28px, 4vw, 38px)', fontWeight: 900, marginTop: '4px' } }, '方法與資料')), h('div', { class: 'form-no' }, '資料查核：2026-10')));
   function p(t) { return h('p', { html: t }); }
   function ul(items) { var u = h('ul'); items.forEach(function (t) { u.appendChild(h('li', { html: t })); }); return u; }
-  inn.appendChild(p('這不是理財建議，而是一個盡量貼近現實的試算。每個數字都有出處；查不到可靠資料的地方，我們標成估計值，並寫出理由。你可以在報告左側的「進階假設」調整大部分假設。'));
+  inn.appendChild(p('這不是理財建議，而是一個盡量貼近現實的試算。每個數字都有出處；查不到可靠資料的地方，我們標成估計值，並寫出理由。你可以在報告「調整設定」裡的「進階假設」調整大部分假設。'));
 
   inn.appendChild(h('h2', {}, '一、怎麼算'));
   inn.appendChild(ul([

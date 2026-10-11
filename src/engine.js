@@ -544,6 +544,8 @@ var ENGINE = (function (D) {
         for (var key2 in e) totals[key2] = (totals[key2] || 0) + e[key2];
         for (var key3 in tr) subs[key3] += tr[key3];
       }
+      // 事件記下總共幾個孩子，文字才能寫「老大」或只有一個時寫「孩子」
+      events.forEach(function (ev) { if (ev && ev.n) ev.of = nK; });
       years.push({
         t: t, year: D.BASE_YEAR + t, ageA: ageA, ageB: ageB, kids: kAges, events: events,
         gA: gA, gB: gB, gross: gross, si: si, tax: tax, transfers: transfers, tr: tr, gift: gift, interest: interest,

@@ -715,3 +715,11 @@ p { margin: 0; }
 .src.src-wide { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .src.src-wide a { font-weight: 700; }
 #sec-crowd .linkbtn { margin-left: 8px; }
+/* 手機：「開始填寫」按鈕移到申請書欄位前面，第一屏就看得到 */
+@media (max-width: 560px) {
+  .cover .sheet-in { display: flex; flex-direction: column; }
+  .cover .cover-cta { order: 1; margin-top: 20px; }
+  .cover .cover-fields { order: 2; margin: 24px 0 18px; }
+  .cover .cvd-toggle { order: 3; }
+  .cover .cover-lede { font-size: 16px; }
+}

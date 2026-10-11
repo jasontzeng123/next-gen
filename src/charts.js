@@ -20,7 +20,9 @@ var Charts = (function () {
     if (a >= 1e4) return Math.round(v / 1e4).toLocaleString('en-US') + '萬';
     return v === 0 ? '0' : Math.round(v).toLocaleString('en-US');
   }
-  var EVT = { birth: function (e) { return '第' + e.n + '胎出生'; }, buy: function () { return '買房'; }, kg: function (e) { return '老' + U.cn(e.n) + '上幼兒園'; }, es: function (e) { return '老' + U.cn(e.n) + '上小學'; }, jh: function (e) { return '老' + U.cn(e.n) + '上國中'; }, sh: function (e) { return '老' + U.cn(e.n) + '上高中'; }, uni: function (e) { return '老' + U.cn(e.n) + '上大學'; }, master: function (e) { return '老' + U.cn(e.n) + '讀研究所'; }, abroad: function (e) { return '老' + U.cn(e.n) + '出國留學'; }, indep: function (e) { return '老' + U.cn(e.n) + '獨立'; }, car: function () { return '買車'; }, car2: function () { return '換車'; }, grace: function () { return '房貸寬限期結束'; }, quit: function (e) { return (e.who === 'A' ? '你' : '伴侶') + '離職照顧'; }, back: function (e) { return (e.who === 'A' ? '你' : '伴侶') + '回到職場'; } };
+  // 孩子的稱呼：只有一個孩子時叫「孩子」，否則第一個叫「老大」，其他叫「老二」「老三」……
+  function kid(e) { return e.of === 1 ? '孩子' : e.n === 1 ? '老大' : '老' + U.cn(e.n); }
+  var EVT = { birth: function (e) { return e.of === 1 ? '孩子出生' : '第' + e.n + '胎出生'; }, buy: function () { return '買房'; }, kg: function (e) { return kid(e) + '上幼兒園'; }, es: function (e) { return kid(e) + '上小學'; }, jh: function (e) { return kid(e) + '上國中'; }, sh: function (e) { return kid(e) + '上高中'; }, uni: function (e) { return kid(e) + '上大學'; }, master: function (e) { return kid(e) + '讀研究所'; }, abroad: function (e) { return kid(e) + '出國留學'; }, indep: function (e) { return kid(e) + '獨立'; }, car: function () { return '買車'; }, car2: function () { return '換車'; }, grace: function () { return '房貸寬限期結束'; }, quit: function (e) { return (e.who === 'A' ? '你' : '伴侶') + '離職照顧'; }, back: function (e) { return (e.who === 'A' ? '你' : '伴侶') + '回到職場'; } };
   function evtText(e) { return typeof e === 'string' ? e : (EVT[e.k] ? EVT[e.k](e) : ''); }
   function income(y) { return y.gross - y.si - y.tax + y.transfers + y.gift; }
   function expense(y) { return y.expTotal - y.exp.debtInterest; }

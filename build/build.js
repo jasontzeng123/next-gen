@@ -30,6 +30,13 @@ const APPBODY = `<div id="app">
     <div class="foot-meta"><span>依 2026 年 10 月公開資料試算，不是理財建議。</span><span>主計總處・內政部・勞動部・衛福部・財政部・樂居・591</span></div>
   </footer>
 </div>`;
+// 自架網站：字型改成不擋畫面的載入方式（Google 字型慢或連不上時，先用系統字型顯示）
+// 內文的黑體直接用系統內建（iPhone 的蘋方、Android 的 Noto Sans CJK），少下載一大包字型
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=LXGW+WenKai+TC:wght@400;700&family=DotGothic16&display=swap';
+const FONTS_WEB = `<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="${FONT_URL}" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="${FONT_URL}"></noscript>`;
 const SCRIPT = `<script>
 ${probe}
 ${js}
@@ -80,7 +87,7 @@ if (CFG.siteUrl) {
 <meta name="theme-color" content="#0d1210" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-${FONTS}
+${FONTS_WEB}
 <style>body{margin:0}[hidden]{display:none!important}</style>
 <style>
 ${R('styles.css')}

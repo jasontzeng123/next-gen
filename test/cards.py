@@ -4,8 +4,8 @@ from playwright.sync_api import sync_playwright
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHOTS = os.environ.get('SHOTS', ROOT + '/test/shots'); os.makedirs(SHOTS, exist_ok=True)
 os.makedirs(SHOTS, exist_ok=True)
-body=open(ROOT+'/dist/index.html').read()
-open(ROOT+'/test/page.html','w').write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}[hidden]{display:none!important}</style></head><body>'+body+'</body></html>')
+# 用自架網站版（含 <head> 裡的樣式與設定）
+open(ROOT+'/test/web.html','w').write(open(ROOT+'/index.html').read())
 SC={
  'A-th-couple-tpe-buy': {'county':'TPE','housing':'buy','partner':True,'incomeMode':'threshold','kids':2,'ageA':28,'ageB':30,'firstBirthAge':31},
  'B-full-couple-khh-rent': {'county':'KHH','housing':'rent','partner':True,'incomeMode':'full','jobA':{'industry':'all','pr':60,'mode':'pr'},'jobB':{'industry':'all','pr':50,'mode':'pr'},'kids':2,'ageA':29,'ageB':29,'firstBirthAge':31},
@@ -28,7 +28,7 @@ with sync_playwright() as p:
         pg.route('**/*', lambda r: r.abort() if r.request.url.startswith('http') else r.continue_())
         LS={'draft':d,'unlocked':True,'submitted':d,'seen':{}}
         pg.add_init_script('(()=>{const L=%s;for(const k in L)localStorage.setItem("tw-kids:"+k,JSON.stringify(L[k]));})()' % json.dumps(LS))
-        pg.goto('file://'+ROOT+'/test/page.html#report'); pg.wait_for_timeout(1500)
+        pg.goto('file://'+ROOT+'/test/web.html#report'); pg.wait_for_timeout(1500)
         for sid in ['sec-head','sec-wait','sec-flow']:
             el=pg.query_selector('#'+sid)
             if el: el.screenshot(path=f'{SHOTS}/{name}-{scheme}-{width}-{sid}.png')
