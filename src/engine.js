@@ -52,7 +52,8 @@ var ENGINE = (function (D) {
      family(x)（可省略）→ 依整個家庭計算的補助
      rentFor(c, rooms, rentMult, x) → 月租；rentSubsidy(x)（可省略）
      rentDeposit(c, rooms, rentMult, x)（可省略）→ 租屋押金裡要自己拿出的現金（韓國全稅）；
-       搬到更大的房子要補、買房時退回，押金算在淨資產裡
+       押金的增減記在 e.deposit（不是花掉的錢，不算進住房），買房時退回，押金算在淨資產裡；
+       x.S、x.depHeld 是年初的存款與已付押金
      taxes(x) → { si, tax }
   */
   var COUNTRIES = {}, ORDER = [];
@@ -494,6 +495,7 @@ var ENGINE = (function (D) {
       var e = { housing: 0, housingOnce: 0, living: 0, kidsBirth: 0, kidsCare: 0, kidsEdu: 0, kidsLife: 0, transport: 0, elder: 0, travel: 0, debtInterest: 0 };
       var tr = { birth: 0, cityBirth: 0, allowance: 0, care: 0, leave: 0, rent: 0, uni: 0, growth: 0, kg: 0, pension: 0 };
       x.t = t; x.e = e; x.tr = tr; x.events = events; x.kAges = kAges; x.helperMonths = 0; x.y = {}; // x.y：國家模組每年用的暫存
+      x.S = S; x.depHeld = depHeld; // 年初的存款與已付的押金（韓國全稅：決定自己拿得出多少押金）
       // ---- 收入 ----
       var gA = personGross('A', t), gB = personGross('B', t);
       // 65 歲後：年金（有工作者）
@@ -559,7 +561,7 @@ var ENGINE = (function (D) {
       if (family) { e.housing = 0; }
       else if (buy && t >= tb) {
         var h = house;
-        if (t === tb) { e.housingOnce = h.down + h.closing + h.reno; events.push({ k: 'buy' }); if (depHeld) { e.housingOnce -= depHeld; depHeld = 0; } }
+        if (t === tb) { e.housingOnce = h.down + h.closing + h.reno; events.push({ k: 'buy' }); if (depHeld) { e.deposit = (e.deposit || 0) - depHeld; depHeld = 0; } } // 押金退回，拿去付頭期款
         var ly = t - tb; // 貸款年度
         var payNom = 0, intNom = 0;
         for (var li = 0; li < loans.length; li++) {
@@ -585,7 +587,7 @@ var ENGINE = (function (D) {
         e.housing = rentM * 12;
         x.rentM = rentM;
         if (A.rentSubsidy && K.rentSubsidy) K.rentSubsidy(x);
-        if (K.rentDeposit) { var dep = K.rentDeposit(c, rooms, rentMult, x); e.housingOnce += dep - depHeld; depHeld = dep; }
+        if (K.rentDeposit) { var dep = K.rentDeposit(c, rooms, rentMult, x); if (dep !== depHeld) e.deposit = (e.deposit || 0) + dep - depHeld; depHeld = dep; }
       }
 
       var carDebt = 0; carPays.forEach(function (cp) { carDebt += cp.amt * cp.left; });

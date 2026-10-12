@@ -140,14 +140,15 @@ var WUI = (function () {
     if (per > 0.05 * inc) {
       save.appendChild(document.createTextNode('上面只算花掉的錢。收入剛好夠時，到最小的孩子獨立（你 ' + a.endAge + ' 歲）前，平均每年還能存下約 '));
       save.appendChild(h('b', {}, money(per, K)));
-      save.appendChild(document.createTextNode('（' + twd(per, K) + (K.id === 'TW' ? '' : '，') + '約占收入 ' + Math.round(per / inc * 100) + '%）。'));
+      save.appendChild(document.createTextNode('（' + twd(per, K) + (K.id === 'TW' ? '' : '，') + '約占收入 ' + Math.round(per / inc * 100) + '%）。' +
+        (a.deposit > 0.05 * a.saved ? '其中約 ' + money(a.deposit, K) + ' 放在租屋押金裡（全稅押金會退回，但不能隨時動用）。' : '')));
     } else save.appendChild(document.createTextNode('收入剛好夠時，存款最低會降到接近 0，幾乎沒有餘裕。'));
     box.appendChild(save);
     if (r.bind) {
       var b = r.bind;
       box.appendChild(h('p', { class: 'wd-bind' },
         h('b', {}, '門檻卡在買房那年'), '（你 ' + b.age + ' 歲' + (b.beforeKid ? '，第一胎出生前' : '') + '）：要一次拿出約 ', h('b', {}, money(b.cash, K)),
-        '（頭期款 ' + money(b.down, K) + '，稅費與裝修 ' + money(b.fees, K) + '）。房價約 ' + money(b.price, K) + '，最多貸 ' + money(b.loan, K) + '。' +
+        '（頭期款 ' + money(b.down, K) + '，稅費與裝修 ' + money(b.fees, K) + '）' + (b.refund ? '，其中約 ' + money(b.refund, K) + '可以用退回的租屋押金' : '') + '。房價約 ' + money(b.price, K) + '，最多貸 ' + money(b.loan, K) + '。' +
         (per > 0.25 * inc ? '收入要高到存得出這筆錢，所以買完房之後會有很多餘裕，稅在上面的長條裡也顯得特別多。' : '')));
     }
     box.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } }, '政府給的錢（生育、育兒、托育等現金補助）：占收入 ' + pct(r.at.cash, r.at.gross) + '，' + tw.name + ' ' + pct(tw.at.cash, tw.at.gross) + '。'));

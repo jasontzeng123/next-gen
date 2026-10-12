@@ -186,12 +186,15 @@ var WORLD = (function (E, D) {
     o.at = breakdown(sim);
     // 收入剛好夠時，從現在到最小的孩子獨立，現金存款增加多少（不畫進長條，另外用文字說明）
     var yT = sim.years[sim.Tv] || sim.years[sim.years.length - 1];
-    o.at.saved = yT.S - sim.years[0].Sstart; o.at.endAge = ls.ageA + sim.Tv;
+    // 韓國全稅：押金是自己的錢（會退回），算在存下來的錢裡
+    o.at.saved = yT.S + (yT.deposit || 0) - sim.years[0].Sstart; o.at.endAge = ls.ageA + sim.Tv; o.at.deposit = yT.deposit || 0;
     // 門檻卡在買房那年（存款最低點在買房當年或之前）：記下要一次拿出多少現金
     var hs = sim.house;
     if (ls.housing === 'buy' && hs && th.pr != null && sim.minT <= hs.tb) {
       var loan = hs.loanAmt != null ? hs.loanAmt : (hs.qLoan || 0) + (hs.bLoan || 0);
       o.bind = { age: ls.ageA + hs.tb, cash: hs.down + hs.closing + hs.reno, down: hs.down, fees: hs.closing + hs.reno, price: hs.total, loan: loan, beforeKid: hs.tb < sim.t0 };
+      var yPrev = hs.tb > 0 ? sim.years[hs.tb - 1] : null;
+      if (yPrev && yPrev.deposit) o.bind.refund = yPrev.deposit; // 租屋押金退回，可以拿來付一部分
     }
     // 已知收入：直接看能不能過
     if (ls.incomeMode === 'full') { var r = E.simulate(ls); o.verdict = r.verdict; o.minS = r.minS; o.prA = ls.jobA.pr; o.prB = ls.jobB.pr; }

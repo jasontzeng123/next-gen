@@ -9,9 +9,12 @@
   var FX = 1 / 42.0; // 1 韓元 = 0.0238 台幣（馬來西亞央行牌價交叉匯率，2026-10-08）§1
   var EOK = 100000000; // 1 億韓元
 
-  // 全稅（전세）押金換算成每月成本的年利率：80% 用全稅貸款 4.35%、20% 用自有資金 3.21% §12.3.3［DERIVED］
-  var JEONSE_RATE = 0.041;
+  // 全稅（전세）押金：最多 80% 用全稅貸款（HF 一般全稅保證，上限 4 億）［SECONDARY：wikidocs 2026-07］，
+  // 其餘要用自己的存款。自己的錢放在押金裡沒有利息（引擎少算存款報酬，另外每年要補通膨），
+  // 存款不夠時押金降低、差額改付月租（보증부 월세），用市場轉換率換算 §12.3.3
   var JEONSE_LOAN = 0.0435; // 銀行全稅貸款平均利率（2026-08）§4.5［NEWS］
+  var JEONSE_LTV = 0.8, JEONSE_CAP = 4 * 100000000;
+  var DEP_SHARE = 0.5;      // 最多拿出「存款＋已付押金」的一半放進押金，其餘留著應付生產、教育等支出［ESTIMATE］
   var BANK_RATE = 0.0466;   // 銀行新承作房貸平均利率（2026-08），假設之後不變 §4.5［NEWS］
   var MEDIAN4 = 6494738;    // 2026 年 4 人家庭「基準中位所得」（每月）§12.4［NEWS］
   // 托育憑證（보육료 지원단가，每月）：0 歲班、1 歲班、2 歲班 §6［SECONDARY］
@@ -63,7 +66,8 @@
       seoul: {
         id: 'seoul', name: '首爾', short: '首爾', capital: true,
         cons: 1.22, // 每人民間消費：首爾 ÷ 全國（地區所得統計，研究檔未收錄，依過去幾年的水準）［ESTIMATE］
-        // 租屋：[押金, 月租（小坪數含管理費）, 專有面積 ㎡（另計公共管理費）]；每月成本 = 押金 × 4.1% ÷ 12 ＋ 月租 ＋ 管理費
+        conv: 0.047, // 押金轉月租的市場轉換率：首爾公寓 4.7%（2026-05）§4.4［NEWS］
+        // 租屋：[押金, 月租（小坪數含管理費）, 專有面積 ㎡（另計公共管理費）]；押金怎麼付見 leasePlan()
         // 全稅與月租型在 4.1% 下成本幾乎相同（§4.4），所以公寓直接用全稅押金表示
         lease: [
           [10000000, 709000, 0],   // 套房：月租 62.5 萬＋管理費 8.4 萬，押金 1,000 萬（2026-07）§12.3.2［NEWS］
@@ -91,6 +95,7 @@
       busan: {
         id: 'busan', name: '釜山', short: '釜山', capital: false,
         cons: 0.97, // 每人民間消費：釜山略低於全國［ESTIMATE］
+        conv: 0.053, // 押金轉月租的轉換率：全國公寓 5.3%（釜山未查到，用全國）§4.4［NEWS］
         lease: [
           [5000000, 460000, 0],    // 套房［ESTIMATE］
           [150000000, 50000, 0],   // 1.5–2 房（빌라、오피스텔）［ESTIMATE］
@@ -188,7 +193,7 @@
       ls.parking = 'rent';                                   // 公寓車位不另外買賣，管理費內含或月付
     },
     MAP: {
-      housing: { rent: '租公寓（全稅或押金＋月租，押金以 4.1% 換算成每月成本）', buy: '買公寓，銀行房貸（有新生兒時可用特例貸款）', family: '和長輩同住' },
+      housing: { rent: '租公寓（全稅押金 8 成用全稅貸款、最多 4 億，其餘用自己的存款；存款不夠就降低押金、改付月租）', buy: '買公寓，銀行房貸（有新生兒時可用特例貸款）', family: '和長輩同住' },
       build: { used: '中古公寓', new: '新建公寓（預售，需抽籤）' },
       loan: { qingan: '沒有新青安，改用一般房貸；有新生兒、房價 9 億以下時改用特例貸款', qinganNoGrace: '沒有新青安，改用一般房貸；有新生兒、房價 9 億以下時改用特例貸款', bank: '一般房貸（首爾有貸款上限，DSR 40%）' },
       postpartum: { center: '產後調理院（月子中心）2 週', nanny: '產後到府幫手（政府憑證）', family: '家人幫忙照顧' },
@@ -279,14 +284,16 @@
     },
 
     // ---------- 住房 ----------
+    // 每月租屋成本＝全稅貸款利息＋自有押金每年要補的通膨＋押金不足改付的月租＋原本的月租與管理費
     rentFor: function (c, rooms, rentMult, x) {
       var L = c.lease, r = Math.min(Math.max(rooms, 1), 4);
-      function cost(i) { return L[i][0] * JEONSE_RATE / 12 + L[i][1] + L[i][2] * c.mgmt; }
-      var v = r <= 1 ? (cost(0) + cost(1)) / 2 : cost(r);
-      var dep = r <= 1 ? (L[0][0] + L[1][0]) / 2 : L[r][0];
-      if (x) x.krDep = dep * rentMult; // 給新生兒特例全稅貸款判斷押金上限
-      return v * rentMult * K.COST.rentFactor;
+      var row = r <= 1 ? [(L[0][0] + L[1][0]) / 2, (L[0][1] + L[1][1]) / 2, 0] : L[r];
+      var m = rentMult * K.COST.rentFactor;
+      var p = leasePlan(row[0] * m, c, x);
+      if (x) { x.krDep = p.dep; x.krLoan = p.loan; x.y.krOwn = p.own; }
+      return p.yearly / 12 + (row[1] + row[2] * c.mgmt) * m;
     },
+    rentDeposit: function (c, rooms, rentMult, x) { return x.y.krOwn || 0; },
     // 新生兒特例全稅貸款（신생아 특례 버팀목）§12.3.5［SECONDARY］：出生後 4 年（每多生一胎 +4 年，最長 12 年）
     // 押金首都圈 5 億、其他 4 億以下；貸款 ≤ 押金 80% 且 ≤ 2.4 億；夫妻所得 1.3 億（雙薪 2 億）以下。
     // 省下的是全稅貸款利率（4.35%）與特例利率的差。資產上限（3.45 億）沒有計算
@@ -301,7 +308,7 @@
       if (inc > (dual ? 2 * EOK : 1.3 * EOK)) return;
       var dep = x.krDep || 0;
       if (!(dep > 0) || dep > (c.capital ? 5 : 4) * EOK) return;
-      var loan = Math.min(2.4 * EOK, 0.8 * dep);
+      var loan = Math.min(2.4 * EOK, 0.8 * dep, x.krLoan || 0);
       var born = 0; for (var j = 0; j < B.length; j++) if (B[j] <= t) born++;
       var r = nbRate(inc, 0.013, 0.043) - (c.capital ? 0 : 0.002) - Math.min(0.004, 0.002 * (born - 1));
       x.tr.rent = loan * Math.max(0, JEONSE_LOAN - Math.max(0.01, r));
@@ -438,6 +445,17 @@
     return price * r;
   }
   function annuityF(r, n) { return r / (1 - Math.pow(1 + r, -n)); }
+  // 全稅押金 D 的付法：貸款 ≤ 80% 且 ≤ 4 億，其餘自己出（最多拿出存款與已付押金合計的一半）。
+  // 自己拿不出那麼多時，押金降到 D'（D' − 貸款 = 自有資金），D − D' 改付月租（轉換率 conv）。
+  // 每年成本：貸款 × 4.35% ＋ 自有 × 通膨（押金不生利息，每年要補）＋（D − D'）× conv
+  function leasePlan(D, c, x) {
+    var need = D - Math.min(JEONSE_LTV * D, JEONSE_CAP);
+    var avail = x ? DEP_SHARE * Math.max(0, x.S + (x.depHeld || 0)) : Infinity;
+    var own = Math.min(need, avail), dep = D;
+    if (own < need) dep = own <= (1 - JEONSE_LTV) * JEONSE_CAP / JEONSE_LTV ? own / (1 - JEONSE_LTV) : own + JEONSE_CAP;
+    var loan = dep - own, infl = x && x.A ? x.A.inflation : 0.02;
+    return { dep: dep, own: own, loan: loan, yearly: loan * JEONSE_LOAN + own * infl + (D - dep) * c.conv };
+  }
   // 新生兒特例貸款利率：依夫妻所得在 2,000 萬到 2 億之間線性內插［ESTIMATE］
   function nbRate(inc, lo, hi) { return lo + (hi - lo) * U.clamp((inc - 20000000) / 180000000, 0, 1); }
   // 這一年夫妻的全職年薪（育嬰留停那年還原成全年）
