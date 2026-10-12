@@ -8,8 +8,8 @@ var WUI = (function () {
   var h = U.h, A = APP, E = ENGINE;
 
   // 城市位置（地球上的標記）
-  var COORD = { tokyo: [139.69, 35.69], osaka: [135.50, 34.69], seoul: [126.98, 37.57], busan: [129.08, 35.18], paris: [2.35, 48.86], lyon: [4.84, 45.76], shanghai: [121.47, 31.23], chengdu: [104.07, 30.57], nyc: [-74.01, 40.71], houston: [-95.37, 29.76] };
-  var A3 = { JP: 'JPN', KR: 'KOR', FR: 'FRA', CN: 'CHN', US: 'USA' };
+  var COORD = { tokyo: [139.69, 35.69], osaka: [135.50, 34.69], seoul: [126.98, 37.57], busan: [129.08, 35.18], paris: [2.35, 48.86], lyon: [4.84, 45.76], shanghai: [121.47, 31.23], chengdu: [104.07, 30.57], nyc: [-74.01, 40.71], houston: [-95.37, 29.76], london: [-0.13, 51.51], manchester: [-2.24, 53.48] };
+  var A3 = { JP: 'JPN', KR: 'KOR', FR: 'FRA', CN: 'CHN', US: 'USA', UK: 'GBR' };
 
   // 當地幣值：一律用「萬」，加上約合台幣（市場匯率）
   function money(v, K) {
