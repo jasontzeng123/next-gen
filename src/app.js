@@ -83,7 +83,8 @@ var APP = (function () {
       box.appendChild(h('p', {}, '目前的填寫內容和審查報告會清空，回到第一題。你在實驗室存下的支出與收入設定都會保留。'));
       box.appendChild(h('div', { class: 'actions' }, h('button', { class: 'btn ghost', onclick: close }, '取消'), h('button', { class: 'btn', onclick: function () {
         close(); A.s = ENGINE.normalize({}); A.seen = {}; A.qi = 0; A.dirty = true; A.submitted = null; A.undo = [];
-        U.store.set('submitted', null); A.persist(); A.go('quiz');
+        // 重新填寫：再看一次填寫須知
+        U.store.set('submitted', null); U.store.set('noticeOk', null); A.persist(); A.go('notice');
       } }, '清空並重新填寫')));
     });
   };

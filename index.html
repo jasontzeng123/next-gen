@@ -789,7 +789,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-12T02:12', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-12T02:31', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -3473,7 +3473,8 @@ var APP = (function () {
       box.appendChild(h('p', {}, '目前的填寫內容和審查報告會清空，回到第一題。你在實驗室存下的支出與收入設定都會保留。'));
       box.appendChild(h('div', { class: 'actions' }, h('button', { class: 'btn ghost', onclick: close }, '取消'), h('button', { class: 'btn', onclick: function () {
         close(); A.s = ENGINE.normalize({}); A.seen = {}; A.qi = 0; A.dirty = true; A.submitted = null; A.undo = [];
-        U.store.set('submitted', null); A.persist(); A.go('quiz');
+        // 重新填寫：再看一次填寫須知
+        U.store.set('submitted', null); U.store.set('noticeOk', null); A.persist(); A.go('notice');
       } }, '清空並重新填寫')));
     });
   };
