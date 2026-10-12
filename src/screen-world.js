@@ -17,20 +17,25 @@
   function twd(v, K) { return K.id === 'TW' ? '' : '約台幣 ' + U.wan(Math.round(v * K.fx.toTWD / 1e4) * 1e4); }
   function pct(a, b) { return b > 0 ? Math.round(a / b * 100) + '%' : '—'; }
 
-  // 9 個城市逐一試算，每算完一個就讓出主執行緒（手機上比較不會卡）
-  function rowsFor(s, onProgress, done) {
-    var raw = A.strip(s), key = COMM.sig(raw);
+  // 9 個城市逐一試算，每算完一個就讓出主執行緒（手機上比較不會卡）。
+  // 同一組設定只算一次：報告重畫時沿用結果，或等正在算的那一輪算完。
+  function curKey() { return COMM.sig(A.strip(A.s)); }
+  function rowsFor(onProgress, done) {
+    var key = curKey();
     if (A.world && A.world.key === key) return done(A.world.rows);
-    var tw = ENGINE.normalize(raw), jobs = [['TW', tw.county]];
+    if (A.worldJob && A.worldJob.key === key) { A.worldJob.waiters.push(done); A.worldJob.progress.push(onProgress); return; }
+    var tw = ENGINE.normalize(A.strip(A.s)), jobs = [['TW', tw.county]];
     ENGINE.countries().forEach(function (cid) { if (cid !== 'TW') ENGINE.country(cid).cities.forEach(function (cy) { jobs.push([cid, cy]); }); });
-    var rows = [];
+    var job = A.worldJob = { key: key, waiters: [done], progress: [onProgress] }, rows = [];
+    function finish(r, err) { if (A.worldJob === job) A.worldJob = null; job.waiters.forEach(function (w) { U.safe(function () { w(r, err); }, 'world-draw'); }); }
     (function next() {
-      if (A.s !== s) return; // 設定已經改了：不用再算這一輪
-      if (rows.length === jobs.length) { A.world = { key: key, rows: rows }; return done(rows); }
+      if (A.worldJob !== job) return;                       // 已經有新的一輪
+      if (curKey() !== key) { A.worldJob = null; return; }  // 設定改了：不用再算這一輪
+      if (rows.length === jobs.length) { A.world = { key: key, rows: rows }; return finish(rows); }
       U.task(function () {
-        var j = jobs[rows.length];
-        rows.push(WORLD.row(tw, j[0], j[1]));
-        onProgress(rows.length, jobs.length);
+        try { var j = jobs[rows.length]; rows.push(WORLD.row(tw, j[0], j[1])); }
+        catch (e) { if (U.report) U.report(e, 'world-row'); return finish(null, e); }
+        job.progress.forEach(function (p) { p(rows.length, jobs.length); });
         next();
       }, 'world-row');
     })();
@@ -59,14 +64,13 @@
     var msg = h('p', { class: 'muted sm' }, '正在試算各國城市…');
     var box = h('div', {}, msg);
     sec.appendChild(box);
-    var s0 = A.s;
-    try {
-      rowsFor(s0, function (i, n) { msg.textContent = '正在試算各國城市…（' + i + '／' + n + '）'; }, function (rows) {
-        if (A.s !== s0 || !box.isConnected) return;
-        U.clear(box);
-        draw(box, rows, ENGINE.normalize(A.strip(s0)));
-      });
-    } catch (e) { U.clear(box); box.appendChild(h('p', { class: 'muted sm' }, '這部分暫時算不出來。')); if (U.report) U.report(e, 'world'); }
+    var key0 = curKey();
+    rowsFor(function (i, n) { msg.textContent = '正在試算各國城市…（' + i + '／' + n + '）'; }, function (rows, err) {
+      if (curKey() !== key0) return; // 設定已經改了，新的報告會自己算
+      U.clear(box);
+      if (err || !rows) { box.appendChild(h('p', { class: 'muted sm' }, '這部分暫時算不出來，已記錄下來。')); return; }
+      draw(box, rows, ENGINE.normalize(A.strip(A.s)));
+    });
     return sec;
   };
 
