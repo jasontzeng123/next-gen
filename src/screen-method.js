@@ -99,7 +99,7 @@ APP.screens.method = function (main) {
 
   if (typeof WORLD !== 'undefined' && ENGINE.countries().length > 1) {
     inn.appendChild(h('h2', { id: 'world' }, '七之一、換到別的國家（試算版）'));
-    inn.appendChild(p('報告書會把你的每個選擇換成當地最接近的做法（例如準公共托育換成東京的認可保育所），用同一套逐年試算，找出在當地需要的收入排名。'));
+    inn.appendChild(p('實驗室的「地圖」切到「世界」，會把你的每個選擇換成當地最接近的做法（例如準公共托育換成東京的認可保育所），用同一套逐年試算，找出在當地需要的收入排名。'));
     inn.appendChild(ul([
       '收入排名以該國全國同年齡的受僱者計算，不分產業。中國大陸官方不公布薪資中位數，分布為估計。',
       '你填的存款、長輩資助與孝親費，依兩地薪資中位數的比例換算。',

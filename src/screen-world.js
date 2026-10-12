@@ -1,141 +1,147 @@
 /* =========================================================================
-   報告書：換到別的國家（第二波，試算版）
+   實驗室「地圖 → 世界」：各國主要城市的比較（第二波，試算版）
+   這裡只放共用的零件：試算（有快取）、城市列表、城市詳細資料。
+   版面與地球在 screen-lab.js。
    ========================================================================= */
-(function () {
+var WUI = (function () {
   'use strict';
-  var h = U.h, A = APP;
+  var h = U.h, A = APP, E = ENGINE;
+
+  // 城市位置（地球上的標記）
+  var COORD = { tokyo: [139.69, 35.69], osaka: [135.50, 34.69], seoul: [126.98, 37.57], busan: [129.08, 35.18], paris: [2.35, 48.86], lyon: [4.84, 45.76], shanghai: [121.47, 31.23], chengdu: [104.07, 30.57] };
+  var A3 = { JP: 'JPN', KR: 'KOR', FR: 'FRA', CN: 'CHN' };
 
   // 當地幣值：一律用「萬」，加上約合台幣（市場匯率）
   function money(v, K) {
     if (K.id === 'TW') return U.wan(v);
     var w = v / 1e4, s;
-    if (w >= 10000) s = (w / 10000).toFixed(w >= 100000 ? 0 : 1).replace(/\.0$/, '') + ' 億';
-    else if (w >= 100) s = U.sep(w) + ' 萬';
-    else s = w.toFixed(w >= 10 ? 0 : 1).replace(/\.0$/, '') + ' 萬';
+    if (Math.abs(w) >= 10000) s = (w / 10000).toFixed(Math.abs(w) >= 100000 ? 0 : 1).replace(/\.0$/, '') + ' 億';
+    else if (Math.abs(w) >= 100) s = U.sep(w) + ' 萬';
+    else s = w.toFixed(Math.abs(w) >= 10 ? 0 : 1).replace(/\.0$/, '') + ' 萬';
     return s + K.curName;
   }
   function twd(v, K) { return K.id === 'TW' ? '' : '約台幣 ' + U.wan(Math.round(v * K.fx.toTWD / 1e4) * 1e4); }
   function pct(a, b) { return b > 0 ? Math.round(a / b * 100) + '%' : '—'; }
+  function key(r) { return r.cid + ':' + r.city; }
+  function cityName(r, short) { return r.cid === 'TW' ? r.name : (short ? (E.country(r.cid).CITY[r.city].short || r.name) : r.name); }
+  function prText(pr) { return pr == null ? '>99.9' : 'PR ' + U.pr(pr); }
 
-  // 9 個城市逐一試算，每算完一個就讓出主執行緒（手機上比較不會卡）。
-  // 同一組設定只算一次：報告重畫時沿用結果，或等正在算的那一輪算完。
-  function curKey() { return COMM.sig(A.strip(A.s)); }
-  function rowsFor(onProgress, done) {
-    var key = curKey();
-    if (A.world && A.world.key === key) return done(A.world.rows);
-    if (A.worldJob && A.worldJob.key === key) { A.worldJob.waiters.push(done); A.worldJob.progress.push(onProgress); return; }
-    var tw = ENGINE.normalize(A.strip(A.s)), jobs = [['TW', tw.county]];
-    ENGINE.countries().forEach(function (cid) { if (cid !== 'TW') ENGINE.country(cid).cities.forEach(function (cy) { jobs.push([cid, cy]); }); });
-    var job = A.worldJob = { key: key, waiters: [done], progress: [onProgress] }, rows = [];
-    function finish(r, err) { if (A.worldJob === job) A.worldJob = null; job.waiters.forEach(function (w) { U.safe(function () { w(r, err); }, 'world-draw'); }); }
+  // ---------- 試算：9 個城市逐一算，每算完一個就讓出主執行緒；同一組設定只算一次 ----------
+  var cache = null, job = null;
+  function rows(s, onProgress, done) {
+    var k = COMM.sig(A.strip(s));
+    if (cache && cache.key === k) return done(cache.rows);
+    if (job && job.key === k) { job.waiters.push(done); job.progress.push(onProgress); return; }
+    var tw = E.normalize(A.strip(s)), jobs = [['TW', tw.county]];
+    E.countries().forEach(function (cid) { if (cid !== 'TW') E.country(cid).cities.forEach(function (cy) { jobs.push([cid, cy]); }); });
+    var me = job = { key: k, waiters: [done], progress: [onProgress] }, out = [];
+    function finish(r, err) { if (job === me) job = null; me.waiters.forEach(function (w) { U.safe(function () { w(r, err); }, 'world-draw'); }); }
     (function next() {
-      if (A.worldJob !== job) return;                       // 已經有新的一輪
-      if (curKey() !== key) { A.worldJob = null; return; }  // 設定改了：不用再算這一輪
-      if (rows.length === jobs.length) { A.world = { key: key, rows: rows }; return finish(rows); }
+      if (job !== me) return;
+      if (out.length === jobs.length) { cache = { key: k, rows: out }; return finish(out); }
       U.task(function () {
-        try { var j = jobs[rows.length]; rows.push(WORLD.row(tw, j[0], j[1])); }
+        if (job !== me) return;
+        try { var j = jobs[out.length]; out.push(WORLD.row(tw, j[0], j[1])); }
         catch (e) { if (U.report) U.report(e, 'world-row'); return finish(null, e); }
-        job.progress.forEach(function (p) { p(rows.length, jobs.length); });
+        me.progress.forEach(function (p) { if (p) p(out.length, jobs.length); });
         next();
       }, 'world-row');
     })();
   }
 
-  // 你的選擇在當地怎麼對應
-  var MAP_KEYS = [['housing', '住房'], ['build', '房子'], ['loan', '房貸'], ['postpartum', '坐月子'], ['care', '0–2 歲'], ['preschool', '幼兒園'], ['school', '學校'], ['after', '放學後'], ['cram', '補習'], ['uni', '大學'], ['transport', '交通'], ['leave', '育嬰假']];
+  // ---------- 城市列表（放在地球下面）：只有城市與 PR 條 ----------
+  function list(all, sel, heat, onPick) {
+    var sorted = all.slice().sort(function (a, b) { return (a.pr == null ? 101 : a.pr) - (b.pr == null ? 101 : b.pr); });
+    var box = h('div', { class: 'wd-list', role: 'list', 'aria-label': '各國主要城市的門檻 PR' });
+    sorted.forEach(function (r) {
+      var mine = r.cid === 'TW', p = r.pr == null ? 100 : Math.max(1.5, r.pr);
+      var inner = [
+        h('span', { class: 'wd-name' }, cityName(r, true), h('small', {}, mine ? '你選的縣市' : E.country(r.cid).name)),
+        h('span', { class: 'wd-bar', 'aria-hidden': 'true' }, h('i', { style: { width: p + '%', background: heat(r.pr) } })),
+        h('span', { class: 'wd-pr' }, prText(r.pr))
+      ];
+      if (mine) box.appendChild(h('div', { class: 'wd-li mine', role: 'listitem' }, inner));
+      else box.appendChild(h('button', { type: 'button', class: 'wd-li' + (sel === key(r) ? ' sel' : ''), role: 'listitem', 'aria-pressed': sel === key(r) ? 'true' : 'false', onclick: function () { onPick(key(r)); } }, inner));
+    });
+    return box;
+  }
+
+  // ---------- 你的選擇在當地怎麼對應 ----------
+  var MAP_KEYS = [['housing', '住房'], ['build', '房子'], ['loan', '房貸'], ['postpartum', '坐月子'], ['leave', '育嬰假'], ['care', '0–2 歲'], ['preschool', '幼兒園'], ['school', '學校'], ['after', '放學後'], ['cram', '補習'], ['uni', '大學'], ['transport', '交通']];
   function mapList(K, s) {
     var ul = h('ul', { class: 'wd-map' });
     MAP_KEYS.forEach(function (kk) {
-      var key = kk[0], v = s[key];
-      if ((key === 'build' || key === 'loan') && s.housing !== 'buy') return;
-      if (key === 'after' && (s.school === 'private' || s.school === 'intl')) return;
-      var m = K.MAP && K.MAP[key] && K.MAP[key][v];
+      var k = kk[0], v = s[k];
+      if ((k === 'build' || k === 'loan') && s.housing !== 'buy') return;
+      if (k === 'after' && (s.school === 'private' || s.school === 'intl')) return;
+      var m = K.MAP && K.MAP[k] && K.MAP[k][v];
       if (m) ul.appendChild(h('li', {}, h('b', {}, kk[1]), m));
     });
     (K.notes || []).forEach(function (n) { ul.appendChild(h('li', { class: 'note' }, n)); });
     return ul;
   }
 
-  A.worldSection = function (res, th, s) {
-    var sec = h('section', { class: 'rsec', id: 'sec-world' });
-    sec.appendChild(h('div', { class: 'rsec-k num' }));
-    sec.appendChild(h('h2', {}, '換到別的國家，同樣的選擇要多少收入？'));
-    sec.appendChild(h('p', { class: 'rsec-lede' }, '把你的每個選擇換成當地最接近的做法，看收入要贏過當地多少同齡的受僱者。'));
-    var msg = h('p', { class: 'muted sm' }, '正在試算各國城市…');
-    var box = h('div', {}, msg);
-    sec.appendChild(box);
-    var key0 = curKey();
-    rowsFor(function (i, n) { msg.textContent = '正在試算各國城市…（' + i + '／' + n + '）'; }, function (rows, err) {
-      if (curKey() !== key0) return; // 設定已經改了，新的報告會自己算
-      U.clear(box);
-      if (err || !rows) { box.appendChild(h('p', { class: 'muted sm' }, '這部分暫時算不出來，已記錄下來。')); return; }
-      draw(box, rows, ENGINE.normalize(A.strip(A.s)));
-    });
-    return sec;
-  };
-
-  function draw(box, rows, s) {
-    var full = s.incomeMode === 'full';
-    var who = rows[0].who;
-    var sorted = rows.slice().sort(function (a, b) { return (a.pr == null ? 101 : a.pr) - (b.pr == null ? 101 : b.pr); });
-    var list = h('div', { class: 'wd-list', role: 'list' });
-    sorted.forEach(function (r) {
-      var K = ENGINE.country(r.cid), mine = r.cid === 'TW';
-      var p = r.pr == null ? 100 : Math.max(1, r.pr);
-      var sal = who === 'B' ? r.salaryB : r.salaryA;
-      var name = mine ? r.name : (K.CITY[r.city].short || r.name);
-      var sub = r.pr == null ? '收入再高也不夠' : r.pr <= 1 ? '幾乎任何收入都夠'
-        : (s.partner && who === 'both' ? '每人' : '') + '年薪約 ' + money(sal, K) + (mine ? '' : '（' + twd(sal, K) + '）') +
-          (r.ratio ? '，同齡中位數的 ' + r.ratio.toFixed(1) + ' 倍' : '');
-      var verdict = null;
-      if (full && r.verdict) {
-        var ok = r.minS >= 0;
-        verdict = h('span', { class: 'wd-ok ' + (ok ? 'ok' : 'no') }, (s.partner ? '你們' : '你') + '的排名：' + (ok ? '養得起' : '不夠'));
-      }
-      list.appendChild(h('div', { class: 'wd-row' + (mine ? ' mine' : ''), role: 'listitem' },
-        h('div', { class: 'wd-name' }, h('b', {}, name), h('small', {}, mine ? '你選的縣市' : K.name)),
-        h('div', { class: 'wd-bar', 'aria-hidden': 'true' }, h('i', { style: { width: p + '%' } })),
-        h('div', { class: 'wd-pr' }, r.pr == null ? '>99.9' : 'PR ' + U.pr(r.pr)),
-        h('div', { class: 'wd-sub' }, sub, verdict)));
-    });
-    box.appendChild(list);
-    box.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } },
-      (s.partner && who === 'both' ? '兩人都要達到的收入排名' : '要達到的收入排名') + '，以該國全國同年齡的受僱者計算' +
-      (full ? '；「' + (s.partner ? '你們' : '你') + '的排名」是把你在台灣同齡受僱者中的排名直接搬過去' : '') +
-      (s.jobA.industry !== 'all' || (s.partner && s.jobB.industry !== 'all') ? '（不分產業，所以台灣這一列可能和上面的門檻不同）' : '') + '。'));
-
-    // 為什麼差這麼多：養孩子那些年，各項花費占家庭稅前收入的比例
-    var why = h('details', { class: 'wd-why' }, h('summary', {}, '為什麼差這麼多？'));
-    var tbl = h('table', { class: 'tbl' });
-    tbl.appendChild(h('thead', {}, h('tr', {}, h('th', {}, ''), h('th', {}, '住房'), h('th', {}, '養孩子'), h('th', {}, '稅與社保'), h('th', {}, '政府給的錢'))));
-    var tb = h('tbody', {});
-    [rows[0]].concat(sorted.filter(function (r) { return r.cid !== 'TW'; })).forEach(function (r) {
-      var K = ENGINE.country(r.cid), a = r.at, g = a.gross;
-      tb.appendChild(h('tr', { class: r.cid === 'TW' ? 'mine' : '' },
-        h('td', {}, r.cid === 'TW' ? r.name : (K.CITY[r.city].short || r.name)),
-        h('td', {}, pct(a.housing, g)), h('td', {}, pct(a.kids, g)), h('td', {}, pct(a.tax + a.si, g)), h('td', {}, pct(a.cash, g))));
-    });
-    tbl.appendChild(tb);
-    why.appendChild(h('p', { class: 'sm' }, '收入剛好達到門檻時，養孩子那些年各項花費占家庭稅前收入的比例。'));
-    why.appendChild(h('div', { class: 'table-scroll' }, tbl));
-    box.appendChild(why);
-
-    // 你的選擇在各國怎麼對應
-    var how = h('details', { class: 'wd-why' }, h('summary', {}, '你的選擇在各國怎麼對應'));
-    var ids = ENGINE.countries().filter(function (c) { return c !== 'TW'; });
-    var pane = h('div', {}), seg = h('div', { class: 'seg wd-seg', role: 'group', 'aria-label': '選擇國家' });
-    function show(cid) {
-      A.worldTab = cid;
-      Array.prototype.forEach.call(seg.children, function (b) { b.setAttribute('aria-pressed', b.dataset.c === cid ? 'true' : 'false'); });
-      U.clear(pane); pane.appendChild(mapList(ENGINE.country(cid), s));
+  // ---------- 城市詳細資料 ----------
+  var CATS = [
+    ['住房', function (a) { return a.housing; }, 'var(--s-expense)'],
+    ['養孩子', function (a) { return a.kids; }, 'var(--s-alt)'],
+    ['大人生活', function (a) { return a.living; }, 'var(--s-income)'],
+    ['交通', function (a) { return a.transport; }, 'var(--warn)'],
+    ['稅與社保', function (a) { return a.tax + a.si; }, 'var(--ink-3)']
+  ];
+  function shares(at) {
+    var v = CATS.map(function (c) { return Math.max(0, c[1](at)); }), tot = v.reduce(function (x, y) { return x + y; }, 0);
+    return v.map(function (x) { return tot > 0 ? x / tot : 0; });
+  }
+  function stackBar(label, sh) {
+    var bar = h('span', { class: 'wd-stack' });
+    sh.forEach(function (f, i) { if (f > 0) bar.appendChild(h('i', { style: { width: (f * 100).toFixed(2) + '%', background: CATS[i][2] }, title: CATS[i][0] + ' ' + Math.round(f * 100) + '%' })); });
+    return h('div', { class: 'wd-stack-row' }, h('span', { class: 'wd-stack-l' }, label), bar);
+  }
+  function detail(r, tw, s, heat) {
+    var K = E.country(r.cid), C = K.CITY[r.city], box = h('div', { class: 'wd-detail' });
+    var full = s.incomeMode === 'full', both = s.partner && r.who === 'both';
+    box.appendChild(h('div', { class: 'card-k' }, '點選的城市'));
+    box.appendChild(h('h2', { style: { fontSize: '22px' } }, C.name, h('small', { class: 'wd-country' }, K.name)));
+    // 門檻 PR 與 100 人圖
+    box.appendChild(h('div', { class: 'wd-big' },
+      h('s', { style: { background: heat(r.pr) } }), h('b', {}, prText(r.pr)),
+      h('span', {}, '你選的' + tw.name + '：' + prText(tw.pr))));
+    var n = People.count(r.pr);
+    box.appendChild(h('figure', { class: 'wd-pp' },
+      People.svg(r.pr, { n: n, label: '每 100 個同齡受僱者，有 ' + n + ' 個收入養得起' }),
+      h('figcaption', {}, '每 100 個當地同齡受僱者，有 ', h('b', {}, String(n)), ' 個收入養得起')));
+    // 需要的年薪
+    if (r.pr != null && r.pr > 1) {
+      var sal = r.who === 'B' ? r.salaryB : r.salaryA;
+      box.appendChild(h('p', { class: 'wd-line' }, (both ? '每人' : '') + '年薪要約 ', h('b', {}, money(sal, K)), '（' + twd(sal, K) + '），是當地同齡中位數的 ' + (r.ratio ? r.ratio.toFixed(1) : '—') + ' 倍。'));
+    } else if (r.pr == null) box.appendChild(h('p', { class: 'wd-line' }, '收入再高也不夠。'));
+    else box.appendChild(h('p', { class: 'wd-line' }, '幾乎任何收入都夠。'));
+    if (full && r.verdict) {
+      var ok = r.minS >= 0;
+      box.appendChild(h('p', { class: 'wd-line' }, '把' + (s.partner ? '你們' : '你') + '在台灣的收入排名搬過去：', h('b', { class: ok ? 'wd-yes' : 'wd-no' }, ok ? '養得起' : '不夠'), ok ? '' : '（存款最低 ' + money(r.minS, K) + '）'));
     }
-    ids.forEach(function (cid) { var b = h('button', { type: 'button', onclick: function () { show(cid); } }, ENGINE.country(cid).name); b.dataset.c = cid; seg.appendChild(b); });
-    how.appendChild(seg); how.appendChild(pane);
-    show(ids.indexOf(A.worldTab) >= 0 ? A.worldTab : ids[0]);
+    // 錢花到哪裡：收入剛好達到門檻時，養孩子那些年各項支出的比例
+    box.appendChild(h('h3', { class: 'wd-h3' }, '收入剛好夠時，錢花到哪裡'));
+    var shC = shares(r.at), shT = shares(tw.at);
+    box.appendChild(stackBar(C.short || C.name, shC));
+    box.appendChild(stackBar(tw.name, shT));
+    var leg = h('div', { class: 'wd-leg' }, h('span', {}), h('span', {}), h('b', {}, C.short || C.name), h('b', {}, tw.name));
+    CATS.forEach(function (c, i) {
+      leg.appendChild(h('s', { style: { background: c[2] } }));
+      leg.appendChild(h('span', {}, c[0]));
+      leg.appendChild(h('span', { class: 'v' }, Math.round(shC[i] * 100) + '%'));
+      leg.appendChild(h('span', { class: 'v muted' }, Math.round(shT[i] * 100) + '%'));
+    });
+    box.appendChild(leg);
+    box.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } }, '政府給的錢（生育、育兒、托育等現金補助）：占收入 ' + pct(r.at.cash, r.at.gross) + '，' + tw.name + ' ' + pct(tw.at.cash, tw.at.gross) + '。'));
+    // 你的選擇在當地怎麼對應
+    var how = h('details', { class: 'wd-why' }, h('summary', {}, '你的選擇在' + K.name + '怎麼對應'));
+    how.appendChild(mapList(K, s));
     box.appendChild(how);
-
-    box.appendChild(h('p', { class: 'sm muted wd-note' }, '試算版：各國數字來自官方統計與新聞，部分是估計，仍在核對。各國薪資統計的範圍不完全相同，排名較低時的比較比較粗略。台幣以市場匯率換算；存款、長輩資助與孝親費依兩地薪資中位數換算。'));
+    box.appendChild(h('p', { class: 'xs muted wd-note' }, '試算版：各國數字來自官方統計與新聞，部分是估計，仍在核對。收入排名以該國全國同年齡的受僱者計算；台幣以市場匯率換算；存款、長輩資助與孝親費依兩地薪資中位數換算。'));
+    return box;
   }
 
-  A.worldMoney = money;
+  return { COORD: COORD, A3: A3, rows: rows, list: list, detail: detail, mapList: mapList, money: money, key: key, cityName: cityName, prText: prText };
 })();

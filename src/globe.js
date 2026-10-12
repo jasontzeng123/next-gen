@@ -101,6 +101,52 @@ var Globe = (function () {
         ctx.fillStyle = colors.sheet; ctx.globalAlpha = .85; var lw = ctx.measureText('台灣').width; ctx.fillRect(tw[0] + 13, tw[1] - 10, lw + 10, 20); ctx.globalAlpha = 1;
         ctx.fillStyle = colors.landHi; ctx.fillText('台灣', tw[0] + 18, tw[1] + 5);
       }
+      // 城市標記（可省略）：[{ id, lon, lat, color, label, sel }]
+      // 名稱依序試放在右、左、上、下，會和別的名稱或點重疊就不寫（點仍可點選，滑過會顯示名稱）
+      if (opts.markers) {
+        var ms = (opts.markers() || []).slice().sort(function (a, b) { return (b.sel ? 1 : 0) - (a.sel ? 1 : 0); });
+        var boxes = [];
+        if (tw[2] > 0.05) { ctx.font = '700 13px ' + U.cssVar('--f-sans'); boxes.push([tw[0] - 9, tw[1] - 10, tw[0] + 23 + ctx.measureText('台灣').width, tw[1] + 10]); }
+        ms.forEach(function (m) { var q = fwd(m.lon, m.lat); m._p = q; if (q[2] >= 0.05) { var rr = m.sel ? 11.5 : 7; boxes.push([q[0] - rr, q[1] - rr, q[0] + rr, q[1] + rr]); } });
+        var hit = function (b) { for (var i = 0; i < boxes.length; i++) { var o = boxes[i]; if (b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]) return true; } return false; };
+        var labels = [];
+        ms.forEach(function (m) {
+          var q = m._p; if (q[2] < 0.05 || !m.label) return;
+          ctx.font = (m.sel ? '700 ' : '500 ') + '12px ' + U.cssVar('--f-sans');
+          var w = ctx.measureText(m.label).width + 6, r = m.sel ? 11.5 : 7.5;
+          var cand = [[q[0] + r, q[1] - 8], [q[0] - r - w, q[1] - 8], [q[0] - w / 2, q[1] - r - 16], [q[0] - w / 2, q[1] + r]];
+          for (var i = 0; i < cand.length; i++) {
+            var b = [cand[i][0], cand[i][1], cand[i][0] + w, cand[i][1] + 16];
+            if (b[0] < 0 || b[2] > size || b[1] < 0 || b[3] > size) continue;
+            if (!hit(b)) { boxes.push(b); labels.push({ m: m, b: b }); return; }
+          }
+          if (m.sel) labels.push({ m: m, b: [cand[0][0], cand[0][1], cand[0][0] + w, cand[0][1] + 16] }); // 選取的城市一定寫
+        });
+        ms.forEach(function (m) {
+          var q = m._p; if (q[2] < 0.05) return;
+          var r = m.sel ? 7.5 : 5.5;
+          ctx.globalAlpha = 1;
+          if (m.sel) { ctx.beginPath(); ctx.arc(q[0], q[1], r + 4, 0, Math.PI * 2); ctx.strokeStyle = colors.landHi; ctx.lineWidth = 2; ctx.stroke(); }
+          ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, Math.PI * 2); ctx.fillStyle = m.color || colors.sel; ctx.fill();
+          ctx.lineWidth = 1.6; ctx.strokeStyle = colors.sheet; ctx.stroke();
+        });
+        labels.forEach(function (l) {
+          ctx.font = (l.m.sel ? '700 ' : '500 ') + '12px ' + U.cssVar('--f-sans');
+          ctx.fillStyle = colors.sheet; ctx.globalAlpha = .85; ctx.fillRect(l.b[0], l.b[1], l.b[2] - l.b[0], 16); ctx.globalAlpha = 1;
+          ctx.fillStyle = colors.landHi; ctx.textAlign = 'left'; ctx.fillText(l.m.label, l.b[0] + 3, l.b[1] + 12);
+        });
+      }
+    }
+    // 離點擊位置最近的城市標記（16px 內）
+    function nearMarker(px, py) {
+      if (!opts.markers) return null;
+      var best = null, bd = 16 * 16;
+      (opts.markers() || []).forEach(function (m) {
+        var q = m._p || fwd(m.lon, m.lat); if (q[2] < 0.05) return;
+        var dx = px - q[0], dy = py - q[1], d2 = dx * dx + dy * dy;
+        if (d2 < bd) { bd = d2; best = m; }
+      });
+      return best;
     }
     var raf = 0, last = 0, alive = true;
     function loop(ts) {
@@ -133,12 +179,16 @@ var Globe = (function () {
       var g = inv(e.clientX - rect.left, e.clientY - rect.top);
       var v = g ? cell(g[0], g[1]) : 0;
       st.hover = v;
+      var mk = nearMarker(e.clientX - rect.left, e.clientY - rect.top);
+      if (mk && opts.onHoverMarker) { opts.onHoverMarker(mk, e.clientX - rect.left, e.clientY - rect.top); return; }
       if (opts.onHover) opts.onHover(v ? GEO.countries[v - 1] : null, e.clientX - rect.left, e.clientY - rect.top);
     });
     function up(e) {
       if (!st.dragging) return; st.dragging = false;
       if (moved < 6) {
         var rect = canvas.getBoundingClientRect();
+        var mk = nearMarker(e.clientX - rect.left, e.clientY - rect.top);
+        if (mk && opts.onPickMarker) { opts.onPickMarker(mk); return; }
         var g = inv(e.clientX - rect.left, e.clientY - rect.top);
         var v = g ? cell(g[0], g[1]) : 0;
         // 台灣很小：點在台灣附近也算

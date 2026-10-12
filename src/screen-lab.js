@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var h = U.h, A = APP, D = DATA, E = ENGINE;
-  var L = A.lab = A.lab || { exp: 'current', inc: 'current', tab: U.store.get('labTab', 'map'), metric: 'th', level: 'tw', sel: null, era: 'current' };
+  var L = A.lab = A.lab || { exp: 'current', inc: 'current', tab: U.store.get('labTab', 'map'), metric: 'th', level: 'tw', sel: null, era: 'current', wsel: null };
   // 門檻 PR 分六級：綠（容易）→ 黃（中間收入附近）→ 橘紅（困難）→ 黑（PR 95 以上或再高也不夠）
   // 色盲友善模式改用藍 → 黃 → 橘 → 黑（兩組都以相鄰色的色盲模擬差異檢查過）
   var PAL = { normal: ['#0f8a73', '#6db36a', '#edc948', '#e86a2c', '#bf2c34', '#17181a'], cvd: ['#2a6fb8', '#82b8e3', '#ecd060', '#e9792e', '#a8342a', '#17181a'] };
@@ -123,10 +123,11 @@
     ctrl.appendChild(h('div', { class: 'seg', role: 'group', 'aria-label': '地圖範圍' },
       h('button', { type: 'button', 'aria-pressed': L.level === 'tw' ? 'true' : 'false', onclick: function () { L.level = 'tw'; A.go('lab', { keepScroll: true }); } }, '台灣縣市'),
       h('button', { type: 'button', 'aria-pressed': L.level === 'world' ? 'true' : 'false', onclick: function () { L.level = 'world'; A.go('lab', { keepScroll: true }); } }, '世界')));
-    if (full) ctrl.appendChild(h('div', { class: 'seg', role: 'group', 'aria-label': '顯示指標' },
+    if (full && L.level === 'tw') ctrl.appendChild(h('div', { class: 'seg', role: 'group', 'aria-label': '顯示指標' },
       h('button', { type: 'button', 'aria-pressed': L.metric === 'th' ? 'true' : 'false', onclick: function () { L.metric = 'th'; A.go('lab', { keepScroll: true }); } }, '門檻 PR'),
       h('button', { type: 'button', 'aria-pressed': L.metric === 'v' ? 'true' : 'false', onclick: function () { L.metric = 'v'; A.go('lab', { keepScroll: true }); } }, '用你們的收入')));
     left.appendChild(ctrl);
+    if (L.level === 'world' && typeof WUI !== 'undefined') { worldView(left, right, s); return; }
     var status = h('p', { class: 'sm muted', 'aria-live': 'polite' }, '計算各縣市中…');
     var mapBox = h('div', { class: 'twmap-wrap' });
     left.appendChild(h('h2', { style: { fontSize: '20px', marginBottom: '4px' } }, L.metric === 'th' ? '同樣的標準，在哪裡養得起？' : '同樣的收入，搬到哪裡會核准？'));
@@ -155,26 +156,12 @@
     function colorOf(id) { var r = result[id]; if (!r) return null; return L.metric === 'th' ? heat(r.v) : vcol(r.v); }
     function label(r) { if (!r) return '—'; if (L.metric === 'th') return r.v == null ? '>99.9' : 'PR ' + U.pr(r.v); return VTXT[r.v]; }
 
-    if (L.level === 'world') {
-      var cv = h('canvas', { width: 520, height: 520, role: 'img', 'aria-label': '世界點陣地球，台灣依結果著色，其他國家資料建置中' });
-      var gw = h('div', { class: 'globe-wrap' }, cv, tip);
-      mapBox.appendChild(gw);
-      mapBox.appendChild(h('p', { class: 'globe-hint' }, '目前只有台灣有資料，其他國家正在準備中。'));
-    }
     compute(function () {
       var vals = ids.map(function (id) { return result[id]; });
       var med = null;
       if (L.metric === 'th') med = popMedian(vals);
       status.textContent = (L.metric === 'th' ? '顏色是門檻收入 PR' + (dotsOn ? '，點越大代表那裡住的人越密' : '') + '。一半的台灣人，住在門檻 PR ' + U.pr(med) + ' 以上的縣市。' : '以你們目前的收入，套用到每個縣市的結果' + (dotsOn ? '；點越大代表那裡住的人越密' : '') + '。');
-      if (L.level === 'world') {
-        var twColor = L.metric === 'th' ? heat(med) : vcol(result[s.county] ? result[s.county].v : 'pass');
-        L.globe = Globe.create(mapBox.querySelector('canvas'), {
-          lon: 121, lat: 23.7, zoom: 1.5, auto: false,
-          colorFor: function (a3) { return a3 === 'TWN' ? twColor : null; },
-          onHover: function (c, x, y) { if (!c) { tip.classList.remove('on'); return; } tip.textContent = c.a3 === 'TWN' ? (L.metric === 'th' ? '台灣・人口加權中位數 PR ' + U.pr(med) : '台灣・' + D.COUNTY[s.county].name + '：' + VTXT[result[s.county].v]) : c.n + '・資料建置中'; tip.style.left = x / mapBox.clientWidth * 100 + '%'; tip.style.top = y / mapBox.clientHeight * 100 + '%'; tip.classList.add('on'); },
-          onPick: function (c) { if (c.a3 === 'TWN') { L.level = 'tw'; A.go('lab', { keepScroll: true }); } }
-        });
-      } else {
+      if (L.level === 'tw') {
         var map = TWMap.create(mapBox, {
           label: '各縣市結果地圖',
           onPick: function (id) { L.sel = id; paint(); showDetail(); },
@@ -265,6 +252,83 @@
       });
       right.appendChild(list);
     }
+  }
+
+  // ---------- 世界：各國主要城市（地球＋地球下方的城市列表；右邊是點選城市的詳細資料） ----------
+  var A3INV = { JPN: 'JP', KOR: 'KR', FRA: 'FR', CHN: 'CN' };
+  function worldView(left, right, s) {
+    var status = h('p', { class: 'sm muted', 'aria-live': 'polite' }, '正在試算各國城市…');
+    var mapBox = h('div', { class: 'twmap-wrap' });
+    var tip = h('div', { class: 'globe-tip' });
+    var cv = h('canvas', { width: 520, height: 520, role: 'img', 'aria-label': '世界點陣地球，各國主要城市依門檻 PR 著色' });
+    var gw = h('div', { class: 'globe-wrap' }, cv, tip);
+    left.appendChild(h('h2', { style: { fontSize: '20px', marginBottom: '4px' } }, '同樣的標準，換到別的國家要多少收入？'));
+    left.appendChild(status);
+    left.appendChild(mapBox);
+    mapBox.appendChild(gw);
+    mapBox.appendChild(h('p', { class: 'globe-hint' }, '拖曳轉動地球，點城市看詳細比較。'));
+    left.appendChild(legendEl('th', false));
+    var listBox = h('div', { class: 'wd-listbox' });
+    left.appendChild(listBox);
+    var detail = h('div', { class: 'wd-detail-box' });
+    right.appendChild(detail);
+    var all = null, marks = [];
+    function byKey(k) { for (var i = 0; i < all.length; i++) if (WUI.key(all[i]) === k) return all[i]; return null; }
+    function placeTip(x, y) { tip.style.left = x / gw.clientWidth * 100 + '%'; tip.style.top = y / gw.clientHeight * 100 + '%'; tip.classList.add('on'); }
+    function drawList() {
+      U.clear(listBox);
+      listBox.appendChild(h('div', { class: 'card-k', style: { marginTop: '16px' } }, '各國主要城市・由易到難'));
+      listBox.appendChild(WUI.list(all, L.wsel, heat, function (k) { select(k, true, true); }));
+    }
+    function drawDetail() {
+      U.clear(detail);
+      var r = L.wsel ? byKey(L.wsel) : null;
+      if (!r) {
+        detail.appendChild(h('div', { class: 'card-k' }, '點選的城市'));
+        detail.appendChild(h('p', { class: 'muted', style: { marginTop: '6px' } }, '點地球上的城市，或地球下方列表裡的城市，看那裡的收入門檻、需要的年薪，以及錢都花到哪裡。'));
+        return;
+      }
+      detail.appendChild(WUI.detail(r, all[0], s, heat));
+    }
+    function select(k, fly, scroll) {
+      var r = byKey(k); if (!r) return;
+      L.wsel = k;
+      marks.forEach(function (m) { m.sel = m.id === k; });
+      drawList(); drawDetail();
+      if (L.globe) { L.globe.select(WUI.A3[r.cid]); if (fly) { var c = WUI.COORD[r.city]; L.globe.flyTo(c[0], c[1], 1.5, 900); } }
+      if (scroll && window.matchMedia('(max-width: 920px)').matches) detail.scrollIntoView({ behavior: U.reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+    }
+    WUI.rows(s, function (i, n) { status.textContent = '正在試算各國城市…（' + i + '／' + n + '）'; }, function (rows, err) {
+      if (!gw.isConnected) return; // 已經離開這一頁
+      if (err || !rows) { status.textContent = '這部分暫時算不出來，已記錄下來。'; return; }
+      all = rows;
+      if (L.wsel && !byKey(L.wsel)) L.wsel = null;
+      var tw = all[0], twCol = heat(tw.pr), hi = U.cssVar('--ink-2');
+      status.textContent = '顏色是門檻收入 PR，以各國全國同年齡的受僱者計算。';
+      marks = all.filter(function (r) { return r.cid !== 'TW'; }).map(function (r) {
+        var c = WUI.COORD[r.city];
+        return { id: WUI.key(r), lon: c[0], lat: c[1], color: heat(r.pr), label: WUI.cityName(r, true), sel: L.wsel === WUI.key(r) };
+      });
+      var sel0 = L.wsel ? byKey(L.wsel) : null, c0 = sel0 ? WUI.COORD[sel0.city] : [121, 23.7];
+      if (L.globe) { L.globe.destroy(); L.globe = null; }
+      L.globe = Globe.create(cv, {
+        lon: c0[0], lat: c0[1], zoom: 1.5, auto: false, selected: sel0 ? WUI.A3[sel0.cid] : 'TWN',
+        colorFor: function (a3) { return a3 === 'TWN' ? twCol : A3INV[a3] ? hi : null; },
+        markers: function () { return marks; },
+        onHover: function (c, x, y) {
+          if (!c) { tip.classList.remove('on'); return; }
+          tip.textContent = c.a3 === 'TWN' ? '台灣・你選的' + tw.name + ' ' + WUI.prText(tw.pr) : A3INV[c.a3] ? c.n + '・點城市看比較' : c.n + '・資料建置中';
+          placeTip(x, y);
+        },
+        onHoverMarker: function (m, x, y) { var r = byKey(m.id); tip.textContent = WUI.cityName(r) + '・' + WUI.prText(r.pr); placeTip(x, y); },
+        onPick: function (c) {
+          if (c.a3 === 'TWN') { L.level = 'tw'; A.go('lab', { keepScroll: true }); return; }
+          var cid = A3INV[c.a3]; if (cid) select(cid + ':' + ENGINE.country(cid).cities[0], true, true);
+        },
+        onPickMarker: function (m) { select(m.id, false, true); }
+      });
+      drawList(); drawDetail();
+    });
   }
 
   function curveTab(panel, s) {

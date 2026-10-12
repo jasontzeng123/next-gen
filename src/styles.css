@@ -746,29 +746,45 @@ p { margin: 0; }
 .notice-item p { color: var(--ink-2); font-size: 15px; line-height: 1.7; margin: 0; }
 .notice-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-top: 18px; border-top: 1px solid var(--rule-soft); }
 
-/* ---------- 換到別的國家（第二波） ---------- */
-.wd-list { display: flex; flex-direction: column; border-top: 1px solid var(--rule); }
-.wd-row { display: grid; grid-template-columns: 7.2em minmax(0, 1fr) 5.4em; grid-template-areas: "name bar pr" "name sub sub"; column-gap: 12px; row-gap: 3px; align-items: center; padding: 10px 8px; border-bottom: 1px solid var(--rule-soft); }
-.wd-row.mine { background: var(--seal-soft); }
-.wd-name { grid-area: name; line-height: 1.25; }
-.wd-name b { display: block; font-size: 15px; }
-.wd-name small { color: var(--ink-3); font-size: 12px; }
-.wd-bar { grid-area: bar; height: 10px; background: var(--sheet-3); border-radius: 5px; overflow: hidden; }
-.wd-bar i { display: block; height: 100%; background: var(--ink-2); border-radius: 5px; }
-.wd-row.mine .wd-bar i { background: var(--seal); }
-.wd-pr { grid-area: pr; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
-.wd-sub { grid-area: sub; font-size: 12.5px; color: var(--ink-2); }
-.wd-ok { display: inline-block; margin-left: 8px; font-weight: 600; }
-.wd-ok.ok { color: var(--good); }
-.wd-ok.no { color: var(--seal); }
+/* ---------- 實驗室「地圖 → 世界」：各國主要城市（第二波） ---------- */
+.wd-list { display: flex; flex-direction: column; border-top: 1px solid var(--rule); margin-top: 6px; }
+.wd-li { display: grid; grid-template-columns: 6.6em minmax(0, 1fr) 4.6em; gap: 10px; align-items: center; width: 100%; padding: 8px 6px; border: 0; border-bottom: 1px solid var(--rule-faint); background: none; text-align: left; font-size: 14px; color: var(--ink); }
+button.wd-li { cursor: pointer; }
+button.wd-li:hover { background: var(--sheet-2); }
+.wd-li.sel { background: var(--pen-soft); }
+.wd-li.mine { background: var(--sheet-2); }
+.wd-name { line-height: 1.2; font-weight: 700; }
+.wd-name small { display: block; font-weight: 400; font-size: 11.5px; color: var(--ink-3); }
+.wd-bar { height: 10px; background: var(--sheet-3); border-radius: 5px; overflow: hidden; }
+.wd-bar i { display: block; height: 100%; border-radius: 5px; }
+.wd-pr { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+.wd-detail h2 small.wd-country { font-family: var(--f-sans); font-size: 13px; font-weight: 500; color: var(--ink-3); margin-left: 8px; }
+.wd-big { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin-top: 8px; }
+.wd-big s { width: 14px; height: 14px; border-radius: 3px; display: inline-block; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+.wd-big b { font-family: var(--f-serif); font-weight: 900; font-size: 34px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.wd-big span { font-size: 13.5px; color: var(--ink-3); }
+.wd-pp { margin: 12px 0 0; }
+.wd-pp .people { max-width: 100%; }
+.wd-pp figcaption { font-size: 13.5px; color: var(--ink-2); margin-top: 6px; }
+.wd-pp figcaption b { color: var(--pp-on); font-size: 16px; }
+.wd-line { font-size: 14.5px; color: var(--ink-2); margin-top: 10px; }
+.wd-line b { color: var(--ink); }
+.wd-line .wd-yes { color: var(--good); }
+.wd-line .wd-no { color: var(--seal); }
+.wd-h3 { font-size: 15px; margin: 20px 0 8px; }
+.wd-stack-row { display: grid; grid-template-columns: 4.6em minmax(0, 1fr); gap: 10px; align-items: center; margin-bottom: 6px; font-size: 13px; }
+.wd-stack-l { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wd-stack { display: flex; height: 16px; border-radius: 3px; overflow: hidden; gap: 2px; background: var(--sheet); }
+.wd-stack i { display: block; height: 100%; min-width: 2px; }
+.wd-leg { display: grid; grid-template-columns: 12px minmax(0, 1fr) 4em 4em; gap: 4px 8px; align-items: center; font-size: 13px; margin-top: 10px; }
+.wd-leg s { width: 12px; height: 12px; border-radius: 2px; display: block; }
+.wd-leg b { font-size: 12px; color: var(--ink-3); font-weight: 500; text-align: right; }
+.wd-leg .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.wd-leg .v.muted { font-weight: 400; }
 .wd-why { margin-top: 14px; border-top: 1px solid var(--rule-soft); padding-top: 10px; }
 .wd-why summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
-.wd-why h4 { margin: 12px 0 2px; font-size: 14px; }
-.wd-why .tbl tr.mine td { font-weight: 700; }
 .wd-map { list-style: none; padding: 0; margin: 4px 0 8px; font-size: 13.5px; }
 .wd-map li { padding: 3px 0; }
 .wd-map b { display: inline-block; min-width: 4.6em; color: var(--ink-3); font-weight: 500; }
 .wd-map li.note { color: var(--ink-3); font-size: 12.5px; }
 .wd-note { margin-top: 12px; }
-@media (max-width: 560px) { .wd-row { grid-template-columns: 6.2em minmax(0, 1fr) 4.8em; column-gap: 8px; } }
-.wd-seg { margin: 6px 0 4px; flex-wrap: wrap; }
