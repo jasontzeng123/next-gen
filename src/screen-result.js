@@ -10,9 +10,10 @@
     var t = document.createElement('template');
     var col = 'var(--seal)';
     var txt = '';
-    if (lines.length === 1) txt = '<text x="100" y="' + (sub ? 112 : 124) + '" text-anchor="middle" font-family="var(--f-serif)" font-weight="900" font-size="' + (lines[0].length > 2 ? 46 : 70) + '" fill="' + col + '" letter-spacing="4">' + lines[0] + '</text>';
+    if (lines.length === 1) txt = '<text x="100" y="' + (sub ? 98 : 124) + '" text-anchor="middle" font-family="var(--f-serif)" font-weight="900" font-size="' + (sub ? 56 : lines[0].length > 2 ? 46 : 70) + '" fill="' + col + '" letter-spacing="4">' + lines[0] + '</text>';
     else txt = lines.map(function (l, i) { return '<text x="100" y="' + (88 + i * 52) + '" text-anchor="middle" font-family="var(--f-serif)" font-weight="900" font-size="44" fill="' + col + '" letter-spacing="3">' + l + '</text>'; }).join('');
-    if (sub) txt += '<text x="100" y="' + (lines.length === 1 ? 152 : 168) + '" text-anchor="middle" font-family="var(--f-sans)" font-weight="700" font-size="17" fill="' + col + '">' + sub + '</text>';
+    // 副標（PR 值）放大約兩倍；字多（如 PR 99.9）就縮小一點，放得進內圈
+    if (sub) txt += '<text x="100" y="' + (lines.length === 1 ? 152 : 168) + '" text-anchor="middle" font-family="var(--f-sans)" font-weight="700" font-size="' + (lines.length === 1 ? (sub.length > 5 ? 28 : 34) : 17) + '" fill="' + col + '">' + sub + '</text>';
     var shape = kind === 'round'
       ? '<circle cx="100" cy="100" r="88" fill="none" stroke="' + col + '" stroke-width="7"/><circle cx="100" cy="100" r="77" fill="none" stroke="' + col + '" stroke-width="2"/>'
       : '<rect x="14" y="14" width="172" height="172" rx="10" fill="none" stroke="' + col + '" stroke-width="8"/><rect x="26" y="26" width="148" height="148" rx="4" fill="none" stroke="' + col + '" stroke-width="2"/>';
@@ -323,13 +324,13 @@
     sec.appendChild(tiles);
     return sec;
   }
-  // 10×10 小人圖：100 個同齡（同產業）的人，收入達到門檻的有幾個
+  // 10 人圖：100 個同齡（同產業）的人濃縮成 10 個人形，收入達到門檻的比例上色
   function peopleInfo(res, th, s) {
     var n = People.count(th.pr);
     var peer = s.jobA.industry === 'all' && (!s.partner || s.jobB.industry === 'all') ? '同齡的人' : '同齡同業的人';
     return { n: n, peer: peer, say: peer + '，收入養得起', aria: '每 100 個' + peer + '，有 ' + n + ' 個人的收入養得起這組標準' };
   }
-  // 100 人圖：只留數字與一句話
+  // 10 人圖：數字（每 100 人）＋一句話
   function peopleBlock(res, th, s) {
     var info = peopleInfo(res, th, s);
     var anim = !A.peopleShown && !U.reduceMotion(); A.peopleShown = true;
@@ -926,9 +927,9 @@
     setL.slice(0, 2).forEach(function (l, i) { fitText(c, l, X, 484 + i * setLH, setW); });
     var y;
     if (thMode) {
-      // 100 人（25 × 4）
-      var gh = People.draw(c, X, 590, CW, info.n, { on: css('--pp-on') || css('--good'), off: css('--pp-off') || css('--rule-soft') }, 25);
-      var y0 = 590 + gh, yMax = 1212;
+      // 10 人一列（每人代表 10%，不滿一人由下往上填色）
+      var gh = People.draw(c, X, 618, CW, info.n, { on: css('--pp-on') || css('--good'), off: css('--pp-off') || css('--rule-soft') });
+      var y0 = 618 + gh, yMax = 1212;
       var sub = vi.hb ? (th.pr != null ? '卡在 ' + vi.hb.year + ' 年買房：頭期款、稅費與裝潢一次要 ' + U.wan(vi.hb.cash) + '。' : '光是 ' + vi.hb.year + ' 年買房要拿出的 ' + U.wan(vi.hb.cash) + '，就來不及存。') : th.pr != null && th.grossBirth ? '生第一胎那年，' + (s.partner ? '夫妻合計' : '') + '稅前年收入要約 ' + U.wan(th.grossBirth) + '。' : vi.line.replace(/<br>/g, '').replace(/<[^>]+>/g, '');
       // 結論放大（太長就在逗號後換行），下面接說明與「收入在中間的話」；整塊放進 100 人與頁尾之間
       var tF = 72, tLH = 86, GAP_T = 68, SLH = 46, GAP_M = 54;
@@ -974,10 +975,11 @@
     c.strokeStyle = css('--seal'); c.fillStyle = css('--seal'); c.lineWidth = R * 0.08; c.textAlign = 'center';
     if (vi.stamp.k === 'round') { c.beginPath(); c.arc(0, 0, R, 0, Math.PI * 2); c.stroke(); c.lineWidth = R * 0.027; c.beginPath(); c.arc(0, 0, R * 0.866, 0, Math.PI * 2); c.stroke(); }
     else { c.strokeRect(-R, -R, R * 2, R * 2); c.lineWidth = R * 0.027; c.strokeRect(-R * 0.853, -R * 0.853, R * 1.706, R * 1.706); }
-    var L = vi.stamp.l;
-    if (L.length === 1) { c.font = '900 ' + Math.round(R * (L[0].length > 2 ? 0.52 : 0.8)) + 'px ' + F_SERIF; c.fillText(L[0], 0, vi.stamp.sub ? R * 0.067 : R * 0.28); }
+    var L = vi.stamp.l, sub = vi.stamp.sub;
+    if (L.length === 1) { c.font = '900 ' + Math.round(R * (sub ? 0.48 : L[0].length > 2 ? 0.52 : 0.8)) + 'px ' + F_SERIF; c.fillText(L[0], 0, sub ? -R * 0.09 : R * 0.28); }
     else { c.font = '900 ' + Math.round(R * 0.507) + 'px ' + F_SERIF; c.fillText(L[0], 0, -R * 0.093); c.fillText(L[1], 0, R * 0.507); }
-    if (vi.stamp.sub) { c.font = '700 ' + Math.round(R * 0.267) + 'px ' + F_SANS; c.fillText(vi.stamp.sub, 0, R * 0.533); }
+    // 副標（PR 值）放大約兩倍；太寬就縮到印章內圈放得下
+    if (sub) { var sf = R * 0.5; c.font = '700 ' + Math.round(sf) + 'px ' + F_SANS; var sw = c.measureText(sub).width; if (sw > R * 1.22) { sf *= R * 1.22 / sw; c.font = '700 ' + Math.round(sf) + 'px ' + F_SANS; } c.fillText(sub, 0, R * 0.54); }
     c.restore(); c.textAlign = 'left';
   }
   // 自動換行（中文避頭尾、數字與單位不拆開、優先在逗號後換行）；回傳最後一行的 y
