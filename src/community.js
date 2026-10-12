@@ -124,7 +124,9 @@ var COMM = (function () {
     return loadRows();
   }
   function loadRows() {
-    return st.db.collection('submissions').orderBy('ts', 'desc').limit(st.backend === 'web' ? 3000 : 1000).get().then(function (snap) {
+    // 網站版只有在資料庫的統計函式失敗時才會走到這裡：只抓最近 300 筆當樣本，
+    // 避免大量訪客同時下載整份資料、把免費方案的流量（每月 5 GB）用完
+    return st.db.collection('submissions').orderBy('ts', 'desc').limit(st.backend === 'web' ? 300 : 1000).get().then(function (snap) {
       // 雲端讀回的資料是唯讀的，一律複製一份再使用
       var all = snap.docs.map(function (d) { var o = JSON.parse(JSON.stringify(d.data() || {})); o._id = d.id; return o; }).filter(function (o) { return o.v >= 2; });
       // 示範資料（作者產生、不是真人填的）：畫面上一律註明；真實分享滿 DEMO_OFF 筆後就不再計入
