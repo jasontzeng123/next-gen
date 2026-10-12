@@ -204,6 +204,7 @@
       mainCol.appendChild(childSection(view, s));
       mainCol.appendChild(spendSection(view, s));
       mainCol.appendChild(compSection(res, th, s));
+      if (A.worldSection) mainCol.appendChild(A.worldSection(res, th, s));
       mainCol.appendChild(crowdSection());
       mainCol.appendChild(saveSection(res, th, s));
       window.scrollTo(0, y);

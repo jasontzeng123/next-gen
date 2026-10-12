@@ -745,3 +745,30 @@ p { margin: 0; }
 .notice-item h2 { font-family: var(--f-serif); font-size: 18px; font-weight: 700; margin: 6px 0 4px; }
 .notice-item p { color: var(--ink-2); font-size: 15px; line-height: 1.7; margin: 0; }
 .notice-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-top: 18px; border-top: 1px solid var(--rule-soft); }
+
+/* ---------- 換到別的國家（第二波） ---------- */
+.wd-list { display: flex; flex-direction: column; border-top: 1px solid var(--rule); }
+.wd-row { display: grid; grid-template-columns: 7.2em minmax(0, 1fr) 5.4em; grid-template-areas: "name bar pr" "name sub sub"; column-gap: 12px; row-gap: 3px; align-items: center; padding: 10px 8px; border-bottom: 1px solid var(--rule-soft); }
+.wd-row.mine { background: var(--seal-soft); }
+.wd-name { grid-area: name; line-height: 1.25; }
+.wd-name b { display: block; font-size: 15px; }
+.wd-name small { color: var(--ink-3); font-size: 12px; }
+.wd-bar { grid-area: bar; height: 10px; background: var(--sheet-3); border-radius: 5px; overflow: hidden; }
+.wd-bar i { display: block; height: 100%; background: var(--ink-2); border-radius: 5px; }
+.wd-row.mine .wd-bar i { background: var(--seal); }
+.wd-pr { grid-area: pr; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+.wd-sub { grid-area: sub; font-size: 12.5px; color: var(--ink-2); }
+.wd-ok { display: inline-block; margin-left: 8px; font-weight: 600; }
+.wd-ok.ok { color: var(--good); }
+.wd-ok.no { color: var(--seal); }
+.wd-why { margin-top: 14px; border-top: 1px solid var(--rule-soft); padding-top: 10px; }
+.wd-why summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+.wd-why h4 { margin: 12px 0 2px; font-size: 14px; }
+.wd-why .tbl tr.mine td { font-weight: 700; }
+.wd-map { list-style: none; padding: 0; margin: 4px 0 8px; font-size: 13.5px; }
+.wd-map li { padding: 3px 0; }
+.wd-map b { display: inline-block; min-width: 4.6em; color: var(--ink-3); font-weight: 500; }
+.wd-map li.note { color: var(--ink-3); font-size: 12.5px; }
+.wd-note { margin-top: 12px; }
+@media (max-width: 560px) { .wd-row { grid-template-columns: 6.2em minmax(0, 1fr) 4.8em; column-gap: 8px; } }
+.wd-seg { margin: 6px 0 4px; flex-wrap: wrap; }
