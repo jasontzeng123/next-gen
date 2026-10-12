@@ -46,7 +46,7 @@ var ENGINE = (function (D) {
      HOUSEHOLD（可支配所得五分位，可省略）, COST（生活與養育成本）
      city(s) → 城市資料；districtMult(s)；normalize(s)
      housePlan(x) → 房屋計畫；loans(house, x) → [{ bal, rate 或 rates, years, grace }]
-     leavePay(g, ind, months, nb, x, who) → 育嬰給付（who：'A' 或 'B'）；leaveMonths
+     leavePay(g, ind, months, nb, x, who) → 育嬰給付（who：'A' 或 'B'）；leaveMonths（數字，或 function(who, s) → 月數）
      x.y：每年重設的暫存物件（例如累計當年的教育費給稅額抵減用）
      kid(x, k, a) → 每個孩子每年的花費與補助（寫進 x.e、x.tr、x.events）
      family(x)（可省略）→ 依整個家庭計算的補助
@@ -462,7 +462,8 @@ var ENGINE = (function (D) {
       if (noKids) return 0;
       if (quit && who === quitWho) return 0;
       if (who === 'B' && !s.partner) return 0;
-      return (s.leave === who || s.leave === 'both') ? K.leaveMonths : 0;
+      if (!(s.leave === who || s.leave === 'both')) return 0;
+      return typeof K.leaveMonths === 'function' ? K.leaveMonths(who, s) : K.leaveMonths; // 德國：一人請 12 個月，夫妻各 7 個月
     }
     var lmA = leaveMonths('A'), lmB = leaveMonths('B');
 
