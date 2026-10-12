@@ -17,7 +17,7 @@ function takeHome(K, g, opt) {
     s: Object.assign({ partner: !!opt.partner, ageA: opt.age || 35, ageB: opt.age || 35, build: 'used', leave: 'none', jobA: {}, jobB: {} }, opt.s || {}),
     c: K.CITY[cityId], C: K.COST, K, t: 0, gA: g, gB: opt.gB || 0, workFracA: 1, workFracB: 1,
     atHome: opt.kids || [], minors: (opt.kids || []).filter(a => a < 18).length, adultDeps: 0, presch: 0, persons: 1 + (opt.partner ? 1 : 0) + (opt.kids || []).length,
-    ly: -1, loanBalReal: 0, A: { inflation: 0.02 }, renting: true, mortInt: 0, indA: K.IND.all, indB: K.IND.all, tr: {}
+    ly: -1, loanBalReal: 0, A: { inflation: 0.02 }, renting: true, mortInt: 0, indA: K.IND.all, indB: K.IND.all, tr: {}, y: {}, kAges: []
   };
   const r = K.taxes(x);
   return { si: r.si, tax: r.tax, net: g - r.si - r.tax, rate: (g - r.si - r.tax) / g };

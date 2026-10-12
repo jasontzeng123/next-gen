@@ -124,7 +124,11 @@ var WORLD = (function (E, D) {
     var K = E.country(cid);
     var ls = E.clone(tw); delete ls.__norm;
     ls.country = K.id;
-    if (K.id !== 'TW') { ls.city = cityId || K.cities[0]; ls.dm = TW.districtMult(tw); }
+    if (K.id !== 'TW') {
+      ls.city = cityId || K.cities[0]; ls.dm = TW.districtMult(tw);
+      // 台灣進階設定裡的「租金補貼」「待審津貼」只代表台灣的政策，其他國家照當地現行制度算
+      ls.adv.rentSubsidy = true; ls.adv.pending = false;
+    }
     else if (cityId) ls.county = cityId;
     // 收入：換成「同年齡、不分產業」的 PR，再放到當地的分布
     ['jobA', 'jobB'].forEach(function (k) {

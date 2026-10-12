@@ -46,7 +46,8 @@ var ENGINE = (function (D) {
      HOUSEHOLD（可支配所得五分位，可省略）, COST（生活與養育成本）
      city(s) → 城市資料；districtMult(s)；normalize(s)
      housePlan(x) → 房屋計畫；loans(house, x) → [{ bal, rate 或 rates, years, grace }]
-     leavePay(g, ind, months, nb, x) → 育嬰給付；leaveMonths
+     leavePay(g, ind, months, nb, x, who) → 育嬰給付（who：'A' 或 'B'）；leaveMonths
+     x.y：每年重設的暫存物件（例如累計當年的教育費給稅額抵減用）
      kid(x, k, a) → 每個孩子每年的花費與補助（寫進 x.e、x.tr、x.events）
      family(x)（可省略）→ 依整個家庭計算的補助
      rentFor(c, rooms, rentMult, x) → 月租；rentSubsidy(x)（可省略）
@@ -490,7 +491,7 @@ var ENGINE = (function (D) {
       var events = [];
       var e = { housing: 0, housingOnce: 0, living: 0, kidsBirth: 0, kidsCare: 0, kidsEdu: 0, kidsLife: 0, transport: 0, elder: 0, travel: 0, debtInterest: 0 };
       var tr = { birth: 0, cityBirth: 0, allowance: 0, care: 0, leave: 0, rent: 0, uni: 0, growth: 0, kg: 0, pension: 0 };
-      x.t = t; x.e = e; x.tr = tr; x.events = events; x.kAges = kAges; x.helperMonths = 0;
+      x.t = t; x.e = e; x.tr = tr; x.events = events; x.kAges = kAges; x.helperMonths = 0; x.y = {}; // x.y：國家模組每年用的暫存
       // ---- 收入 ----
       var gA = personGross('A', t), gB = personGross('B', t);
       // 65 歲後：年金（有工作者）
@@ -501,10 +502,10 @@ var ENGINE = (function (D) {
       var nb = kAges.filter(function (a) { return a === 0; }).length;
       if (nb > 0) {
         if (lmA && gA > 0) {
-          leaveAllow += K.leavePay(gA, indA, lmA, nb, x); workFracA = Math.max(0, 1 - lmA * nb / 12); gA *= workFracA;
+          leaveAllow += K.leavePay(gA, indA, lmA, nb, x, 'A'); workFracA = Math.max(0, 1 - lmA * nb / 12); gA *= workFracA;
         }
         if (lmB && gB > 0) {
-          leaveAllow += K.leavePay(gB, indB, lmB, nb, x); workFracB = Math.max(0, 1 - lmB * nb / 12); gB *= workFracB;
+          leaveAllow += K.leavePay(gB, indB, lmB, nb, x, 'B'); workFracB = Math.max(0, 1 - lmB * nb / 12); gB *= workFracB;
         }
       }
       tr.leave = leaveAllow;
