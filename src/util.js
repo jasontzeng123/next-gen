@@ -57,6 +57,13 @@ var U = (function () {
   function monthly(n) { return n >= 10000 ? (n / 1e4).toFixed(n % 10000 === 0 ? 0 : 1).replace(/\.0$/, '') + ' 萬/月' : sep(n) + ' 元/月'; }
   function prFmt(p) { if (p == null) return '—'; if (p >= 99) return p.toFixed(1); if (p < 1) return '<1'; return Math.round(p).toString(); }
   function topPct(p) { var t = 100 - p; if (t < 1) return t.toFixed(1); return Math.round(t).toString(); }
+  // 門檻 PR 一律無條件進位到顯示的精度（50.3 → 51、99.12 → 99.2）：
+  // 四捨五入會出現「門檻 PR 50」卻「PR 50 的夫妻撐不住」的矛盾
+  function thUp(p) {
+    if (p == null || !(p >= 1)) return p;
+    if (p >= 99) return Math.min(99.9, Math.ceil(p * 10 - 1e-6) / 10);
+    return Math.min(99, Math.ceil(p - 1e-6));
+  }
   var CN = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十'];
   function cn(n) { return CN[n] || String(n); }
 
@@ -167,5 +174,5 @@ var U = (function () {
     var s = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + (cls ? ' class="' + cls + '"' : '') + '>' + (ICONS[name] || '') + '</svg>';
     var t = document.createElement('template'); t.innerHTML = s; return t.content.firstChild;
   }
-  return { task: task, safe: safe, report: report, onError: onError, modalOpen: modalOpen, h: h, svg: svg, clear: clear, sep: sep, wan: wan, wan1: wan1, yuan: yuan, monthly: monthly, pr: prFmt, topPct: topPct, cn: cn, debounce: debounce, store: store, toast: toast, cssVar: cssVar, reduceMotion: reduceMotion, cvd: cvd, setCvd: setCvd, isDark: isDark, mix: mix, copy: copy, modal: modal, icon: icon };
+  return { task: task, safe: safe, report: report, onError: onError, modalOpen: modalOpen, h: h, svg: svg, clear: clear, sep: sep, wan: wan, wan1: wan1, yuan: yuan, monthly: monthly, pr: prFmt, topPct: topPct, thUp: thUp, cn: cn, debounce: debounce, store: store, toast: toast, cssVar: cssVar, reduceMotion: reduceMotion, cvd: cvd, setCvd: setCvd, isDark: isDark, mix: mix, copy: copy, modal: modal, icon: icon };
 })();
