@@ -789,7 +789,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-12T05:48', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-12T06:05', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -2495,6 +2495,8 @@ var Globe = (function () {
     opts = opts || {};
     var ctx = canvas.getContext('2d');
     var st = { lon: opts.lon != null ? opts.lon : 105, lat: opts.lat != null ? opts.lat : 18, zoom: opts.zoom || 1, vx: 0, auto: opts.auto !== false, hover: 0, sel: opts.selected || 'TWN', dragging: false, anim: null };
+    // 縮放範圍：1 倍是整顆地球；5 倍時一格地圖資料（0.5 度）約占 2 個點，再放大只會更粗糙
+    var ZMIN = opts.minZoom || 1, ZMAX = opts.maxZoom || 5;
     var colors = {};
     function readColors() {
       colors = { ocean: U.cssVar('--rule-soft'), land: U.cssVar('--ink-3'), landHi: U.cssVar('--ink'), tw: U.cssVar('--seal'), sel: U.cssVar('--pen'), sheet: U.cssVar('--sheet'), ring: U.cssVar('--rule') };
@@ -2576,7 +2578,7 @@ var Globe = (function () {
       if (!alive) return;
       var dt = last ? Math.min(50, ts - last) : 16; last = ts;
       if (st.anim) {
-        var a = st.anim, k = Math.min(1, (ts - a.t0) / a.dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        var a = st.anim, k = Math.min(1, (ts - a.t0) / a.dur), e = a.ease === 'out' ? 1 - Math.pow(1 - k, 3) : k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
         st.lon = a.lon0 + (a.lon1 - a.lon0) * e; st.lat = a.lat0 + (a.lat1 - a.lat0) * e; st.zoom = a.z0 + (a.z1 - a.z0) * e;
         if (k >= 1) { st.anim = null; if (a.done) a.done(); }
       } else if (!st.dragging) {
@@ -2586,11 +2588,48 @@ var Globe = (function () {
       draw();
       raf = requestAnimationFrame(loop);
     }
-    // 互動
+    // 互動：單指拖曳旋轉；雙指縮放（超過範圍會有阻力，放開後回彈）；觸控板捏合（Ctrl＋滾輪）
     var lastX = 0, lastY = 0, lastT = 0, moved = 0;
-    canvas.addEventListener('pointerdown', function (e) { st.dragging = true; st.auto = false; st.anim = null; lastX = e.clientX; lastY = e.clientY; lastT = performance.now(); moved = 0; canvas.setPointerCapture(e.pointerId); });
+    var pts = {}, pinch = null, rawZ = st.zoom, wheelT = 0;
+    function npts() { return Object.keys(pts).length; }
+    function two() { var k = Object.keys(pts); return [pts[k[0]], pts[k[1]]]; }
+    // 超過範圍時越拉越緊（橡皮筋）：最多再放大 35%、再縮小 25%
+    function rubber(z) {
+      if (z > ZMAX) return ZMAX * (1 + 0.35 * (1 - ZMAX / z));
+      if (z < ZMIN) return ZMIN * (1 - 0.25 * (1 - z / ZMIN));
+      return z;
+    }
+    function settle() {
+      var tz = Math.max(ZMIN, Math.min(ZMAX, st.zoom));
+      rawZ = tz;
+      if (Math.abs(tz - st.zoom) < 1e-4) return;
+      st.anim = { t0: performance.now(), dur: U.reduceMotion() ? 1 : 340, lon0: st.lon, lon1: st.lon, lat0: st.lat, lat1: st.lat, z0: st.zoom, z1: tz, ease: 'out' };
+    }
+    canvas.addEventListener('pointerdown', function (e) {
+      pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+      try { canvas.setPointerCapture(e.pointerId); } catch (er) { /* 略過 */ }
+      st.auto = false; st.anim = null;
+      if (npts() === 2) {
+        var p2 = two();
+        pinch = { d0: Math.max(10, Math.hypot(p2[0].x - p2[1].x, p2[0].y - p2[1].y)), z0: rawZ = st.zoom, mx: (p2[0].x + p2[1].x) / 2, my: (p2[0].y + p2[1].y) / 2 };
+        st.dragging = false; st.vx = 0; moved = 999; // 雙指操作結束時不算點選
+        return;
+      }
+      if (npts() > 2) return;
+      st.dragging = true; lastX = e.clientX; lastY = e.clientY; lastT = performance.now(); moved = 0;
+    });
     canvas.addEventListener('pointermove', function (e) {
       var rect = canvas.getBoundingClientRect();
+      if (pts[e.pointerId]) { pts[e.pointerId].x = e.clientX; pts[e.pointerId].y = e.clientY; }
+      if (pinch && npts() >= 2) {
+        var p2 = two(), d = Math.max(10, Math.hypot(p2[0].x - p2[1].x, p2[0].y - p2[1].y));
+        rawZ = pinch.z0 * d / pinch.d0; st.zoom = rubber(rawZ);
+        // 兩指一起移動：跟著轉動地球
+        var mx = (p2[0].x + p2[1].x) / 2, my = (p2[0].y + p2[1].y) / 2, kk = 0.32 / st.zoom;
+        st.lon -= (mx - pinch.mx) * kk; st.lat = Math.max(-70, Math.min(70, st.lat + (my - pinch.my) * kk));
+        pinch.mx = mx; pinch.my = my;
+        return;
+      }
       if (st.dragging) {
         var dx = e.clientX - lastX, dy = e.clientY - lastY, now = performance.now();
         moved += Math.abs(dx) + Math.abs(dy);
@@ -2602,12 +2641,24 @@ var Globe = (function () {
       var g = inv(e.clientX - rect.left, e.clientY - rect.top);
       var v = g ? cell(g[0], g[1]) : 0;
       st.hover = v;
+      if (typeof nearMarker === 'function') {
+        var mk = nearMarker(e.clientX - rect.left, e.clientY - rect.top);
+        if (mk && opts.onHoverMarker) { opts.onHoverMarker(mk, e.clientX - rect.left, e.clientY - rect.top); return; }
+      }
       if (opts.onHover) opts.onHover(v ? GEO.countries[v - 1] : null, e.clientX - rect.left, e.clientY - rect.top);
     });
     function up(e) {
+      var wasPinch = !!pinch;
+      delete pts[e.pointerId];
+      if (pinch && npts() < 2) { pinch = null; settle(); }
+      if (wasPinch) { st.dragging = false; return; }
       if (!st.dragging) return; st.dragging = false;
       if (moved < 6) {
         var rect = canvas.getBoundingClientRect();
+        if (typeof nearMarker === 'function') {
+          var mk = nearMarker(e.clientX - rect.left, e.clientY - rect.top);
+          if (mk && opts.onPickMarker) { opts.onPickMarker(mk); return; }
+        }
         var g = inv(e.clientX - rect.left, e.clientY - rect.top);
         var v = g ? cell(g[0], g[1]) : 0;
         // 台灣很小：點在台灣附近也算
@@ -2617,7 +2668,19 @@ var Globe = (function () {
       }
     }
     canvas.addEventListener('pointerup', up);
-    canvas.addEventListener('pointercancel', function () { st.dragging = false; });
+    canvas.addEventListener('pointercancel', function (e) { delete pts[e.pointerId]; if (pinch && npts() < 2) { pinch = null; settle(); } st.dragging = false; });
+    // 觸控板捏合（瀏覽器會送出按住 Ctrl 的滾輪事件）；一般滾輪仍然捲動頁面
+    canvas.addEventListener('wheel', function (e) {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      st.auto = false; st.anim = null;
+      if (performance.now() - wheelT > 250) rawZ = st.zoom;
+      wheelT = performance.now();
+      rawZ *= Math.exp(-e.deltaY * 0.01); st.zoom = rubber(rawZ);
+      clearTimeout(st.wheelTimer); st.wheelTimer = setTimeout(settle, 160);
+    }, { passive: false });
+    // iOS Safari：避免雙指縮放整個頁面
+    canvas.addEventListener('gesturestart', function (e) { e.preventDefault(); });
     canvas.addEventListener('pointerleave', function () { st.hover = 0; if (opts.onHover) opts.onHover(null); });
     var ro = new ResizeObserver(function () { resize(); });
     ro.observe(canvas);
@@ -2628,11 +2691,12 @@ var Globe = (function () {
       st: st,
       flyTo: function (lon, lat, zoom, dur, done) {
         var dl = ((lon - st.lon) % 360 + 540) % 360 - 180;
-        st.anim = { t0: performance.now(), dur: U.reduceMotion() ? 1 : (dur || 1200), lon0: st.lon, lon1: st.lon + dl, lat0: st.lat, lat1: lat, z0: st.zoom, z1: zoom || st.zoom, done: done };
+        var zt = Math.max(ZMIN, Math.min(ZMAX, zoom || st.zoom)); rawZ = zt;
+        st.anim = { t0: performance.now(), dur: U.reduceMotion() ? 1 : (dur || 1200), lon0: st.lon, lon1: st.lon + dl, lat0: st.lat, lat1: lat, z0: st.zoom, z1: zt, done: done };
         st.auto = false;
       },
       select: function (a3) { st.sel = a3; },
-      destroy: function () { alive = false; cancelAnimationFrame(raf); ro.disconnect(); mo.disconnect(); },
+      destroy: function () { alive = false; cancelAnimationFrame(raf); clearTimeout(st.wheelTimer); ro.disconnect(); mo.disconnect(); },
       redraw: draw
     };
   }
