@@ -1,7 +1,7 @@
 // 隨機設定跑遍 9 個城市：不能出錯、不能有 NaN
 'use strict';
 const D = require('../src/data.js'), E = require('../src/engine.js'), W = require('../src/world.js');
-['jp', 'kr', 'fr', 'cn', 'us', 'uk', 'de', 'se', 'ca', 'au', 'sg'].forEach(c => require('../src/country-' + c + '.js'));
+['jp', 'kr', 'fr', 'cn', 'us', 'uk', 'de', 'se', 'ca', 'au', 'sg', 'hk'].forEach(c => require('../src/country-' + c + '.js'));
 let seed = 7; const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
 const pick = a => a[Math.floor(rnd() * a.length)], int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const n = +(process.argv[2] || 120); let bad = 0, sims = 0; const t0 = Date.now();

@@ -8,8 +8,8 @@ var WUI = (function () {
   var h = U.h, A = APP, E = ENGINE;
 
   // 城市位置（地球上的標記）
-  var COORD = { tokyo: [139.69, 35.69], osaka: [135.50, 34.69], seoul: [126.98, 37.57], busan: [129.08, 35.18], paris: [2.35, 48.86], lyon: [4.84, 45.76], shanghai: [121.47, 31.23], chengdu: [104.07, 30.57], nyc: [-74.01, 40.71], houston: [-95.37, 29.76], london: [-0.13, 51.51], manchester: [-2.24, 53.48], berlin: [13.40, 52.52], leipzig: [12.37, 51.34], stockholm: [18.07, 59.33], gothenburg: [11.97, 57.71], toronto: [-79.38, 43.65], calgary: [-114.07, 51.05], sydney: [151.21, -33.87], melbourne: [144.96, -37.81], singapore: [103.82, 1.35] };
-  var A3 = { JP: 'JPN', KR: 'KOR', FR: 'FRA', CN: 'CHN', US: 'USA', UK: 'GBR', DE: 'DEU', SE: 'SWE', CA: 'CAN', AU: 'AUS', SG: 'SGP' };
+  var COORD = { tokyo: [139.69, 35.69], osaka: [135.50, 34.69], seoul: [126.98, 37.57], busan: [129.08, 35.18], paris: [2.35, 48.86], lyon: [4.84, 45.76], shanghai: [121.47, 31.23], chengdu: [104.07, 30.57], nyc: [-74.01, 40.71], houston: [-95.37, 29.76], london: [-0.13, 51.51], manchester: [-2.24, 53.48], berlin: [13.40, 52.52], leipzig: [12.37, 51.34], stockholm: [18.07, 59.33], gothenburg: [11.97, 57.71], toronto: [-79.38, 43.65], calgary: [-114.07, 51.05], sydney: [151.21, -33.87], melbourne: [144.96, -37.81], singapore: [103.82, 1.35], hongkong: [114.17, 22.32] };
+  var A3 = { JP: 'JPN', KR: 'KOR', FR: 'FRA', CN: 'CHN', US: 'USA', UK: 'GBR', DE: 'DEU', SE: 'SWE', CA: 'CAN', AU: 'AUS', SG: 'SGP', HK: 'HKG' };
 
   // 當地幣值：一律用「萬」，加上約合台幣（市場匯率）
   function money(v, K) {
@@ -56,7 +56,7 @@ var WUI = (function () {
     sorted.forEach(function (r) {
       var mine = r.cid === 'TW', p = r.pr == null ? 100 : Math.max(1.5, r.pr);
       var inner = [
-        h('span', { class: 'wd-name' }, cityName(r, true), h('small', {}, mine ? '你選的縣市' : E.country(r.cid).name)),
+        h('span', { class: 'wd-name' }, cityName(r, true), h('small', {}, mine ? '你選的縣市' : E.country(r.cid).name === cityName(r, true) ? '' : E.country(r.cid).name)),
         h('span', { class: 'wd-bar', 'aria-hidden': 'true' }, h('i', { style: { width: p + '%', background: heat(r.pr) } })),
         h('span', { class: 'wd-pr' }, prText(r.pr))
       ];
@@ -102,7 +102,7 @@ var WUI = (function () {
     var K = E.country(r.cid), C = K.CITY[r.city], box = h('div', { class: 'wd-detail' });
     var full = s.incomeMode === 'full', both = s.partner && r.who === 'both';
     box.appendChild(h('div', { class: 'card-k' }, '點選的城市'));
-    box.appendChild(h('h2', { style: { fontSize: '22px' } }, C.name, h('small', { class: 'wd-country' }, K.name)));
+    box.appendChild(h('h2', { style: { fontSize: '22px' } }, C.name, K.name === C.name ? null : h('small', { class: 'wd-country' }, K.name)));
     // 門檻 PR 與 100 人圖
     box.appendChild(h('div', { class: 'wd-big' },
       h('s', { style: { background: heat(r.pr) } }), h('b', {}, prText(r.pr)),
