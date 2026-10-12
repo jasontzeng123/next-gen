@@ -51,6 +51,8 @@ var ENGINE = (function (D) {
      kid(x, k, a) → 每個孩子每年的花費與補助（寫進 x.e、x.tr、x.events）
      family(x)（可省略）→ 依整個家庭計算的補助
      rentFor(c, rooms, rentMult, x) → 月租；rentSubsidy(x)（可省略）
+     rentDeposit(c, rooms, rentMult, x)（可省略）→ 租屋押金裡要自己拿出的現金（韓國全稅）；
+       搬到更大的房子要補、買房時退回，押金算在淨資產裡
      taxes(x) → { si, tax }
   */
   var COUNTRIES = {}, ORDER = [];
@@ -479,7 +481,7 @@ var ENGINE = (function (D) {
     var hadJobA = hadJob(s.jobA), hadJobB = s.partner && hadJob(s.jobB);
     var years = [];
     var S = s.savings;
-    var carOwnedSince = -1, carPays = [];
+    var carOwnedSince = -1, carPays = [], depHeld = 0;
     var totals = {}, subs = { birth: 0, cityBirth: 0, allowance: 0, care: 0, leave: 0, rent: 0, uni: 0, growth: 0, kg: 0, pension: 0 };
     var minS = Infinity, minT = 0, firstNeg = -1;
     // 每年交給國家模組的資料
@@ -557,7 +559,7 @@ var ENGINE = (function (D) {
       if (family) { e.housing = 0; }
       else if (buy && t >= tb) {
         var h = house;
-        if (t === tb) { e.housingOnce = h.down + h.closing + h.reno; events.push({ k: 'buy' }); }
+        if (t === tb) { e.housingOnce = h.down + h.closing + h.reno; events.push({ k: 'buy' }); if (depHeld) { e.housingOnce -= depHeld; depHeld = 0; } }
         var ly = t - tb; // 貸款年度
         var payNom = 0, intNom = 0;
         for (var li = 0; li < loans.length; li++) {
@@ -583,6 +585,7 @@ var ENGINE = (function (D) {
         e.housing = rentM * 12;
         x.rentM = rentM;
         if (A.rentSubsidy && K.rentSubsidy) K.rentSubsidy(x);
+        if (K.rentDeposit) { var dep = K.rentDeposit(c, rooms, rentMult, x); e.housingOnce += dep - depHeld; depHeld = dep; }
       }
 
       var carDebt = 0; carPays.forEach(function (cp) { carDebt += cp.amt * cp.left; });
@@ -621,8 +624,9 @@ var ENGINE = (function (D) {
         t: t, year: D.BASE_YEAR + t, ageA: ageA, ageB: ageB, kids: kAges, events: events,
         gA: gA, gB: gB, gross: gross, si: si, tax: tax, transfers: transfers, tr: tr, gift: gift, interest: interest,
         net: netIncome, exp: e, expTotal: expTotal, Sstart: Sstart, S: S, rooms: rooms, renting: renting, principal: principal,
-        homeValue: homeValue, loanBal: loanBalReal, carDebt: carDebt, netWorth: S + homeValue - loanBalReal - carDebt
+        homeValue: homeValue, loanBal: loanBalReal, carDebt: carDebt, netWorth: S + homeValue - loanBalReal - carDebt + depHeld
       });
+      if (depHeld) years[years.length - 1].deposit = depHeld;
     }
 
     // ---- 摘要 ----
