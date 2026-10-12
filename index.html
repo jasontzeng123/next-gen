@@ -775,6 +775,27 @@ p { margin: 0; }
 .notice-item p { color: var(--ink-2); font-size: 15px; line-height: 1.7; margin: 0; }
 .notice-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-top: 18px; border-top: 1px solid var(--rule-soft); }
 
+/* 揭曉頁右上角：存摺印完後，「直接看結果」換成「分享結果」 */
+.rv-head { flex-direction: row !important; }
+.rv-right { text-align: right !important; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+.rv-swap { display: grid; justify-items: end; align-items: start; }
+.rv-swap > * { grid-area: 1 / 1; }
+.rv-swap .skip-btn { position: relative; z-index: 1; }
+.rv-share { visibility: hidden; opacity: 0; animation: rvIn .35s ease forwards; animation-delay: var(--t, 0ms); white-space: nowrap; }
+@keyframes rvIn { from { opacity: 0; visibility: visible; } to { opacity: 1; visibility: visible; } }
+@media (prefers-reduced-motion: reduce) { .rv-share { visibility: visible; opacity: 1; animation: none; } }
+
+/* 題目頁尾：「用一般家庭的標準，直接看結果」＋「繼續填寫」 */
+.qfoot-quick { gap: 8px; }
+.quick-btn { flex-wrap: wrap; column-gap: 0; row-gap: 0; text-align: center; line-height: 1.3; }
+.quick-btn span { white-space: nowrap; }
+@media (max-width: 640px) {
+  .qfoot-quick .qback { padding: 10px 11px; }
+  .qfoot-quick .qback-t { display: none; }
+  .quick-btn { flex-direction: column; font-size: 13px; padding: 6px 12px; }
+  .qfoot-quick #next-btn { padding: 11px 16px; }
+}
+
 </style>
 <script>window.TWKIDS = {"target":"web","siteUrl":"https://jasontzeng123.github.io/next-gen/","repoUrl":"https://github.com/jasontzeng123/next-gen","sb":{"url":"https://yzmqgrtxbibufjmllimv.supabase.co","key":"sb_publishable_BOnfiTrQN53RzycO4nffGg_b8o-i0Nk"}};</script>
 </head>
@@ -789,7 +810,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-12T06:31', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-12T08:02', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -1976,6 +1997,13 @@ var U = (function () {
   function monthly(n) { return n >= 10000 ? (n / 1e4).toFixed(n % 10000 === 0 ? 0 : 1).replace(/\.0$/, '') + ' 萬/月' : sep(n) + ' 元/月'; }
   function prFmt(p) { if (p == null) return '—'; if (p >= 99) return p.toFixed(1); if (p < 1) return '<1'; return Math.round(p).toString(); }
   function topPct(p) { var t = 100 - p; if (t < 1) return t.toFixed(1); return Math.round(t).toString(); }
+  // 門檻 PR 一律無條件進位到顯示的精度（50.3 → 51、99.12 → 99.2）：
+  // 四捨五入會出現「門檻 PR 50」卻「PR 50 的夫妻撐不住」的矛盾
+  function thUp(p) {
+    if (p == null || !(p >= 1)) return p;
+    if (p >= 99) return Math.min(99.9, Math.ceil(p * 10 - 1e-6) / 10);
+    return Math.min(99, Math.ceil(p - 1e-6));
+  }
   var CN = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十'];
   function cn(n) { return CN[n] || String(n); }
 
@@ -2086,7 +2114,7 @@ var U = (function () {
     var s = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + (cls ? ' class="' + cls + '"' : '') + '>' + (ICONS[name] || '') + '</svg>';
     var t = document.createElement('template'); t.innerHTML = s; return t.content.firstChild;
   }
-  return { task: task, safe: safe, report: report, onError: onError, modalOpen: modalOpen, h: h, svg: svg, clear: clear, sep: sep, wan: wan, wan1: wan1, yuan: yuan, monthly: monthly, pr: prFmt, topPct: topPct, cn: cn, debounce: debounce, store: store, toast: toast, cssVar: cssVar, reduceMotion: reduceMotion, cvd: cvd, setCvd: setCvd, isDark: isDark, mix: mix, copy: copy, modal: modal, icon: icon };
+  return { task: task, safe: safe, report: report, onError: onError, modalOpen: modalOpen, h: h, svg: svg, clear: clear, sep: sep, wan: wan, wan1: wan1, yuan: yuan, monthly: monthly, pr: prFmt, topPct: topPct, thUp: thUp, cn: cn, debounce: debounce, store: store, toast: toast, cssVar: cssVar, reduceMotion: reduceMotion, cvd: cvd, setCvd: setCvd, isDark: isDark, mix: mix, copy: copy, modal: modal, icon: icon };
 })();
 
 /* ---- people.js ---- */
@@ -3491,6 +3519,12 @@ var APP = (function () {
     A.s = ENGINE.normalize(strip(A.s));
     A.dirty = true; A.persist();
   };
+  // 所有畫面拿到的門檻 PR 都先無條件進位（報告、實驗室、各國比較都經過這裡）
+  if (!ENGINE.__thUp) {
+    var rawThreshold = ENGINE.threshold;
+    ENGINE.threshold = function (s, o) { var r = rawThreshold(s, o); if (r && r.pr != null) r.pr = U.thUp(r.pr); return r; };
+    ENGINE.__thUp = true;
+  }
   A.compute = function (force) {
     if (!A.dirty && !force && A.res) return;
     var s = ENGINE.normalize(strip(A.s)); s.__norm = true;
@@ -3856,11 +3890,31 @@ APP.screens.notice = function (main) {
 
     // ---- 頁尾 ----
     var canNext = !needsAnswer(q) || isSeen(q);
-    foot.appendChild(h('button', { class: 'btn ghost', type: 'button', onclick: prev }, U.icon('back'), A.qi === 0 ? '封面' : '上一題'));
-    foot.appendChild(h('span', { class: 'spacer' }));
-    if (!canNext) foot.appendChild(h('span', { class: 'xs muted' }, q.type === 'county' ? '請選一個縣市' : '請勾選一項'));
     var last = A.qi === vis.length - 1;
-    foot.appendChild(h('button', { class: 'btn' + (last ? ' seal' : ''), type: 'button', disabled: !canNext, onclick: next, id: 'next-btn' }, last ? '送出審查' : '下一題', U.icon('next')));
+    // 第一部分（起點）的最後一題：可以用一般家庭的標準直接看結果，免得沒耐心的人半途離開
+    var p1 = vis.filter(function (x) { return x.part === 1; });
+    var quickOK = !last && q === p1[p1.length - 1];
+    if (quickOK) {
+      foot.classList.add('qfoot-quick');
+      foot.appendChild(h('button', { class: 'btn ghost qback', type: 'button', onclick: prev, 'aria-label': '上一題' }, U.icon('back'), h('span', { class: 'qback-t' }, '上一題')));
+      foot.appendChild(h('span', { class: 'spacer' }));
+      foot.appendChild(h('button', { class: 'btn ghost quick-btn', type: 'button', onclick: quick }, h('span', {}, '用一般家庭的標準，'), h('span', {}, '直接看結果')));
+      foot.appendChild(h('button', { class: 'btn', type: 'button', disabled: !canNext, onclick: next, id: 'next-btn' }, '繼續填寫', U.icon('next')));
+    } else {
+      foot.appendChild(h('button', { class: 'btn ghost', type: 'button', onclick: prev }, U.icon('back'), A.qi === 0 ? '封面' : '上一題'));
+      foot.appendChild(h('span', { class: 'spacer' }));
+      if (!canNext) foot.appendChild(h('span', { class: 'xs muted' }, q.type === 'county' ? '請選一個縣市' : '請勾選一項'));
+      foot.appendChild(h('button', { class: 'btn' + (last ? ' seal' : ''), type: 'button', disabled: !canNext, onclick: next, id: 'next-btn' }, last ? '送出審查' : '下一題', U.icon('next')));
+    }
+    // 直接看結果：還沒回答的題目用預設（一般家庭）的選項；沒填收入就看門檻。
+    // 這樣送出的結果不分享到「大家怎麼選」，免得預設選項灌進統計
+    function quick() {
+      if (!A.seen.mode) A.set('incomeMode', 'threshold');
+      QS.visible(A.s).forEach(function (x) { A.seen[x.id] = true; });
+      A.quick = true;
+      A.persist();
+      A.go('reveal');
+    }
 
     function next() {
       if (needsAnswer(q) && !isSeen(q)) return;
@@ -4178,6 +4232,7 @@ APP.screens.notice = function (main) {
 
   // ---------- 送出 ----------
   function finish() {
+    A.quick = false;
     var go = function () { A.go('reveal'); };
     if (COMM.st.canShare && A.consent == null) consentModal(go);
     else go();
@@ -4231,6 +4286,23 @@ APP.screens.notice = function (main) {
     return { year: 2026 + h.tb, age: s.ageA + h.tb, cash: h.down + h.closing + h.reno, savings: +s.savings || 0, beforeKid: h.tb < r.t0 };
   }
   A.houseBound = houseBound;
+  // 存款不夠時，說「還缺多少」而不是「負債多少」（銀行不會借錢給人付生活費）。
+  // 缺口從買房那年開始：說買房時頭期款還缺多少；其他情況：說存款見底後最多還缺多少。存摺與圖表照舊顯示負數
+  function shortfall(res) {
+    if (!res || !(res.minS < 0)) return null;
+    var s = res.s, hs = res.house;
+    if (hs && res.firstNeg >= 0 && res.firstNeg === hs.tb && res.years[hs.tb]) {
+      return { down: true, age: s.ageA + hs.tb, v: -res.years[hs.tb].S, cash: hs.down + hs.closing + hs.reno };
+    }
+    return { down: false, age: s.ageA + res.minT, firstAge: s.ageA + (res.firstNeg >= 0 ? res.firstNeg : res.minT), v: -res.minS };
+  }
+  A.shortfall = shortfall;
+  // 一句話：你 X 歲買房那年，頭期款還缺 −Y／你 X 歲那年存款見底，最多還缺 −Y
+  function shortText(sf, bold) {
+    var v = bold ? '<b>' + U.wan(-sf.v) + '</b>' : U.wan(-sf.v);
+    if (sf.down) return '你 ' + sf.age + ' 歲買房那年，頭期款還缺 ' + v;
+    return '你 ' + sf.firstAge + ' 歲那年存款見底' + (sf.age > sf.firstAge ? '，到 ' + sf.age + ' 歲最多還缺 ' : '，還缺 ') + v;
+  }
   function verdictInfo(s, res, th) {
     var you = s.partner ? '你們' : '你';
     if (s.incomeMode !== 'full') {
@@ -4248,19 +4320,19 @@ APP.screens.notice = function (main) {
     }
     // 年齡一律用「那一年你幾歲」（與存摺明細相同）
     var negAge = res.firstNeg >= 0 ? s.ageA + res.firstNeg : null;
-    var buyHint = '';
-    if (res.house && res.firstNeg >= 0 && res.firstNeg === res.house.tb) buyHint = '缺口從買房那年開始：頭期款、稅費與裝潢一次要拿出 ' + U.wan(res.house.down + res.house.closing + res.house.reno) + '。';
+    var sf = shortfall(res);
+    var buyHint = sf && sf.down ? '（頭期款、稅費與裝潢一次要 ' + U.wan(sf.cash) + '）' : '';
     if (res.verdict === 'pass') return { stamp: { k: 'square', l: ['核准'] }, title: '核准：' + you + '養得起。', line: '從生產到孩子獨立，存款最低時仍有 <b>' + U.wan(res.minRaise) + '</b>（你 ' + (s.ageA + res.minRaiseT) + ' 歲那年），超過半年的家庭開銷。', tone: 'good' };
     if (res.verdict === 'tight') return { stamp: { k: 'square', l: ['附條件', '核准'] }, title: '勉強可以，但沒有退路。', line: '你 ' + (s.ageA + res.minRaiseT) + ' 歲那年，存款只剩 <b>' + U.wan(res.minRaise) + '</b>，不到半年的家庭開銷。一場病或一次失業，就會跌破零。', tone: 'warn' };
-    if (res.verdict === 'fail') return { stamp: { k: 'square', l: ['駁回'] }, title: '駁回：中途得靠借錢。', line: '你 ' + negAge + ' 歲那年存款開始變成負的，最多欠下 <b>' + U.wan(-res.minS) + '</b>' + (res.repayT >= 0 ? '，到你 ' + (s.ageA + res.repayT) + ' 歲才還清' : '') + '。' + (buyHint ? '<br>' + buyHint : ''), tone: 'bad' };
+    if (res.verdict === 'fail') return { stamp: { k: 'square', l: ['駁回'] }, title: sf && sf.down ? '駁回：頭期款不夠。' : '駁回：中途錢不夠用。', line: shortText(sf, true) + buyHint + '。', tone: 'bad' };
     var nw = res.netWorthTv;
-    return { stamp: { k: 'square', l: ['駁回'] }, title: '駁回：' + you + '撐不住這組標準。', line: '你 ' + negAge + ' 歲那年起入不敷出，到孩子獨立時仍負債 <b>' + U.wan(-res.endS) + '</b>。' + (buyHint ? '<br>' + buyHint : '') + (res.house && nw > 0 ? '<br>不過房子扣掉房貸後，帳面淨值約 ' + U.wan(nw) + '：錢都卡在房子裡，日常現金不夠用。' : ''), tone: 'black' };
+    return { stamp: { k: 'square', l: ['駁回'] }, title: '駁回：' + you + '撐不住這組標準。', line: (sf && sf.down ? shortText(sf, true) + buyHint + '；' : '你 ' + negAge + ' 歲那年起入不敷出，') + '到孩子獨立時還缺 <b>' + U.wan(res.endS) + '</b>。' + (res.house && nw > 0 ? '<br>不過房子扣掉房貸後，帳面淨值約 ' + U.wan(nw) + '：錢都卡在房子裡，日常現金不夠用。' : ''), tone: 'black' };
   }
   // 不填收入時：收入在中間（PR 50）的人會怎樣
   function midLine(res, s) {
     var who = '收入在中間（PR 50）的' + (s.partner ? '夫妻' : '人');
     if (res.minS >= 0) return who + '：存款最低時還有 <b>' + U.wan(res.minRaise) + '</b>，撐得過去。';
-    return who + '：你 ' + (s.ageA + res.firstNeg) + ' 歲那年存款就跌破零，最多欠下 <b>' + U.wan(-res.minS) + '</b>。';
+    return who + '：' + shortText(shortfall(res), true) + '。';
   }
   // 同樣的標準最早幾歲生得起（一句話）
   function waitLine(s) {
@@ -4302,7 +4374,7 @@ APP.screens.notice = function (main) {
       U.store.set('submitted', A.submitted);
     }, 'store');
     // 只有第一次送出會自動分享；之後要在報告裡按「更新」
-    U.safe(function () { if (A.consent && COMM.st.canShare && !COMM.hasShared()) COMM.submit(COMM.buildDoc(s, res, th), A.submitted); }, 'submit');
+    U.safe(function () { if (A.consent && !A.quick && COMM.st.canShare && !COMM.hasShared()) COMM.submit(COMM.buildDoc(s, res, th), A.submitted); }, 'submit');
     COMM.diag('reveal');
 
     var rows = res.years.slice(0, res.Tv + 1);
@@ -4310,10 +4382,13 @@ APP.screens.notice = function (main) {
     var T = Math.round(n * delay + 350);
     wrap.style.setProperty('--t', T + 'ms');
     var skip = h('button', { class: 'linkbtn skip-btn', onclick: function () { wrap.classList.add('skip'); ledgerBox.scrollTop = ledgerBox.scrollHeight; } }, '直接看結果');
-    inn.appendChild(h('div', { class: 'form-head' },
+    // 蓋完章後，「直接看結果」的位置換成「分享結果」：直接跳到報告裡的分享圖卡
+    var shareJump = h('button', { class: 'btn small rv-share', style: { '--t': (T + 300) + 'ms' }, onclick: function () { A.go('report', { scrollTo: 'sec-share' }); } }, U.icon('share'), '分享結果');
+    inn.appendChild(h('div', { class: 'form-head rv-head' },
       h('div', {}, h('div', { class: 'form-kicker' }, '審查程序'),
         h('h2', { class: 'phase-wrap', style: { fontSize: '24px', marginTop: '4px' } }, h('span', { class: 'phase-a' }, '正在逐年試算你的存摺…'), h('span', { class: 'phase-b' }, '審查完成'))),
-      h('div', { class: 'form-no' }, '試算日 ' + (function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); })(new Date()), h('br'), skip)));
+      h('div', { class: 'form-no rv-right' }, '試算日 ' + (function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); })(new Date()),
+        h('div', { class: 'rv-swap' }, shareJump, skip))));
     var vi = verdictInfo(s, res, th);
     var st = h('div', { class: 'stamp drop' }); st.appendChild(stampSVG(vi.stamp.k, vi.stamp.l, vi.stamp.sub));
     var thMode = s.incomeMode !== 'full';
@@ -4392,6 +4467,7 @@ APP.screens.notice = function (main) {
     var redraw = function () { if (redrawPending) return; redrawPending = true; U.task(function () { redrawPending = false; A.compute(); drawMain(); }, 'report-redraw'); };
     buildPanel(side, function () { redraw(); }, closeDrawer);
     drawMain();
+    if (A.opts && A.opts.scrollTo) followTo(A.opts.scrollTo);
     A.onComm = function () { var c = mainCol.querySelector('#sec-crowd'); if (c) c.replaceWith(crowdSection()); };
     var prevC = A.cleanup; A.cleanup = function () { A.onComm = null; closeDrawer(); document.removeEventListener('keydown', onEsc); document.body.classList.remove('has-fab'); if (prevC) prevC(); };
 
@@ -4414,6 +4490,22 @@ APP.screens.notice = function (main) {
     A.redrawReport = function () { A.dirty = true; A.compute(); drawMain(); U.clear(side); buildPanel(side, function () { redraw(); }, closeDrawer); };
   };
 
+  // 捲到報告裡的某一段；後面的章節陸續算完、高度改變時繼續對齊，玩家自己捲動就停止
+  function followTo(id) {
+    var stop = false, until = Date.now() + 2500;
+    var cancel = function () { stop = true; };
+    ['touchstart', 'wheel', 'keydown', 'mousedown'].forEach(function (ev) { window.addEventListener(ev, cancel, { once: true, passive: true }); });
+    var tick = function () {
+      if (stop || A.screen !== 'report') return;
+      var el = document.getElementById(id);
+      if (el) {
+        var top = Math.max(0, el.getBoundingClientRect().top + window.scrollY - 68);
+        if (Math.abs(window.scrollY - top) > 2) window.scrollTo(0, top);
+      }
+      if (Date.now() < until) setTimeout(tick, 120);
+    };
+    setTimeout(tick, 30);
+  }
   function headSection(res, th, s, view) {
     view = view || res;
     var vi = verdictInfo(s, res, th);
@@ -4434,12 +4526,13 @@ APP.screens.notice = function (main) {
     if (s.incomeMode === 'full') {
       var hhp = res.hhIncomePR;
       tiles.appendChild(tile(s.partner ? '你們的收入' : '你的收入', 'PR ' + U.pr(res.prA) + (s.partner ? '／' + U.pr(res.prB) : ''), '現在的家庭可支配所得，贏過 ' + U.pr(hhp) + '% 的台灣家庭', false));
-      var lo = res.low;
-      tiles.appendChild(tile(lo.v < 0 ? '最多負債' : '孩子出生後的最低存款', U.wan(lo.v), '你 ' + (s.ageA + lo.t) + ' 歲那年', lo.v < 0));
+      var lo = res.low, sf = shortfall(res);
+      if (sf) tiles.appendChild(tile(sf.down ? '買房時頭期款還缺' : '存款最多還缺', U.wan(-sf.v), '你 ' + sf.age + ' 歲那年', true));
+      else tiles.appendChild(tile('孩子出生後的最低存款', U.wan(lo.v), '你 ' + (s.ageA + lo.t) + ' 歲那年', false));
     } else {
       // A.res 就是「收入在中間（PR 50）」的完整試算
-      var md = res.low;
-      tiles.appendChild(tile('如果收入剛好在中間（PR 50）', U.wan(md.v), md.v < 0 ? '最多負債，你 ' + (s.ageA + md.t) + ' 歲那年' : '孩子出生後的最低存款', md.v < 0));
+      var md = res.low, msf = shortfall(res);
+      tiles.appendChild(tile('如果收入剛好在中間（PR 50）', msf ? U.wan(-msf.v) : U.wan(md.v), msf ? (msf.down ? '買房時頭期款還缺，你 ' : '存款最多還缺，你 ') + msf.age + ' 歲那年' : '孩子出生後的最低存款', !!msf));
     }
     var W = A.wait;
     if (W) tiles.appendChild(tile(s.incomeMode === 'full' ? '最早幾歲生得起' : '中間收入最早幾歲生得起', W.earliest == null ? '生不起' : W.earliest + '<small>歲</small>', W.earliest == null ? '存到 ' + W.maxAge + ' 歲也不夠' : W.earliest <= s.ageA ? '現在就可以' : '要先存 ' + (W.earliest - s.ageA) + ' 年', W.earliest == null || W.earliest > W.planned, true));
@@ -4573,7 +4666,7 @@ APP.screens.notice = function (main) {
       var both = s.partner ? '雙方' : '你';
       var thPr = A.th && A.th.pr;
       if (atTh) thLede = thPr == null ? '即使' + both + '的收入都在 <b>PR 99.9</b>，存款最低仍會到 <b>' + U.wan(res.minS) + '</b>。' : '以<b>門檻收入（' + both + ' PR ' + U.pr(thPr) + '）</b>試算，存款最低點剛好碰到零。';
-      else thLede = (s.partner ? '以雙方收入都在' : '以你的收入在') + '<b>中間（PR 50）</b>試算：' + (res.minS >= 0 ? '存款最低時還有 <b>' + U.wan(res.minRaise) + '</b>（你 ' + (s.ageA + res.minRaiseT) + ' 歲那年），撐得過去。' : '你 ' + (s.ageA + res.firstNeg) + ' 歲那年存款跌破零，最多欠下 <b>' + U.wan(-res.minS) + '</b>。');
+      else thLede = (s.partner ? '以雙方收入都在' : '以你的收入在') + '<b>中間（PR 50）</b>試算：' + (res.minS >= 0 ? '存款最低時還有 <b>' + U.wan(res.minRaise) + '</b>（你 ' + (s.ageA + res.minRaiseT) + ' 歲那年），撐得過去。' : shortText(shortfall(res), true) + '。');
       var setView = function (mode) {
         if ((A.viewMode === 'threshold') === (mode === 'threshold')) return;
         A.viewMode = mode; A.view = mode === 'threshold' ? A.thView : A.res;
@@ -4767,7 +4860,8 @@ APP.screens.notice = function (main) {
       var list = h('div', { class: 'comp' });
       items.slice(0, 8).forEach(function (it) {
         var ok = full ? it.passes : false;
-        var val = full ? (it.value < 0 ? '最多負債 ' + U.wan(-it.value) : '最低存款 ' + U.wan(it.value)) : (it.value == null ? '門檻 >99.9' : '門檻 PR ' + U.pr(it.value) + '（−' + Math.round(it.gain) + '）');
+        var itPr = U.thUp(it.value), drop = th.pr != null && itPr != null ? th.pr - itPr : Math.round(it.gain);
+        var val = full ? (it.value < 0 ? '最多還缺 ' + U.wan(-it.value) : '最低存款 ' + U.wan(it.value)) : (it.value == null ? '門檻 >99.9' : '門檻 PR ' + U.pr(itPr) + (drop >= 1 ? '（−' + Math.round(drop) + '）' : ''));
         list.appendChild(h('div', { class: 'comp-row' },
           h('span', { class: 'ci ' + (ok ? 'ok' : 'part') }, ok ? '✓' : '↑'),
           h('span', {}, it.label),
@@ -4918,7 +5012,7 @@ APP.screens.notice = function (main) {
     row.appendChild(h('button', { class: 'btn ghost small', onclick: function () { nameModal('存成收入設定', A.incName(A.s), function (n) { A.saveProfile('income', n); U.toast('已存成收入設定'); }); } }, U.icon('save'), '存成收入設定'));
     row.appendChild(h('button', { class: 'btn small', onclick: function () { A.go('lab'); } }, U.icon('lab'), '進入實驗室'));
     sec.appendChild(row);
-    var share = h('div', { class: 'share' });
+    var share = h('div', { class: 'share', id: 'sec-share' });
     var cv = h('canvas', { width: 1080, height: 1350, 'aria-label': '分享圖卡預覽' });
     share.appendChild(cv);
     var right = h('div', {});
@@ -5043,24 +5137,32 @@ APP.screens.notice = function (main) {
     c.fillStyle = css('--ink-3'); c.font = '500 28px ' + F_SANS; c.fillText('台灣・生育資格審查・模擬試算　No.115-TW', X, 170);
     c.fillStyle = css('--ink'); c.font = '900 92px ' + F_SERIF; c.fillText('你有資格', X, 300); c.fillText('生下一代嗎', X, 410);
     c.fillStyle = css('--seal'); c.fillText('？', X + c.measureText('生下一代嗎').width, 410);
+    // 設定（縣市・地區・孩子數・住房）：標題正下方、紅字；太長就在「・」後換行，右邊留給印章
+    var setW = thMode ? 560 : 500;
+    c.fillStyle = css('--seal'); c.font = '500 32px ' + F_SANS;
+    var setL = splitLines(c, setting, setW);
+    if (setL.length > 2) { c.font = '500 28px ' + F_SANS; setL = splitLines(c, setting, setW); }
+    setL.slice(0, 2).forEach(function (l, i) { fitText(c, l, X, 478 + i * 44, setW); });
     var y;
     if (thMode) {
       // 100 人（25 × 4）
       var gh = People.draw(c, X, 590, CW, info.n, { on: css('--pp-on') || css('--good'), off: css('--pp-off') || css('--rule-soft') }, 25);
-      var cy = 590 + gh + 46;
-      c.font = '900 44px ' + F_SERIF; c.fillStyle = css('--pp-on') || css('--good');
-      var nTxt = String(info.n); c.fillText(nTxt, X, cy);
-      var nx = X + c.measureText(nTxt).width;
-      c.font = '700 28px ' + F_SERIF; c.fillStyle = css('--ink-3'); c.fillText('／100', nx + 4, cy);
-      nx += 4 + c.measureText('／100').width + 14;
-      c.font = '500 28px ' + F_SANS; c.fillStyle = css('--ink-2'); fitText(c, info.peer + '，收入養得起', nx, cy, W - X - nx);
-      // 結論（下移）
-      c.fillStyle = css('--ink'); c.font = '900 58px ' + F_SERIF;
-      fitText(c, vi.title, X, cy + 86, CW);
-      y = cy + 86;
+      var y0 = 590 + gh, yMax = 1212;
       var sub = vi.hb ? (th.pr != null ? '卡在 ' + vi.hb.year + ' 年買房：頭期款、稅費與裝潢一次要 ' + U.wan(vi.hb.cash) + '。' : '光是 ' + vi.hb.year + ' 年買房要拿出的 ' + U.wan(vi.hb.cash) + '，就來不及存。') : th.pr != null && th.grossBirth ? '生第一胎那年，' + (s.partner ? '夫妻合計' : '') + '稅前年收入要約 ' + U.wan(th.grossBirth) + '。' : vi.line.replace(/<br>/g, '').replace(/<[^>]+>/g, '');
+      // 結論放大（太長就在逗號後換行），下面接說明與「收入在中間的話」；整塊放進 100 人與頁尾之間
+      var tF = 72, tLH = 86, GAP_T = 68, SLH = 46, GAP_M = 54;
+      c.font = '900 ' + tF + 'px ' + F_SERIF; var tL = splitLines(c, vi.title, CW);
+      c.font = '400 32px ' + F_SANS; var sL = splitLines(c, sub, CW).slice(0, 2);
+      var need = function () { return (tL.length - 1) * tLH + GAP_T + (sL.length - 1) * SLH + (mw ? GAP_M : 0); };
+      if (tL.length > 2 || y0 + 96 + need() > yMax) { tF = 64; tLH = 76; c.font = '900 64px ' + F_SERIF; tL = splitLines(c, vi.title, CW).slice(0, 2); }
+      var yT = y0 + 96;
+      yT = Math.max(y0 + 80, Math.min(yT + Math.max(0, yMax - (yT + need())) / 2, yMax - need()));
+      c.fillStyle = css('--ink'); c.font = '900 ' + tF + 'px ' + F_SERIF;
+      tL.forEach(function (l, i) { fitText(c, l, X, yT + i * tLH, CW); });
+      y = yT + (tL.length - 1) * tLH + GAP_T;
       c.fillStyle = css('--ink-2'); c.font = '400 32px ' + F_SANS;
-      y += 56; fitText(c, sub, X, y, CW);
+      sL.forEach(function (l, i) { fitText(c, l, X, y + i * SLH, CW); });
+      y += (sL.length - 1) * SLH;
     } else {
       c.fillStyle = css('--ink'); c.font = '900 58px ' + F_SERIF;
       y = wrapText(c, vi.title, X, 860, CW, 76, 2);
@@ -5075,13 +5177,12 @@ APP.screens.notice = function (main) {
       c.font = '700 32px ' + F_SANS; c.fillStyle = mw.bad ? css('--seal') : css('--good');
       fitText(c, mw.value, lx, y, W - X - lx);
     }
-    var fy = Math.min(Math.max(y + 56, 1200), 1222);
-    c.fillStyle = css('--pen'); c.font = '400 32px ' + F_HAND; fitText(c, setting, X, fy, CW);
+    var fy = 1222;
     c.fillStyle = css('--ink-3'); c.font = '400 24px ' + F_SANS;
     c.fillText('依 2026 年台灣真實資料試算', X, fy + 46);
     // 網址：圖卡被轉傳時，看到的人知道去哪裡玩
     var host = String((window.TWKIDS && window.TWKIDS.siteUrl) || shareUrl()).replace(/^https?:\/\//, '').replace(/\/$/, '');
-    c.fillStyle = css('--pen'); c.font = '500 26px ' + F_SANS; c.textAlign = 'right';
+    c.fillStyle = css('--ink'); c.font = '500 26px ' + F_SANS; c.textAlign = 'right';
     c.fillText(host, W - X, fy + 46); c.textAlign = 'left';
     // 印章最後蓋上去（兩種印章一樣大）；門檻模式往上移，騰出中間放 100 人，壓到一點也沒關係
     if (thMode) stamp(c, vi, 852, 432, 172, css);
@@ -5100,18 +5201,22 @@ APP.screens.notice = function (main) {
   }
   // 自動換行（中文避頭尾、數字與單位不拆開、優先在逗號後換行）；回傳最後一行的 y
   var TOKEN = /[（「(]*(?:PR\s?[\d.]+|[−\-+]?\d[\d,.]*%?(?:\s?(?:萬|億|元|歲|年|倍|人|個|坪))?|[A-Za-z]+|[\s\S])[，。、：；！？）」)]*/g;
-  function wrapText(c, text, x, y, maxW, lh, maxLines) {
-    var toks = text.match(TOKEN) || [], lines = [], line = '', max = maxLines || 4;
+  function splitLines(c, text, maxW) {
+    var toks = text.match(TOKEN) || [], lines = [], line = '';
     toks.forEach(function (t) {
       if (!line && /^\s+$/.test(t)) return;
       if (c.measureText(line + t).width <= maxW || !line) { line += t; return; }
-      // 超出寬度：若這一行後段有逗號，就從逗號後換行，讓句子斷在自然的地方
-      var m = -1, re = /[，：；]/g, r;
+      // 超出寬度：若這一行後段有逗號（或「・」），就從那裡換行，讓句子斷在自然的地方
+      var m = -1, re = /[，：；・]/g, r;
       while ((r = re.exec(line))) m = r.index;
-      if (m >= 0 && c.measureText(line.slice(0, m + 1)).width >= maxW * 0.4) { lines.push(line.slice(0, m + 1)); line = line.slice(m + 1) + t; }
+      if (m >= 0 && c.measureText(line.slice(0, m + 1)).width >= maxW * 0.4) { lines.push(line.slice(0, m + 1).replace(/・$/, '')); line = (line.slice(m + 1) + t).replace(/^\s+/, ''); }
       else { lines.push(line.replace(/\s+$/, '')); line = t.replace(/^\s+/, ''); }
     });
     if (line) lines.push(line);
+    return lines;
+  }
+  function wrapText(c, text, x, y, maxW, lh, maxLines) {
+    var lines = splitLines(c, text, maxW), max = maxLines || 4;
     var yy = y;
     lines.forEach(function (l, i) {
       if (i >= max) return;

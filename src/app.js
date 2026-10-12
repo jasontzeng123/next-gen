@@ -26,6 +26,12 @@ var APP = (function () {
     A.s = ENGINE.normalize(strip(A.s));
     A.dirty = true; A.persist();
   };
+  // 所有畫面拿到的門檻 PR 都先無條件進位（報告、實驗室、各國比較都經過這裡）
+  if (!ENGINE.__thUp) {
+    var rawThreshold = ENGINE.threshold;
+    ENGINE.threshold = function (s, o) { var r = rawThreshold(s, o); if (r && r.pr != null) r.pr = U.thUp(r.pr); return r; };
+    ENGINE.__thUp = true;
+  }
   A.compute = function (force) {
     if (!A.dirty && !force && A.res) return;
     var s = ENGINE.normalize(strip(A.s)); s.__norm = true;

@@ -97,11 +97,31 @@
 
     // ---- 頁尾 ----
     var canNext = !needsAnswer(q) || isSeen(q);
-    foot.appendChild(h('button', { class: 'btn ghost', type: 'button', onclick: prev }, U.icon('back'), A.qi === 0 ? '封面' : '上一題'));
-    foot.appendChild(h('span', { class: 'spacer' }));
-    if (!canNext) foot.appendChild(h('span', { class: 'xs muted' }, q.type === 'county' ? '請選一個縣市' : '請勾選一項'));
     var last = A.qi === vis.length - 1;
-    foot.appendChild(h('button', { class: 'btn' + (last ? ' seal' : ''), type: 'button', disabled: !canNext, onclick: next, id: 'next-btn' }, last ? '送出審查' : '下一題', U.icon('next')));
+    // 第一部分（起點）的最後一題：可以用一般家庭的標準直接看結果，免得沒耐心的人半途離開
+    var p1 = vis.filter(function (x) { return x.part === 1; });
+    var quickOK = !last && q === p1[p1.length - 1];
+    if (quickOK) {
+      foot.classList.add('qfoot-quick');
+      foot.appendChild(h('button', { class: 'btn ghost qback', type: 'button', onclick: prev, 'aria-label': '上一題' }, U.icon('back'), h('span', { class: 'qback-t' }, '上一題')));
+      foot.appendChild(h('span', { class: 'spacer' }));
+      foot.appendChild(h('button', { class: 'btn ghost quick-btn', type: 'button', onclick: quick }, h('span', {}, '用一般家庭的標準，'), h('span', {}, '直接看結果')));
+      foot.appendChild(h('button', { class: 'btn', type: 'button', disabled: !canNext, onclick: next, id: 'next-btn' }, '繼續填寫', U.icon('next')));
+    } else {
+      foot.appendChild(h('button', { class: 'btn ghost', type: 'button', onclick: prev }, U.icon('back'), A.qi === 0 ? '封面' : '上一題'));
+      foot.appendChild(h('span', { class: 'spacer' }));
+      if (!canNext) foot.appendChild(h('span', { class: 'xs muted' }, q.type === 'county' ? '請選一個縣市' : '請勾選一項'));
+      foot.appendChild(h('button', { class: 'btn' + (last ? ' seal' : ''), type: 'button', disabled: !canNext, onclick: next, id: 'next-btn' }, last ? '送出審查' : '下一題', U.icon('next')));
+    }
+    // 直接看結果：還沒回答的題目用預設（一般家庭）的選項；沒填收入就看門檻。
+    // 這樣送出的結果不分享到「大家怎麼選」，免得預設選項灌進統計
+    function quick() {
+      if (!A.seen.mode) A.set('incomeMode', 'threshold');
+      QS.visible(A.s).forEach(function (x) { A.seen[x.id] = true; });
+      A.quick = true;
+      A.persist();
+      A.go('reveal');
+    }
 
     function next() {
       if (needsAnswer(q) && !isSeen(q)) return;
@@ -419,6 +439,7 @@
 
   // ---------- 送出 ----------
   function finish() {
+    A.quick = false;
     var go = function () { A.go('reveal'); };
     if (COMM.st.canShare && A.consent == null) consentModal(go);
     else go();

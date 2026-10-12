@@ -792,3 +792,23 @@ button.wd-li:hover { background: var(--sheet-2); }
 .wd-save b { color: var(--ink); }
 .wd-bind { font-size: 14px; color: var(--ink-2); margin-top: 8px; padding: 10px 12px; border-left: 3px solid var(--seal); background: var(--seal-soft); border-radius: 0 4px 4px 0; }
 .wd-bind b { color: var(--ink); }
+/* 揭曉頁右上角：存摺印完後，「直接看結果」換成「分享結果」 */
+.rv-head { flex-direction: row !important; }
+.rv-right { text-align: right !important; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+.rv-swap { display: grid; justify-items: end; align-items: start; }
+.rv-swap > * { grid-area: 1 / 1; }
+.rv-swap .skip-btn { position: relative; z-index: 1; }
+.rv-share { visibility: hidden; opacity: 0; animation: rvIn .35s ease forwards; animation-delay: var(--t, 0ms); white-space: nowrap; }
+@keyframes rvIn { from { opacity: 0; visibility: visible; } to { opacity: 1; visibility: visible; } }
+@media (prefers-reduced-motion: reduce) { .rv-share { visibility: visible; opacity: 1; animation: none; } }
+
+/* 題目頁尾：「用一般家庭的標準，直接看結果」＋「繼續填寫」 */
+.qfoot-quick { gap: 8px; }
+.quick-btn { flex-wrap: wrap; column-gap: 0; row-gap: 0; text-align: center; line-height: 1.3; }
+.quick-btn span { white-space: nowrap; }
+@media (max-width: 640px) {
+  .qfoot-quick .qback { padding: 10px 11px; }
+  .qfoot-quick .qback-t { display: none; }
+  .quick-btn { flex-direction: column; font-size: 13px; padding: 6px 12px; }
+  .qfoot-quick #next-btn { padding: 11px 16px; }
+}
