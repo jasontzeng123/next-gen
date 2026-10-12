@@ -920,10 +920,10 @@
     c.fillStyle = css('--seal'); c.fillText('？', X + c.measureText('生下一代嗎').width, 410);
     // 設定（縣市・地區・孩子數・住房）：標題正下方、紅字；太長就在「・」後換行，右邊留給印章
     var setW = thMode ? 560 : 500;
-    c.fillStyle = css('--seal'); c.font = '500 32px ' + F_SANS;
-    var setL = splitLines(c, setting, setW);
-    if (setL.length > 2) { c.font = '500 28px ' + F_SANS; setL = splitLines(c, setting, setW); }
-    setL.slice(0, 2).forEach(function (l, i) { fitText(c, l, X, 478 + i * 44, setW); });
+    c.fillStyle = css('--seal'); c.font = '500 40px ' + F_SANS;
+    var setL = splitLines(c, setting, setW), setLH = 54;
+    if (setL.length > 2) { c.font = '500 34px ' + F_SANS; setLH = 46; setL = splitLines(c, setting, setW); }
+    setL.slice(0, 2).forEach(function (l, i) { fitText(c, l, X, 484 + i * setLH, setW); });
     var y;
     if (thMode) {
       // 100 人（25 × 4）
