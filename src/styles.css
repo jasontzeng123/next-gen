@@ -562,7 +562,7 @@ p { margin: 0; }
 .report-main { counter-reset: rsec; }
 .rsec-k.num::before { counter-increment: rsec; content: counter(rsec, trad-chinese-formal); font-size: 13px; }
 
-/* ---------- 100 人圖（20 × 5 人形圖示） ---------- */
+/* ---------- 10 人圖（一列 10 個人形，每人代表 10%） ---------- */
 :root { --pp-on: #1f7a45; --pp-off: #c9d2cc; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --pp-on: #4fbf7d; --pp-off: #34433b; } }
 :root[data-theme="dark"] { --pp-on: #4fbf7d; --pp-off: #34433b; }
@@ -571,10 +571,10 @@ p { margin: 0; }
 .pp-n { font-family: var(--f-serif); font-weight: 900; font-size: clamp(54px, 8vw, 76px); line-height: .9; color: var(--pp-on); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
 .pp-of { font-family: var(--f-serif); font-weight: 700; font-size: clamp(20px, 2.6vw, 26px); color: var(--ink-3); margin-right: 10px; }
 .pp-say { font-weight: 700; font-size: clamp(17px, 2.2vw, 21px); color: var(--ink); }
-.people { width: 100%; max-width: 760px; height: auto; display: block; overflow: visible; }
+.people { width: 100%; max-width: 600px; height: auto; display: block; overflow: visible; }
 .pp circle, .pp path { transition: fill .3s ease; }
-.pp.on circle, .pp.on path { fill: var(--pp-on); }
-.pp.off circle, .pp.off path { fill: var(--pp-off); }
+.pp .on circle, .pp .on path { fill: var(--pp-on); }
+.pp .off circle, .pp .off path { fill: var(--pp-off); }
 .people.anim .pp { animation: ppIn .4s cubic-bezier(.2, .8, .3, 1) both; }
 @keyframes ppIn { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .people.anim .pp { animation: none; } }
