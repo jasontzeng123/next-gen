@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var h = U.h, A = APP, D = DATA, E = ENGINE;
-  var L = A.lab = A.lab || { exp: 'current', inc: 'current', tab: U.store.get('labTab', 'map'), metric: 'th', level: 'tw', sel: null, era: 'current', mapStyle: 'dots' };
+  var L = A.lab = A.lab || { exp: 'current', inc: 'current', tab: U.store.get('labTab', 'map'), metric: 'th', level: 'tw', sel: null, era: 'current' };
   // 門檻 PR 分六級：綠（容易）→ 黃（中間收入附近）→ 橘紅（困難）→ 黑（PR 95 以上或再高也不夠）
   // 色盲友善模式改用藍 → 黃 → 橘 → 黑（兩組都以相鄰色的色盲模擬差異檢查過）
   var PAL = { normal: ['#0f8a73', '#6db36a', '#edc948', '#e86a2c', '#bf2c34', '#17181a'], cvd: ['#2a6fb8', '#82b8e3', '#ecd060', '#e9792e', '#a8342a', '#17181a'] };
@@ -67,7 +67,7 @@
     // 大家的資料：有足夠的共享資料、或自己能加入時才顯示
     var crowdOk = COMM.st.canShare || (COMM.st.stats && COMM.st.stats.n >= COMM.MIN_N);
     if (L.tab === 'crowd' && !crowdOk) L.tab = 'map';
-    [['map', '縣市地圖'], ['curve', '門檻分析'], ['time', '時光機']].concat(crowdOk ? [['crowd', '大家的資料']] : []).forEach(function (t) {
+    [['map', '地圖'], ['curve', '門檻分析'], ['time', '時光機']].concat(crowdOk ? [['crowd', '大家的資料']] : []).forEach(function (t) {
       tabs.appendChild(h('button', { role: 'tab', 'aria-selected': L.tab === t[0] ? 'true' : 'false', onclick: function () { L.tab = t[0]; U.store.set('labTab', t[0]); A.go('lab', { keepScroll: true }); } }, t[1]));
     });
     wrap.appendChild(tabs);
@@ -123,9 +123,6 @@
     ctrl.appendChild(h('div', { class: 'seg', role: 'group', 'aria-label': '地圖範圍' },
       h('button', { type: 'button', 'aria-pressed': L.level === 'tw' ? 'true' : 'false', onclick: function () { L.level = 'tw'; A.go('lab', { keepScroll: true }); } }, '台灣縣市'),
       h('button', { type: 'button', 'aria-pressed': L.level === 'world' ? 'true' : 'false', onclick: function () { L.level = 'world'; A.go('lab', { keepScroll: true }); } }, '世界')));
-    if (L.level === 'tw') ctrl.appendChild(h('div', { class: 'seg', role: 'group', 'aria-label': '地圖畫法' },
-      h('button', { type: 'button', 'aria-pressed': L.mapStyle !== 'area' ? 'true' : 'false', onclick: function () { L.mapStyle = 'dots'; A.go('lab', { keepScroll: true }); } }, '點陣'),
-      h('button', { type: 'button', 'aria-pressed': L.mapStyle === 'area' ? 'true' : 'false', onclick: function () { L.mapStyle = 'area'; A.go('lab', { keepScroll: true }); } }, '縣市色塊')));
     if (full) ctrl.appendChild(h('div', { class: 'seg', role: 'group', 'aria-label': '顯示指標' },
       h('button', { type: 'button', 'aria-pressed': L.metric === 'th' ? 'true' : 'false', onclick: function () { L.metric = 'th'; A.go('lab', { keepScroll: true }); } }, '門檻 PR'),
       h('button', { type: 'button', 'aria-pressed': L.metric === 'v' ? 'true' : 'false', onclick: function () { L.metric = 'v'; A.go('lab', { keepScroll: true }); } }, '用你們的收入')));
@@ -135,7 +132,7 @@
     left.appendChild(h('h2', { style: { fontSize: '20px', marginBottom: '4px' } }, L.metric === 'th' ? '同樣的標準，在哪裡養得起？' : '同樣的收入，搬到哪裡會核准？'));
     left.appendChild(status);
     left.appendChild(mapBox);
-    var dotsOn = L.level === 'tw' && L.mapStyle !== 'area' && typeof POPGRID !== 'undefined';
+    var dotsOn = L.level === 'tw' && typeof POPGRID !== 'undefined';
     var lg = legendEl(L.metric, dotsOn);
     left.appendChild(lg);
     var popBox = h('div', { 'aria-live': 'polite' });
@@ -162,7 +159,7 @@
       var cv = h('canvas', { width: 520, height: 520, role: 'img', 'aria-label': '世界點陣地球，台灣依結果著色，其他國家資料建置中' });
       var gw = h('div', { class: 'globe-wrap' }, cv, tip);
       mapBox.appendChild(gw);
-      mapBox.appendChild(h('p', { class: 'globe-hint' }, '目前只有台灣有資料；日本、韓國、新加坡、美國、德國、瑞典將優先加入。'));
+      mapBox.appendChild(h('p', { class: 'globe-hint' }, '目前只有台灣有資料，其他國家正在準備中。'));
     }
     compute(function () {
       var vals = ids.map(function (id) { return result[id]; });
