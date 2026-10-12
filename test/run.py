@@ -22,7 +22,7 @@ with sync_playwright() as p:
     pg.wait_for_timeout(600)
     tag=mode+'-'+scheme
     pg.screenshot(path=f'{SHOTS}/{tag}-00-cover.png', full_page=True)
-    pg.click('text=開始填寫申請書')
+    pg.click('text=開始試算')
     pg.wait_for_timeout(300)
     if pg.query_selector('.notice'): pg.screenshot(path=f'{SHOTS}/{tag}-00b-notice.png', full_page=True); pg.click('text=我了解了，開始填寫')
     pg.wait_for_timeout(400)

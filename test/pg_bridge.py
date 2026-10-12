@@ -49,7 +49,7 @@ with sync_playwright() as p:
     pg.click('#sec-crowd >> text=取消分享'); pg.wait_for_timeout(1200)
     print('4 withdraw      ', st(), '| rows', sql('select count(*) from public.submissions', role='postgres'))
     pg.click('.tbtn[aria-label="實驗室"]'); pg.wait_for_timeout(2500)
-    t = [x for x in pg.query_selector_all('[role=tab]') if '申請人' in x.inner_text()]
+    t = [x for x in pg.query_selector_all('[role=tab]') if '大家' in x.inner_text()]
     if t: t[0].click(); pg.wait_for_timeout(1200)
     print('5 lab crowd     ', pg.evaluate("(document.querySelector('.rsec-lede')||{}).textContent||''")[:40], '| county bars', len(pg.query_selector_all('.bars .bar-row')))
     print('6 calls', {k: CALLS.count(k) for k in set(CALLS)}, '| errors', errs)

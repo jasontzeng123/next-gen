@@ -82,11 +82,11 @@
     try { A.compute(true); } catch (e) { err = e; U.report(e, 'reveal-compute'); }
     if (err || !A.res) {
       inn.appendChild(h('div', { class: 'form-head' }, h('div', {}, h('div', { class: 'form-kicker' }, '審查程序'), h('h2', { style: { fontSize: '24px', marginTop: '4px' } }, '試算時發生錯誤'))));
-      inn.appendChild(h('p', { class: 'qnote warn' }, '很抱歉，試算沒有完成。錯誤訊息已記錄下來。你可以再試一次，或回到申請書修改。'));
+      inn.appendChild(h('p', { class: 'qnote warn' }, '很抱歉，試算沒有完成。錯誤訊息已記錄下來。你可以再試一次，或回到題目修改。'));
       inn.appendChild(h('p', { class: 'xs muted', style: { marginTop: '8px', wordBreak: 'break-all' } }, String(err && err.message || err || '沒有結果')));
       inn.appendChild(h('div', { class: 'cover-cta', style: { marginTop: '18px' } },
         h('button', { class: 'btn seal', onclick: function () { A.go('reveal'); } }, '再試一次'),
-        h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '回到申請書')));
+        h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '回到題目')));
       COMM.diag('reveal-error');
       return;
     }
@@ -111,7 +111,7 @@
     inn.appendChild(h('div', { class: 'form-head' },
       h('div', {}, h('div', { class: 'form-kicker' }, '審查程序'),
         h('h2', { class: 'phase-wrap', style: { fontSize: '24px', marginTop: '4px' } }, h('span', { class: 'phase-a' }, '正在逐年試算你的存摺…'), h('span', { class: 'phase-b' }, '審查完成'))),
-      h('div', { class: 'form-no' }, '收件 ' + (function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); })(new Date()), h('br'), skip)));
+      h('div', { class: 'form-no' }, '試算日 ' + (function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); })(new Date()), h('br'), skip)));
     var vi = verdictInfo(s, res, th);
     var st = h('div', { class: 'stamp drop' }); st.appendChild(stampSVG(vi.stamp.k, vi.stamp.l, vi.stamp.sub));
     var thMode = s.incomeMode !== 'full';
@@ -129,7 +129,7 @@
     Array.prototype.forEach.call(led.querySelectorAll('.ledger-row:not(.head)'), function (r, i) { r.style.animationDelay = Math.round(i * delay) + 'ms'; });
     inn.appendChild(h('div', { class: 'cover-cta later', style: { marginTop: '22px', '--t': (T + 300) + 'ms' } },
       h('button', { class: 'btn seal', onclick: function () { A.go('report'); } }, '查看完整審查報告', U.icon('next')),
-      h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '修改申請書'),
+      h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '修改答案'),
       h('span', { class: 'sm muted' }, '實驗室已解鎖。')));
     // 存摺捲動跟著「正在印的那一行」走（純裝飾，不影響結果）
     var rowEls = led.querySelectorAll('.ledger-row:not(.head)');
@@ -656,7 +656,7 @@
   function crowdSection() {
     var sec = h('section', { class: 'rsec', id: 'sec-crowd' });
     sec.appendChild(h('div', { class: 'rsec-k num' }));
-    sec.appendChild(h('h2', {}, '其他申請人怎麼選？'));
+    sec.appendChild(h('h2', {}, '其他人怎麼選？'));
     var st = COMM.st, S = st.stats, res = A.res, s = res.s;
     if (!st.ready) { sec.appendChild(h('p', { class: 'rsec-lede' }, '正在讀取…')); return sec; }
     var n = S ? S.n : 0;
@@ -668,8 +668,8 @@
       var failTxt = st.backend === 'web' ? '分享失敗，請稍後再試' : '分享失敗，你可能只有檢視權限';
       if (mine) {
         var sh = COMM.shared(), newer = A.submitted && (!sh || !sh.sig || sh.sig !== COMM.sig(A.submitted));
-        ctl.appendChild(document.createTextNode('你已匿名分享' + (newer ? '之前送出的申請書。' : '這份申請書。') + '在報告裡調整設定不會改到分享的資料' + (st.backend === 'web' ? '；要取消，請用同一台裝置的同一個瀏覽器' : '') + '。'));
-        if (newer) ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.submit(submittedDoc(), A.submitted).then(function (ok) { U.toast(ok ? '已更新成最新送出的申請書' : failTxt); }); } }, '更新成最新送出的申請書'));
+        ctl.appendChild(document.createTextNode('你已匿名分享' + (newer ? '之前送出的答案。' : '這次的答案。') + '在報告裡調整設定不會改到分享的資料' + (st.backend === 'web' ? '；要取消，請用同一台裝置的同一個瀏覽器' : '') + '。'));
+        if (newer) ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.submit(submittedDoc(), A.submitted).then(function (ok) { U.toast(ok ? '已更新成最新送出的答案' : failTxt); }); } }, '更新成最新送出的答案'));
         ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.withdraw().then(function () { A.consent = false; U.store.set('consent', false); U.toast('已取消分享並刪除資料'); }); } }, '取消分享'));
       }
       else { ctl.appendChild(document.createTextNode('你目前沒有分享設定。')); ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { A.consentModal(function () { if (A.consent) COMM.submit(submittedDoc(), A.submitted).then(function (ok) { U.toast(ok ? '已匿名分享' : failTxt); }); }); } }, '匿名分享')); }
@@ -677,12 +677,12 @@
     sec.appendChild(ctl);
     if (st.demoOn) sec.appendChild(h('p', { class: 'xs muted demo-note', style: { marginBottom: '12px' } }, COMM.demoNote()));
     if (n < COMM.MIN_N) {
-      sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + n + ' 位申請人分享'), '累積到 ' + COMM.MIN_N + ' 位以上，這裡就會顯示大家的選擇、門檻 PR 的分布，以及你在其中的位置。'));
+      sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + n + ' 人分享'), '累積到 ' + COMM.MIN_N + ' 人以上，這裡就會顯示大家的選擇、門檻 PR 的分布，以及你在其中的位置。'));
       return sec;
     }
     var tiles = h('div', { class: 'tiles' });
     var thRank = A.th.pr != null ? (COMM.thRank(A.th.pr) || 0) : 100;
-    tiles.appendChild(tile('申請人數', U.sep(n), st.demoOn ? '含 ' + st.demoN + ' 筆示範資料' : n >= (st.backend === 'web' ? 3000 : 1000) ? '最近 ' + U.sep(n) + ' 筆' : '所有匿名分享的人', false));
+    tiles.appendChild(tile('分享人數', U.sep(n), st.demoOn ? '含 ' + st.demoN + ' 筆示範資料' : n >= (st.backend === 'web' ? 3000 : 1000) ? '最近 ' + U.sep(n) + ' 筆' : '所有匿名分享的人', false));
     tiles.appendChild(tile('門檻 PR 中位數', U.pr(S.thMedian), '你的門檻比 ' + Math.round(thRank) + '% 的人高', false));
     if (S.perChildMedian) tiles.appendChild(tile('每個孩子的淨成本（中位數）', U.wan(S.perChildMedian), '你的是 ' + U.wan(res.perChild), false));
     var vb = S.by.verdict || {}, vtot = 0; for (var k in vb) vtot += vb[k];
@@ -819,7 +819,7 @@
   // 圖卡用到的字，先讓網頁字型載入（Google Fonts 依字元分批下載）
   function cardFonts(texts) {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
-    var all = '台灣・生育資格審查申請書　No.115-TW你有資格生下一代嗎？依 2026 年台灣房價、薪資、補助與稅制試算0123456789／' + texts.join('');
+    var all = '台灣・生育資格審查・模擬試算　No.115-TW你有資格生下一代嗎？依 2026 年台灣房價、薪資、補助與稅制試算0123456789／' + texts.join('');
     var jobs = ['900 40px "Noto Serif TC"', '700 40px "Noto Sans TC"', '500 40px "Noto Sans TC"', '400 40px "Noto Sans TC"', '400 32px "LXGW WenKai TC"'].map(function (f) { return document.fonts.load(f, all).catch(function () {}); });
     return Promise.race([Promise.all(jobs), new Promise(function (r) { setTimeout(r, 3000); })]);
   }
@@ -839,7 +839,7 @@
     c.fillStyle = css('--sheet'); c.fillRect(60, 60, W - 120, H - 120);
     c.strokeStyle = css('--rule'); c.lineWidth = 4; c.beginPath(); c.moveTo(X, 104); c.lineTo(W - X, 104); c.stroke();
     c.lineWidth = 2; c.beginPath(); c.moveTo(X, 114); c.lineTo(W - X, 114); c.stroke();
-    c.fillStyle = css('--ink-3'); c.font = '500 28px ' + F_SANS; c.fillText('台灣・生育資格審查申請書　No.115-TW', X, 170);
+    c.fillStyle = css('--ink-3'); c.font = '500 28px ' + F_SANS; c.fillText('台灣・生育資格審查・模擬試算　No.115-TW', X, 170);
     c.fillStyle = css('--ink'); c.font = '900 92px ' + F_SERIF; c.fillText('你有資格', X, 300); c.fillText('生下一代嗎', X, 410);
     c.fillStyle = css('--seal'); c.fillText('？', X + c.measureText('生下一代嗎').width, 410);
     var y;

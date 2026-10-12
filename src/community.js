@@ -1,5 +1,5 @@
 /* =========================================================================
-   COMMUNITY — 匿名分享設定、讀取其他申請人的統計、個人存檔同步
+   COMMUNITY — 匿名分享設定、讀取其他人的統計、個人存檔同步
    兩種後端：
    - claude.ai Artifact 的 db / user / downloads 能力（作品發佈在 claude.ai 時）
    - 自架網站（GitHub Pages）時改用 Supabase：每台裝置一個隨機匿名代號＋只有這台裝置知道的密語
@@ -127,7 +127,7 @@ var COMM = (function () {
     return st.db.collection('submissions').orderBy('ts', 'desc').limit(st.backend === 'web' ? 3000 : 1000).get().then(function (snap) {
       // 雲端讀回的資料是唯讀的，一律複製一份再使用
       var all = snap.docs.map(function (d) { var o = JSON.parse(JSON.stringify(d.data() || {})); o._id = d.id; return o; }).filter(function (o) { return o.v >= 2; });
-      // 示範資料（作者產生、不是真的申請人）：畫面上一律註明；真實分享滿 DEMO_OFF 筆後就不再計入
+      // 示範資料（作者產生、不是真人填的）：畫面上一律註明；真實分享滿 DEMO_OFF 筆後就不再計入
       var real = all.filter(function (o) { return !o.demo; });
       st.realN = real.length; st.demoN = all.length - real.length;
       st.demoOn = st.demoN > 0 && real.length < DEMO_OFF;
@@ -137,8 +137,8 @@ var COMM = (function () {
       // 連不上資料庫是預期內的狀況（離線、專案暫停）：只記錄，不跳出錯誤提示
       try { if (window.__diag) window.__diag.errors.push('load: ' + st.loadErr); } catch (x) { /* 忽略 */ } st.stats = aggregate([]); emit(); });
   }
-  // 分享規則：只有「第一次送出申請書」會自動分享；之後重新送出或在報告裡調整設定都不會更新，
-  // 要更新必須在報告的「其他申請人怎麼選？」按「更新」（避免一直覆蓋成參考價值較低的試玩設定）
+  // 分享規則：只有「第一次送出」會自動分享；之後重新送出或在報告裡調整設定都不會更新，
+  // 要更新必須在報告的「其他人怎麼選？」按「更新」（避免一直覆蓋成參考價值較低的試玩設定）
   function sig(o) {
     var norm = function (v) { if (Array.isArray(v)) return v.map(norm); if (v && typeof v === 'object') { var r = {}; Object.keys(v).sort().forEach(function (k) { if (k !== '__norm') r[k] = norm(v[k]); }); return r; } return v; };
     try { return JSON.stringify(norm(o)); } catch (e) { return ''; }
@@ -189,7 +189,7 @@ var COMM = (function () {
       return true;
     });
   }
-  function demoNote() { return st.demoOn ? '目前的統計含 ' + st.demoN + ' 筆作者產生的示範資料（不是真的申請人）；真實分享滿 ' + DEMO_OFF + ' 筆後，示範資料就不再計入。' : ''; }
+  function demoNote() { return st.demoOn ? '目前的統計含 ' + st.demoN + ' 筆作者產生的示範資料（不是真人填的）；真實分享滿 ' + DEMO_OFF + ' 筆後，示範資料就不再計入。' : ''; }
   function median(a) { if (!a.length) return null; var b = a.slice().sort(function (x, y) { return x - y; }); var m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; }
   function aggregate(rows) {
     var by = {};
@@ -217,7 +217,7 @@ var COMM = (function () {
     return { pct: (m[String(value)] || 0) / tot * 100, n: tot };
   }
   var MIN_N = 5, DEMO_OFF = 20;
-  // 門檻 PR 比多少比例的申請人高（用 1 PR 一格的分布估算）
+  // 門檻 PR 比多少比例的人高（用 1 PR 一格的分布估算）
   function thRank(v) {
     var S = st.stats; if (!S || !S.thHist || !S.thHist.length) return null;
     var tot = 0, below = 0, b = Math.max(0, Math.min(100, Math.floor(v)));

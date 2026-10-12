@@ -38,7 +38,7 @@ with sync_playwright() as p:
         if real_n==0: sec.screenshot(path=SH+'/demo-report.png')
         pg.click('.tbtn[aria-label="實驗室"]'); pg.wait_for_timeout(3000)
         tabs=pg.evaluate("Array.from(document.querySelectorAll('[role=tab]')).map(t=>t.textContent)"); print('  lab tabs:', tabs)
-        t=[x for x in pg.query_selector_all('[role=tab]') if '申請人' in x.inner_text() or '大家' in x.inner_text()]
+        t=[x for x in pg.query_selector_all('[role=tab]') if '大家' in x.inner_text()]
         if t:
             t[0].tap(); pg.wait_for_timeout(1500)
             print('  lab note:', bool(pg.query_selector('.demo-note')))

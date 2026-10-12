@@ -1,5 +1,5 @@
 import os
-# 發佈前檢查：模擬三種訪客，從封面填完整份申請書到報告與實驗室
+# 發佈前檢查：模擬三種訪客，從封面填完整份題目到報告與實驗室
 #   owner    — 作者本人：可以寫入共享資料與個人存檔
 #   outside  — 從公開連結進來、已登入的外部訪客：只能讀，寫入一律被拒（invalid_argument）
 #   signedout — 未登入：db 不可用（claude.use('db') 回傳 null）
@@ -48,7 +48,7 @@ with sync_playwright() as p:
         pg.add_init_script(MOCK % role)
         pg.goto('file://' + ROOT + '/test/page.html'); pg.wait_for_timeout(900)
         print('==', role, '| canShare', pg.evaluate('COMM.st.canShare'), 'canWrite', pg.evaluate('COMM.st.canWrite'), 'db', pg.evaluate('!!COMM.st.db'))
-        pg.tap('text=開始填寫申請書'); pg.wait_for_timeout(400)
+        pg.tap('text=開始試算'); pg.wait_for_timeout(400)
         if pg.query_selector('.notice'): pg.tap('text=我了解了，開始填寫'); pg.wait_for_timeout(300)
         consent = False
         for n in range(45):

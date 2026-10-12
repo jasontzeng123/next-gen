@@ -789,7 +789,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-12T02:31', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-12T05:07', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -2144,7 +2144,7 @@ var People = (function () {
 
 /* ---- community.js ---- */
 /* =========================================================================
-   COMMUNITY — 匿名分享設定、讀取其他申請人的統計、個人存檔同步
+   COMMUNITY — 匿名分享設定、讀取其他人的統計、個人存檔同步
    兩種後端：
    - claude.ai Artifact 的 db / user / downloads 能力（作品發佈在 claude.ai 時）
    - 自架網站（GitHub Pages）時改用 Supabase：每台裝置一個隨機匿名代號＋只有這台裝置知道的密語
@@ -2272,7 +2272,7 @@ var COMM = (function () {
     return st.db.collection('submissions').orderBy('ts', 'desc').limit(st.backend === 'web' ? 3000 : 1000).get().then(function (snap) {
       // 雲端讀回的資料是唯讀的，一律複製一份再使用
       var all = snap.docs.map(function (d) { var o = JSON.parse(JSON.stringify(d.data() || {})); o._id = d.id; return o; }).filter(function (o) { return o.v >= 2; });
-      // 示範資料（作者產生、不是真的申請人）：畫面上一律註明；真實分享滿 DEMO_OFF 筆後就不再計入
+      // 示範資料（作者產生、不是真人填的）：畫面上一律註明；真實分享滿 DEMO_OFF 筆後就不再計入
       var real = all.filter(function (o) { return !o.demo; });
       st.realN = real.length; st.demoN = all.length - real.length;
       st.demoOn = st.demoN > 0 && real.length < DEMO_OFF;
@@ -2282,8 +2282,8 @@ var COMM = (function () {
       // 連不上資料庫是預期內的狀況（離線、專案暫停）：只記錄，不跳出錯誤提示
       try { if (window.__diag) window.__diag.errors.push('load: ' + st.loadErr); } catch (x) { /* 忽略 */ } st.stats = aggregate([]); emit(); });
   }
-  // 分享規則：只有「第一次送出申請書」會自動分享；之後重新送出或在報告裡調整設定都不會更新，
-  // 要更新必須在報告的「其他申請人怎麼選？」按「更新」（避免一直覆蓋成參考價值較低的試玩設定）
+  // 分享規則：只有「第一次送出」會自動分享；之後重新送出或在報告裡調整設定都不會更新，
+  // 要更新必須在報告的「其他人怎麼選？」按「更新」（避免一直覆蓋成參考價值較低的試玩設定）
   function sig(o) {
     var norm = function (v) { if (Array.isArray(v)) return v.map(norm); if (v && typeof v === 'object') { var r = {}; Object.keys(v).sort().forEach(function (k) { if (k !== '__norm') r[k] = norm(v[k]); }); return r; } return v; };
     try { return JSON.stringify(norm(o)); } catch (e) { return ''; }
@@ -2334,7 +2334,7 @@ var COMM = (function () {
       return true;
     });
   }
-  function demoNote() { return st.demoOn ? '目前的統計含 ' + st.demoN + ' 筆作者產生的示範資料（不是真的申請人）；真實分享滿 ' + DEMO_OFF + ' 筆後，示範資料就不再計入。' : ''; }
+  function demoNote() { return st.demoOn ? '目前的統計含 ' + st.demoN + ' 筆作者產生的示範資料（不是真人填的）；真實分享滿 ' + DEMO_OFF + ' 筆後，示範資料就不再計入。' : ''; }
   function median(a) { if (!a.length) return null; var b = a.slice().sort(function (x, y) { return x - y; }); var m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; }
   function aggregate(rows) {
     var by = {};
@@ -2362,7 +2362,7 @@ var COMM = (function () {
     return { pct: (m[String(value)] || 0) / tot * 100, n: tot };
   }
   var MIN_N = 5, DEMO_OFF = 20;
-  // 門檻 PR 比多少比例的申請人高（用 1 PR 一格的分布估算）
+  // 門檻 PR 比多少比例的人高（用 1 PR 一格的分布估算）
   function thRank(v) {
     var S = st.stats; if (!S || !S.thHist || !S.thHist.length) return null;
     var tot = 0, below = 0, b = Math.max(0, Math.min(100, Math.floor(v)));
@@ -3118,7 +3118,7 @@ var Charts = (function () {
 
 /* ---- questions.js ---- */
 /* =========================================================================
-   QUESTIONS — 申請書題目（依目前設定動態產生參考價）
+   QUESTIONS — 試算題目（依目前設定動態產生參考價）
    ========================================================================= */
 var QS = (function () {
   'use strict';
@@ -3547,7 +3547,7 @@ var APP = (function () {
   function lockedNotice() {
     U.modal(function (box, close) {
       box.appendChild(h('h3', {}, '實驗室還沒開放'));
-      box.appendChild(h('p', {}, '完成一次申請書、拿到審查結果後，實驗室就會解鎖。你可以載入自己的支出與收入設定，比較各縣市、不同收入水準，甚至回到 30 年前（1996 年）的台灣。'));
+      box.appendChild(h('p', {}, '完成一次試算、拿到審查結果後，實驗室就會解鎖。你可以載入自己的支出與收入設定，比較各縣市、不同收入水準，甚至回到 30 年前（1996 年）的台灣。'));
       box.appendChild(h('div', { class: 'actions' }, h('button', { class: 'btn ghost', onclick: close }, '知道了'), h('button', { class: 'btn', onclick: function () { close(); A.go('quiz'); } }, '開始填寫')));
     });
   }
@@ -3609,25 +3609,25 @@ APP.screens.cover = function (main) {
   var sheet = h('div', { class: 'sheet' });
   var inn = h('div', { class: 'sheet-in' });
   inn.appendChild(h('div', { class: 'form-head' },
-    h('div', {}, h('div', { class: 'form-kicker' }, '台灣・生育資格審查申請書'), h('div', { class: 'form-kicker', style: { marginTop: '2px', letterSpacing: '.06em' } }, '2026 年版')),
-    h('div', { class: 'form-no' }, '表單編號 115-TW', h('br'), '審查依據：現行補助與稅制')));
+    h('div', {}, h('div', { class: 'form-kicker' }, '台灣・生育資格審查・模擬試算'), h('div', { class: 'form-kicker', style: { marginTop: '2px', letterSpacing: '.06em' } }, '2026 年版')),
+    h('div', { class: 'form-no' }, '試算編號 115-TW', h('br'), '審查依據：現行補助與稅制')));
   inn.appendChild(h('h1', { class: 'cover-title' }, '你有資格', h('br'), '生下一代嗎', h('span', { class: 'q' }, '？')));
   inn.appendChild(h('p', { class: 'cover-lede' }, '用你心中「養孩子的最低標準」，加上台灣真實的房價、薪資、補助與稅制，從孩子出生一路算到他獨立。看看存款會不會撐過去，或者，收入要在前百分之幾才撐得住。'));
   var fields = h('div', { class: 'cover-fields' });
-  [['申請人', '你（與伴侶）'], ['審查項目', '有沒有足夠的錢，把孩子養大'], ['審查依據', '2026 年房價、租金、薪資分布、補助、稅制'], ['填寫時間', '約 5 分鐘，隨時可以回頭修改']].forEach(function (r) {
+  [['試算對象', '你（與伴侶）'], ['審查項目', '有沒有足夠的錢，把孩子養大'], ['審查依據', '2026 年房價、租金、薪資分布、補助、稅制'], ['填寫時間', '約 5 分鐘，隨時可以回頭修改']].forEach(function (r) {
     fields.appendChild(h('div', { class: 'cover-field' }, h('span', {}, r[0]), h('b', {}, r[1])));
   });
   inn.appendChild(fields);
   var cta = h('div', { class: 'cover-cta' });
   if (submitted) {
     cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.compute(true); A.go('report'); } }, '查看我的審查報告', U.icon('next')));
-    cta.appendChild(h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '修改申請書'));
+    cta.appendChild(h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '修改答案'));
     cta.appendChild(h('button', { class: 'linkbtn', onclick: function () { A.restart(); } }, '全部重新填寫'));
   } else if (hasDraft) {
     cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.go('quiz'); } }, '繼續填寫（第 ' + (A.qi + 1) + ' 題）', U.icon('next')));
     cta.appendChild(h('button', { class: 'btn ghost', onclick: function () { A.restart(); } }, '重新開始'));
   } else {
-    cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.startQuiz(); } }, '開始填寫申請書', U.icon('next')));
+    cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.startQuiz(); } }, '開始試算', U.icon('next')));
   }
   inn.appendChild(cta);
   // 色盲友善配色
@@ -3661,7 +3661,7 @@ APP.screens.notice = function (main) {
   var local = COMM.st.backend === 'local' || !(window.TWKIDS && window.TWKIDS.sb);
   var wrap = h('div', { class: 'notice fade-in' });
   var sheet = h('div', { class: 'sheet' }), inn = h('div', { class: 'sheet-in' });
-  inn.appendChild(h('div', { class: 'form-kicker' }, '生育資格審查申請書・填寫須知'));
+  inn.appendChild(h('div', { class: 'form-kicker' }, '生育資格審查・填寫須知'));
   inn.appendChild(h('h1', { class: 'notice-title' }, '開始之前'));
   [
     ['lock', '資料只在你的手機裡', local
@@ -3682,7 +3682,7 @@ APP.screens.notice = function (main) {
 };
 
 /* ---- screen-quiz.js ---- */
-/* 填寫申請書 */
+/* 填寫題目 */
 (function () {
   'use strict';
   var h = U.h, A = APP, D = DATA;
@@ -3691,12 +3691,12 @@ APP.screens.notice = function (main) {
   function needsAnswer(q) { return (q.key && q.options) || q.type === 'county'; }
   function isSeen(q) { return !!A.seen[q.id]; }
 
-  // 第一次填寫時不顯示「其他申請人」的比例，避免影響作答；送出過一次之後回來修改才顯示
+  // 第一次填寫時不顯示「其他人」的比例，避免影響作答；送出過一次之後回來修改才顯示
   function crowdAllowed() { return !!(A.submitted || U.store.get('submitted', null)); }
   function crowdFor(key, v) {
     if (!crowdAllowed()) return null;
     var c = COMM.share(key, v); if (!c || Math.round(c.pct) < 1) return null;
-    return h('div', { class: 'crowd' }, h('span', { class: 'crowd-bar' }, h('i', { style: { width: Math.max(2, c.pct).toFixed(0) + '%' } })), h('span', {}, '其他申請人 ' + Math.round(c.pct) + '%'));
+    return h('div', { class: 'crowd' }, h('span', { class: 'crowd-bar' }, h('i', { style: { width: Math.max(2, c.pct).toFixed(0) + '%' } })), h('span', {}, '其他人 ' + Math.round(c.pct) + '%'));
   }
   function optEl(q, o, checked, onPick, showCrowd) {
     var s = A.s;
@@ -3825,7 +3825,7 @@ APP.screens.notice = function (main) {
         list.appendChild(optEl(q, o, checked, function () { pick(o.v); }, isSeen(q)));
       });
       body.appendChild(list);
-      if (isSeen(q) && COMM.st.demoOn && list.querySelector('.crowd')) body.appendChild(h('p', { class: 'xs muted demo-note' }, '「其他申請人」的比例目前含作者產生的示範資料。'));
+      if (isSeen(q) && COMM.st.demoOn && list.querySelector('.crowd')) body.appendChild(h('p', { class: 'xs muted demo-note' }, '「其他人」的比例目前含作者產生的示範資料。'));
       if (q.subs) q.subs.forEach(function (sq) {
         if (sq.when && !sq.when(s)) return;
         if (!isSeen(q)) return;
@@ -3856,7 +3856,7 @@ APP.screens.notice = function (main) {
       });
       grp.appendChild(chips); body.appendChild(grp);
       var c = crowdAllowed() ? COMM.share('elder', s.elder) : null;
-      if (c && Math.round(c.pct) >= 1) body.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } }, '其他申請人中有 ' + Math.round(c.pct) + '% 選了一樣的金額。'));
+      if (c && Math.round(c.pct) >= 1) body.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } }, '其他人中有 ' + Math.round(c.pct) + '% 選了一樣的金額。'));
       var g2 = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, '長輩未來需要照顧時'));
       var ch2 = h('div', { class: 'chips', role: 'radiogroup' });
       ch2.appendChild(chipEl({ label: '不另外分擔' }, !s.elderCare, function () { A.set('elderCare', false); refresh(); }, s, 'ec:0'));
@@ -3880,7 +3880,7 @@ APP.screens.notice = function (main) {
       body.appendChild(box);
       body.appendChild(timeline(s));
     }
-    function crowdLine(key, v) { var c = crowdAllowed() ? COMM.share(key, v) : null; return c && Math.round(c.pct) >= 1 ? '其他申請人 ' + Math.round(c.pct) + '% 也選這個' : ''; }
+    function crowdLine(key, v) { var c = crowdAllowed() ? COMM.share(key, v) : null; return c && Math.round(c.pct) >= 1 ? '其他人 ' + Math.round(c.pct) + '% 也選這個' : ''; }
     function timeline(s) {
       var end = ENGINE.supportEndAge(s.support);
       var births = []; for (var i = 0; i < s.kids; i++) births.push(s.firstBirthAge + i * s.spacing);
@@ -4110,11 +4110,11 @@ APP.screens.notice = function (main) {
   function consentModal(after) {
     U.modal(function (box, close) {
       box.appendChild(h('h3', {}, '要匿名分享你的設定嗎？'));
-      box.appendChild(h('p', {}, '分享後，其他申請人會在題目旁看到「大家怎麼選」，你也能在報告裡看到自己在所有申請人中的位置。'));
+      box.appendChild(h('p', {}, '分享後，其他人會在題目旁看到「大家怎麼選」，你也能在報告裡看到自己在所有分享者中的位置。'));
       box.appendChild(h('ul', {},
         h('li', {}, '會分享：縣市與區域、孩子數、每一題的選擇、收入 PR（四捨五入到 5）、年齡區間（每 5 歲一組）、審查結果。'),
         h('li', {}, '不會分享：姓名、帳號資料、確切年齡、確切年薪與存款金額。'),
-        h('li', {}, '只會分享這次送出的申請書。之後修改或在報告裡調整設定都不會覆蓋，除非你在報告裡按「更新」。'),
+        h('li', {}, '只會分享這次送出的答案。之後修改或在報告裡調整設定都不會覆蓋，除非你在報告裡按「更新」。'),
         h('li', {}, COMM.st.backend === 'web' ? '隨時可以在報告頁取消分享，資料會刪除（請用同一台裝置的同一個瀏覽器）。' : '隨時可以在報告頁取消分享，資料會刪除。')));
       box.appendChild(h('div', { class: 'actions' },
         h('button', { class: 'btn ghost', onclick: function () { A.consent = false; U.store.set('consent', false); close(); after(); } }, '不分享'),
@@ -4209,11 +4209,11 @@ APP.screens.notice = function (main) {
     try { A.compute(true); } catch (e) { err = e; U.report(e, 'reveal-compute'); }
     if (err || !A.res) {
       inn.appendChild(h('div', { class: 'form-head' }, h('div', {}, h('div', { class: 'form-kicker' }, '審查程序'), h('h2', { style: { fontSize: '24px', marginTop: '4px' } }, '試算時發生錯誤'))));
-      inn.appendChild(h('p', { class: 'qnote warn' }, '很抱歉，試算沒有完成。錯誤訊息已記錄下來。你可以再試一次，或回到申請書修改。'));
+      inn.appendChild(h('p', { class: 'qnote warn' }, '很抱歉，試算沒有完成。錯誤訊息已記錄下來。你可以再試一次，或回到題目修改。'));
       inn.appendChild(h('p', { class: 'xs muted', style: { marginTop: '8px', wordBreak: 'break-all' } }, String(err && err.message || err || '沒有結果')));
       inn.appendChild(h('div', { class: 'cover-cta', style: { marginTop: '18px' } },
         h('button', { class: 'btn seal', onclick: function () { A.go('reveal'); } }, '再試一次'),
-        h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '回到申請書')));
+        h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '回到題目')));
       COMM.diag('reveal-error');
       return;
     }
@@ -4238,7 +4238,7 @@ APP.screens.notice = function (main) {
     inn.appendChild(h('div', { class: 'form-head' },
       h('div', {}, h('div', { class: 'form-kicker' }, '審查程序'),
         h('h2', { class: 'phase-wrap', style: { fontSize: '24px', marginTop: '4px' } }, h('span', { class: 'phase-a' }, '正在逐年試算你的存摺…'), h('span', { class: 'phase-b' }, '審查完成'))),
-      h('div', { class: 'form-no' }, '收件 ' + (function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); })(new Date()), h('br'), skip)));
+      h('div', { class: 'form-no' }, '試算日 ' + (function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); })(new Date()), h('br'), skip)));
     var vi = verdictInfo(s, res, th);
     var st = h('div', { class: 'stamp drop' }); st.appendChild(stampSVG(vi.stamp.k, vi.stamp.l, vi.stamp.sub));
     var thMode = s.incomeMode !== 'full';
@@ -4256,7 +4256,7 @@ APP.screens.notice = function (main) {
     Array.prototype.forEach.call(led.querySelectorAll('.ledger-row:not(.head)'), function (r, i) { r.style.animationDelay = Math.round(i * delay) + 'ms'; });
     inn.appendChild(h('div', { class: 'cover-cta later', style: { marginTop: '22px', '--t': (T + 300) + 'ms' } },
       h('button', { class: 'btn seal', onclick: function () { A.go('report'); } }, '查看完整審查報告', U.icon('next')),
-      h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '修改申請書'),
+      h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '修改答案'),
       h('span', { class: 'sm muted' }, '實驗室已解鎖。')));
     // 存摺捲動跟著「正在印的那一行」走（純裝飾，不影響結果）
     var rowEls = led.querySelectorAll('.ledger-row:not(.head)');
@@ -4782,7 +4782,7 @@ APP.screens.notice = function (main) {
   function crowdSection() {
     var sec = h('section', { class: 'rsec', id: 'sec-crowd' });
     sec.appendChild(h('div', { class: 'rsec-k num' }));
-    sec.appendChild(h('h2', {}, '其他申請人怎麼選？'));
+    sec.appendChild(h('h2', {}, '其他人怎麼選？'));
     var st = COMM.st, S = st.stats, res = A.res, s = res.s;
     if (!st.ready) { sec.appendChild(h('p', { class: 'rsec-lede' }, '正在讀取…')); return sec; }
     var n = S ? S.n : 0;
@@ -4794,8 +4794,8 @@ APP.screens.notice = function (main) {
       var failTxt = st.backend === 'web' ? '分享失敗，請稍後再試' : '分享失敗，你可能只有檢視權限';
       if (mine) {
         var sh = COMM.shared(), newer = A.submitted && (!sh || !sh.sig || sh.sig !== COMM.sig(A.submitted));
-        ctl.appendChild(document.createTextNode('你已匿名分享' + (newer ? '之前送出的申請書。' : '這份申請書。') + '在報告裡調整設定不會改到分享的資料' + (st.backend === 'web' ? '；要取消，請用同一台裝置的同一個瀏覽器' : '') + '。'));
-        if (newer) ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.submit(submittedDoc(), A.submitted).then(function (ok) { U.toast(ok ? '已更新成最新送出的申請書' : failTxt); }); } }, '更新成最新送出的申請書'));
+        ctl.appendChild(document.createTextNode('你已匿名分享' + (newer ? '之前送出的答案。' : '這次的答案。') + '在報告裡調整設定不會改到分享的資料' + (st.backend === 'web' ? '；要取消，請用同一台裝置的同一個瀏覽器' : '') + '。'));
+        if (newer) ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.submit(submittedDoc(), A.submitted).then(function (ok) { U.toast(ok ? '已更新成最新送出的答案' : failTxt); }); } }, '更新成最新送出的答案'));
         ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { COMM.withdraw().then(function () { A.consent = false; U.store.set('consent', false); U.toast('已取消分享並刪除資料'); }); } }, '取消分享'));
       }
       else { ctl.appendChild(document.createTextNode('你目前沒有分享設定。')); ctl.appendChild(h('button', { class: 'linkbtn', onclick: function () { A.consentModal(function () { if (A.consent) COMM.submit(submittedDoc(), A.submitted).then(function (ok) { U.toast(ok ? '已匿名分享' : failTxt); }); }); } }, '匿名分享')); }
@@ -4803,12 +4803,12 @@ APP.screens.notice = function (main) {
     sec.appendChild(ctl);
     if (st.demoOn) sec.appendChild(h('p', { class: 'xs muted demo-note', style: { marginBottom: '12px' } }, COMM.demoNote()));
     if (n < COMM.MIN_N) {
-      sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + n + ' 位申請人分享'), '累積到 ' + COMM.MIN_N + ' 位以上，這裡就會顯示大家的選擇、門檻 PR 的分布，以及你在其中的位置。'));
+      sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + n + ' 人分享'), '累積到 ' + COMM.MIN_N + ' 人以上，這裡就會顯示大家的選擇、門檻 PR 的分布，以及你在其中的位置。'));
       return sec;
     }
     var tiles = h('div', { class: 'tiles' });
     var thRank = A.th.pr != null ? (COMM.thRank(A.th.pr) || 0) : 100;
-    tiles.appendChild(tile('申請人數', U.sep(n), st.demoOn ? '含 ' + st.demoN + ' 筆示範資料' : n >= (st.backend === 'web' ? 3000 : 1000) ? '最近 ' + U.sep(n) + ' 筆' : '所有匿名分享的人', false));
+    tiles.appendChild(tile('分享人數', U.sep(n), st.demoOn ? '含 ' + st.demoN + ' 筆示範資料' : n >= (st.backend === 'web' ? 3000 : 1000) ? '最近 ' + U.sep(n) + ' 筆' : '所有匿名分享的人', false));
     tiles.appendChild(tile('門檻 PR 中位數', U.pr(S.thMedian), '你的門檻比 ' + Math.round(thRank) + '% 的人高', false));
     if (S.perChildMedian) tiles.appendChild(tile('每個孩子的淨成本（中位數）', U.wan(S.perChildMedian), '你的是 ' + U.wan(res.perChild), false));
     var vb = S.by.verdict || {}, vtot = 0; for (var k in vb) vtot += vb[k];
@@ -4945,7 +4945,7 @@ APP.screens.notice = function (main) {
   // 圖卡用到的字，先讓網頁字型載入（Google Fonts 依字元分批下載）
   function cardFonts(texts) {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
-    var all = '台灣・生育資格審查申請書　No.115-TW你有資格生下一代嗎？依 2026 年台灣房價、薪資、補助與稅制試算0123456789／' + texts.join('');
+    var all = '台灣・生育資格審查・模擬試算　No.115-TW你有資格生下一代嗎？依 2026 年台灣房價、薪資、補助與稅制試算0123456789／' + texts.join('');
     var jobs = ['900 40px "Noto Serif TC"', '700 40px "Noto Sans TC"', '500 40px "Noto Sans TC"', '400 40px "Noto Sans TC"', '400 32px "LXGW WenKai TC"'].map(function (f) { return document.fonts.load(f, all).catch(function () {}); });
     return Promise.race([Promise.all(jobs), new Promise(function (r) { setTimeout(r, 3000); })]);
   }
@@ -4965,7 +4965,7 @@ APP.screens.notice = function (main) {
     c.fillStyle = css('--sheet'); c.fillRect(60, 60, W - 120, H - 120);
     c.strokeStyle = css('--rule'); c.lineWidth = 4; c.beginPath(); c.moveTo(X, 104); c.lineTo(W - X, 104); c.stroke();
     c.lineWidth = 2; c.beginPath(); c.moveTo(X, 114); c.lineTo(W - X, 114); c.stroke();
-    c.fillStyle = css('--ink-3'); c.font = '500 28px ' + F_SANS; c.fillText('台灣・生育資格審查申請書　No.115-TW', X, 170);
+    c.fillStyle = css('--ink-3'); c.font = '500 28px ' + F_SANS; c.fillText('台灣・生育資格審查・模擬試算　No.115-TW', X, 170);
     c.fillStyle = css('--ink'); c.font = '900 92px ' + F_SERIF; c.fillText('你有資格', X, 300); c.fillText('生下一代嗎', X, 410);
     c.fillStyle = css('--seal'); c.fillText('？', X + c.measureText('生下一代嗎').width, 410);
     var y;
@@ -5227,10 +5227,10 @@ APP.screens.notice = function (main) {
     var s = labSettings();
     wrap.appendChild(h('p', { class: 'sm muted' }, '目前組合：' + QS.placeName(s) + '・' + s.kids + ' 個孩子・' + QS.labelOf('housing', s.housing) + '・' + A.incName(s) + '。', h('button', { class: 'linkbtn', style: { marginLeft: '8px' }, onclick: function () { manageModal(); } }, '管理存檔')));
     var tabs = h('div', { class: 'tabs', role: 'tablist' });
-    // 申請人資料：有足夠的共享資料、或自己能加入時才顯示
+    // 大家的資料：有足夠的共享資料、或自己能加入時才顯示
     var crowdOk = COMM.st.canShare || (COMM.st.stats && COMM.st.stats.n >= COMM.MIN_N);
     if (L.tab === 'crowd' && !crowdOk) L.tab = 'map';
-    [['map', '縣市地圖'], ['curve', '門檻分析'], ['time', '時光機']].concat(crowdOk ? [['crowd', '申請人資料']] : []).forEach(function (t) {
+    [['map', '縣市地圖'], ['curve', '門檻分析'], ['time', '時光機']].concat(crowdOk ? [['crowd', '大家的資料']] : []).forEach(function (t) {
       tabs.appendChild(h('button', { role: 'tab', 'aria-selected': L.tab === t[0] ? 'true' : 'false', onclick: function () { L.tab = t[0]; U.store.set('labTab', t[0]); A.go('lab', { keepScroll: true }); } }, t[1]));
     });
     wrap.appendChild(tabs);
@@ -5630,31 +5630,31 @@ APP.screens.notice = function (main) {
   function crowdTab(panel, s) {
     var st = COMM.st, S = st.stats;
     var sec = h('div', { class: 'rsec' });
-    sec.appendChild(h('h2', {}, '所有申請人的門檻分布'));
+    sec.appendChild(h('h2', {}, '所有人的門檻分布'));
     panel.appendChild(sec);
-    if (!st.db || (st.backend === 'web' && st.loadErr)) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, st.backend === 'web' ? '暫時連不上資料庫' : '這個檢視無法讀取共享資料'), st.backend === 'web' ? '請稍後再試；你的試算不受影響。' : '在 claude.ai 登入後開啟，就能看到所有申請人的資料。')); return; }
+    if (!st.db || (st.backend === 'web' && st.loadErr)) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, st.backend === 'web' ? '暫時連不上資料庫' : '這個檢視無法讀取共享資料'), st.backend === 'web' ? '請稍後再試；你的試算不受影響。' : '在 claude.ai 登入後開啟，就能看到大家分享的資料。')); return; }
     if (st.demoOn) sec.appendChild(h('p', { class: 'xs muted demo-note', style: { marginBottom: '10px' } }, COMM.demoNote()));
-    if (!S || S.n < COMM.MIN_N) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + (S ? S.n : 0) + ' 位申請人分享'), '累積到 ' + COMM.MIN_N + ' 位以上就會顯示。完成申請書時選擇「匿名分享」，就能加入統計。')); return; }
+    if (!S || S.n < COMM.MIN_N) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + (S ? S.n : 0) + ' 人分享'), '累積到 ' + COMM.MIN_N + ' 人以上就會顯示。完成試算時選擇「匿名分享」，就能加入統計。')); return; }
     var th = A.th && A.th.pr;
     var bins = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     (S.thHist || []).forEach(function (c, v) { bins[Math.min(10, Math.floor(v / 10))] += c; });
     var mx = Math.max.apply(null, bins.concat([1]));
     var Wd = 640, Hh = 200, bw = Wd / 11;
-    var svg = U.svg('svg', { viewBox: '0 0 ' + Wd + ' ' + (Hh + 30), role: 'img', 'aria-label': '申請人門檻 PR 分布' });
+    var svg = U.svg('svg', { viewBox: '0 0 ' + Wd + ' ' + (Hh + 30), role: 'img', 'aria-label': '大家的門檻 PR 分布' });
     bins.forEach(function (n, i) {
       var hh = n / mx * (Hh - 20), mine = th != null && Math.min(10, Math.floor(th / 10)) === i;
       svg.appendChild(U.svg('rect', { x: i * bw + 4, y: Hh - hh, width: bw - 8, height: Math.max(1, hh), rx: 3, fill: mine ? 'var(--pen)' : 'var(--rule)' }));
       svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh + 18, 'text-anchor': 'middle', text: i === 10 ? '100' : (i * 10) + '–', style: 'font-size:11px;fill:var(--ink-3)' }));
       if (n) svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh - hh - 6, 'text-anchor': 'middle', text: String(n), style: 'font-size:11px;fill:var(--ink-2)' }));
     });
-    sec.appendChild(h('p', { class: 'rsec-lede' }, S.n + ' 位申請人，各自心中的養育標準需要的收入 PR。藍色是你所在的區間。'));
+    sec.appendChild(h('p', { class: 'rsec-lede' }, S.n + ' 位分享者，各自心中的養育標準需要的收入 PR。藍色是你所在的區間。'));
     sec.appendChild(h('div', { class: 'chart-box' }, svg));
     // 各縣市
     var byC = S.byCounty || {};
     var rows = Object.keys(byC).filter(function (k) { return D.COUNTY[k] && byC[k].n >= 3; }).map(function (k) { return [k, byC[k].med, byC[k].n]; }).sort(function (a, b) { return a[1] - b[1]; });
     if (rows.length) {
       var sec2 = h('div', { class: 'rsec' });
-      sec2.appendChild(h('h2', {}, '各縣市申請人的門檻中位數'));
+      sec2.appendChild(h('h2', {}, '各縣市分享者的門檻中位數'));
       var b = h('div', { class: 'bars' });
       rows.forEach(function (r) { b.appendChild(h('div', { class: 'bar-row' }, h('span', { class: 'bl' }, D.COUNTY[r[0]].name + '（' + r[2] + '）'), h('span', { class: 'bt' }, h('i', { style: { width: r[1] + '%', background: heat(r[1]) } })), h('span', { class: 'bv' }, 'PR ' + U.pr(r[1])))); });
       sec2.appendChild(b);

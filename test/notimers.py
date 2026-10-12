@@ -27,7 +27,7 @@ with sync_playwright() as p:
     pg.route('**/*', lambda r: r.abort() if r.request.url.startswith('http') else r.continue_())
     pg.add_init_script(INIT)
     pg.goto('file://'+ROOT+'/test/page.html'); pg.wait_for_timeout(700)
-    pg.tap('text=開始填寫申請書'); pg.wait_for_timeout(300)
+    pg.tap('text=開始試算'); pg.wait_for_timeout(300)
     if pg.query_selector('.notice'): pg.tap('text=我了解了，開始填寫'); pg.wait_for_timeout(300)
     for n in range(40):
         if pg.query_selector('#county-sel') and not pg.evaluate("!!APP.seen.county"): pg.select_option('#county-sel','NTPC'); pg.wait_for_timeout(120)

@@ -34,15 +34,15 @@ with sync_playwright() as p:
     # 1. 第一次送出 → 自動分享
     pg.evaluate("APP.go('reveal')"); pg.wait_for_timeout(1500)
     print('1 first submit      → db', row(), 'writes', WRITES)
-    # 2. 修改申請書（改成台北）再送出 → 不覆蓋
+    # 2. 修改答案（改成台北）再送出 → 不覆蓋
     pg.evaluate("APP.set('county','TPE'); APP.go('reveal')"); pg.wait_for_timeout(1500)
     print('2 resubmit TPE      → db', row(), 'writes', WRITES)
     # 3. 報告裡調整設定 → 不覆蓋
     pg.evaluate("APP.go('report')"); pg.wait_for_timeout(1500)
     pg.evaluate("APP.set('county','TXG'); APP.compute(true); APP.redrawReport && APP.redrawReport()"); pg.wait_for_timeout(1200)
     print('3 adjust in report  → db', row(), 'writes', WRITES, '| text:', crowd()[:60])
-    # 4. 按「更新」→ 改成最新送出的申請書（台北，不是報告裡調整的台中）
-    pg.click('text=更新成最新送出的申請書'); pg.wait_for_timeout(1200)
+    # 4. 按「更新」→ 改成最新送出的答案（台北，不是報告裡調整的台中）
+    pg.click('text=更新成最新送出的答案'); pg.wait_for_timeout(1200)
     print('4 press update      → db', row(), 'writes', WRITES, '| text:', crowd()[:40])
     # 5. 取消分享 → 刪除；再按匿名分享 → 用送出的版本
     pg.click('#sec-crowd >> text=取消分享'); pg.wait_for_timeout(1000); print('5 withdraw          → db', row())

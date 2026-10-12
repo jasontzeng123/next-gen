@@ -36,7 +36,7 @@ with sync_playwright() as p:
     pg.add_init_script(MOCK)
     pg.goto('file://'+ROOT+'/test/page.html'); pg.wait_for_timeout(900)
     print('cover buttons:', [x.inner_text() for x in pg.query_selector_all('.cover-cta button')])
-    if entry=='edit': pg.tap('text=修改申請書')
+    if entry=='edit': pg.tap('text=修改答案')
     elif entry=='restart':
         pg.tap('text=全部重新填寫'); pg.wait_for_timeout(300); pg.tap('.modal .actions .btn:not(.ghost)')
     pg.wait_for_timeout(400)
