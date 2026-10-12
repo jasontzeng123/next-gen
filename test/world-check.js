@@ -5,7 +5,7 @@ const D = require('../src/data.js');
 const E = require('../src/engine.js');
 const W = require('../src/world.js');
 // 只載入要檢查的國家（其他國家的檔案可能正在編修）
-const want = process.argv.slice(2).length ? process.argv.slice(2).map(s => s.toUpperCase()) : ['JP', 'KR', 'FR', 'CN', 'US', 'UK', 'DE', 'SE'];
+const want = process.argv.slice(2).length ? process.argv.slice(2).map(s => s.toUpperCase()) : ['JP', 'KR', 'FR', 'CN', 'US', 'UK', 'DE', 'SE', 'CA'];
 want.forEach(c => { try { require('../src/country-' + c.toLowerCase() + '.js'); } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e; } });
 const ids = want.filter(c => E.countries().indexOf(c) >= 0);
 const fmt = (v, K) => (v / (K.id === 'TW' ? 10000 : (K.unit || 10000))).toFixed(1);
