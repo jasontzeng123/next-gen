@@ -788,3 +788,7 @@ button.wd-li:hover { background: var(--sheet-2); }
 .wd-map b { display: inline-block; min-width: 4.6em; color: var(--ink-3); font-weight: 500; }
 .wd-map li.note { color: var(--ink-3); font-size: 12.5px; }
 .wd-note { margin-top: 12px; }
+.wd-save { font-size: 14px; color: var(--ink-2); margin-top: 12px; padding: 10px 12px; background: var(--sheet-2); border-radius: 4px; }
+.wd-save b { color: var(--ink); }
+.wd-bind { font-size: 14px; color: var(--ink-2); margin-top: 8px; padding: 10px 12px; border-left: 3px solid var(--seal); background: var(--seal-soft); border-radius: 0 4px 4px 0; }
+.wd-bind b { color: var(--ink); }

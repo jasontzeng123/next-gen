@@ -182,7 +182,17 @@ var WORLD = (function (E, D) {
     o.country = K.name;
     // 在門檻收入下（找不到門檻就用 PR 99.9）的花費結構
     var p = th.pr != null ? th.pr : 99.9;
-    o.at = breakdown(E.atPR(ls, p));
+    var sim = E.atPR(ls, p);
+    o.at = breakdown(sim);
+    // 收入剛好夠時，從現在到最小的孩子獨立，現金存款增加多少（不畫進長條，另外用文字說明）
+    var yT = sim.years[sim.Tv] || sim.years[sim.years.length - 1];
+    o.at.saved = yT.S - sim.years[0].Sstart; o.at.endAge = ls.ageA + sim.Tv;
+    // 門檻卡在買房那年（存款最低點在買房當年或之前）：記下要一次拿出多少現金
+    var hs = sim.house;
+    if (ls.housing === 'buy' && hs && th.pr != null && sim.minT <= hs.tb) {
+      var loan = hs.loanAmt != null ? hs.loanAmt : (hs.qLoan || 0) + (hs.bLoan || 0);
+      o.bind = { age: ls.ageA + hs.tb, cash: hs.down + hs.closing + hs.reno, down: hs.down, fees: hs.closing + hs.reno, price: hs.total, loan: loan, beforeKid: hs.tb < sim.t0 };
+    }
     // 已知收入：直接看能不能過
     if (ls.incomeMode === 'full') { var r = E.simulate(ls); o.verdict = r.verdict; o.minS = r.minS; o.prA = ls.jobA.pr; o.prB = ls.jobB.pr; }
     return o;
