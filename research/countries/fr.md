@@ -43,7 +43,7 @@ Compiled 2026-10-12. Euro amounts are nominal euros in the year shown. TWD conve
 | Taiwan parameter (`src/data.js`) | French equivalent | Value to use | Notes |
 |---|---|---|---|
 | `WAGE.median` (546,000 TWD, 2024 annual **total pay incl. bonus**, all employees) | INSEE private-sector median, EQTP | Net 2,190 €/month (26,280 €/yr). Gross ≈ **33,200–34,600 €/yr** [DERIVED] | INSEE publishes the median only in **net** terms. Gross is derived two ways: ÷0.7916 (statutory employee rate below the PASS) or ×3,602/2,733 (average gross/net). EQTP turns part-timers into full-time equivalents, but Taiwan's median includes part-timers as they are. So the French "median" sits slightly higher in the distribution than Taiwan's. Bonuses (primes, 13th month) are included in EQTP pay. |
-| `WAGE.toBase` (2024 → 2026 growth) | not found | — | No 2025/2026 wage-growth figure was retrieved. The INSEE 2025 private-sector edition had not been found as of 2026-10-12. Needs a placeholder. |
+| `WAGE.toBase` (2024 → 2026 growth) | not found **[Superseded → §13.2: 1.038]** | — | No 2025/2026 wage-growth figure was retrieved. The INSEE 2025 private-sector edition had not been found as of 2026-10-12. Needs a placeholder. |
 | `WAGE.q` decile ratios | INSEE D1–D9 / median (net EQTP) | 0.681, 0.762, 0.832, 0.910, 1, 1.115, 1.272, 1.509, 1.979; P95 2.554; P99 4.685 | Ratios are much flatter than Taiwan's (D9/D5 1.98 vs 2.45). Mean/median = 1.248 (Taiwan 1.34), so `paretoAlpha` needs re-calibration. Ratios are on net pay. Contributions are roughly proportional below the PASS, so gross ratios are similar up to about D8. |
 | `WAGE.age` | INSEE average net EQTP by age / overall average | <25: 0.593; 25–39: 0.932; 40–49: 1.100; 50–54: 1.161; 55+: 1.195 | **Averages, not medians**. INSEE gives no age-band medians. The curve keeps rising after 50, unlike Taiwan's. |
 | `INDUSTRIES` | INSEE average **gross** EQTP by socio-professional category or sector | Cadres 6,224; professions intermédiaires 3,475; employés 2,500; ouvriers 2,659; industry 4,063; construction 3,142; tertiary 3,552 (€/month) | Averages only. A French version could offer "job type" (CSP) instead of industry. |
@@ -107,7 +107,7 @@ Compiled 2026-10-12. Euro amounts are nominal euros in the year shown. TWD conve
 | EUR/TWD market rate | **35.768** (day range 35.737–35.880) | close 2026-10-09 | https://www.poundsterlinglive.com/data/currencies/eur-pairs/EURTWD-exchange-rate | [NEWS] |
 | EUR/TWD 1-year high / low | 37.719 / 35.473 | 12 months to 2026-10-09 | same | [NEWS] |
 | IMF implied PPP conversion rate, France (EUR per international $) | 2023: 0.667; 2024: 0.664; **2025: 0.654**; 2026: 0.644 (projection) | WEO, latest vintage served 2026-10 | https://www.imf.org/external/datamapper/api/v1/PPPEX/TWN/FRA?periods=2024,2025,2026 | [OFFICIAL] |
-| IMF implied PPP conversion rate, Taiwan | **not found**. The API response was truncated before "TWN", and GlobalNote shows "----". | — | — | — |
+| IMF implied PPP conversion rate, Taiwan | **not found**. The API response was truncated before "TWN", and GlobalNote shows "----". **[Superseded → §13.1: ≈ 13.65 TWD/int$, DERIVED]** | — | — | — |
 | World Bank PPP (GDP or private consumption), France | **not found** (data page rendered without values; API blocked) | — | https://data.worldbank.org/indicator/PA.NUS.PPP?locations=FR | — |
 
 **How to use it.** A PPP-based EUR→TWD factor = PPP_TWN / PPP_FRA (both per international $). With France at 0.654 (2025), the game only needs IMF's Taiwan PPPEX for the same vintage. It is available in the IMF WEO database (indicator PPPEX, "Taiwan Province of China"). Until then, use the market rate and label it.
@@ -254,6 +254,8 @@ Notes:
 
 French "pièces" counts the living room. A T3 is the living room plus 2 bedrooms, so it maps to Taiwan's 2房. A T4 maps to 3房.
 
+**[Corrected → §13.4.1]** The OLL surfaces above are **means**, not medians (field `surface_moyenne`). Lyon/Villeurbanne T4 = 88 m². Paris sizes are now available: T2 43, T3 65, 4P+ 102 m².
+
 ### 4.3 Rents (private sector, excluding charges)
 
 | Area | Rent | Period | Basis | Source | Label |
@@ -303,8 +305,8 @@ Illustrative monthly rents [DERIVED; surfaces from §4.2, Lyon sizes applied eve
 | Broker barometer (Pretto) | 15 y 3.38%; 20 y 3.52%; 25 y 3.67% | 2026-09-20 | Selectra | [PORTAL] |
 | **Average loan duration** | **251 months (≈ 21 y)**, a record; 49.3% of loans run 25 y or more | Q2 2026 | Boursedescredits; Selectra | [NEWS] |
 | **HCSF rules** (binding) | Debt service ≤ **35%** of income (insurance included); term ≤ **25 y** (27 y for off-plan or with works); 20% of production may deviate (70% of that reserved for primary residence, 30% of the envelope for first-time buyers) | Jan 2026 | https://www.creditcourtierdefrance.com/actualites/les-criteres-du-hcsf-en-janvier-2026 | [NEWS quoting HCSF] |
-| Down payment norms | **not found** as a statistic. Banks commonly expect the apport to cover at least the notary fees (about 7–8% of price for existing homes) [UNVERIFIED]. | — | — | — |
-| Notary and transfer fees (frais de notaire) | **not found**. About 7–8% existing / 2–3% new [UNVERIFIED]. Départements were allowed a +0.5-point transfer-tax rise from 2025, first-time buyers exempt [UNVERIFIED]. | — | — | — |
+| Down payment norms **[Superseded → §13.4.2: BdF July 2026, first-time buyers 34k € apport]** | **not found** as a statistic. Banks commonly expect the apport to cover at least the notary fees (about 7–8% of price for existing homes) [UNVERIFIED]. | — | — | — |
+| Notary and transfer fees (frais de notaire) **[Superseded → §13.4.2: DMTO 5.81% first-time / 6.32% other]** | **not found**. About 7–8% existing / 2–3% new [UNVERIFIED]. Départements were allowed a +0.5-point transfer-tax rise from 2025, first-time buyers exempt [UNVERIFIED]. | — | — | — |
 | Monthly payment per 100k € | 549 € (251 months at 3.24%); 490 € (25 y at 3.3%) [DERIVED] | — | — | — |
 
 ### 4.6 PTZ (prêt à taux zéro), rules for offers from April 2025, valid to end-2027
@@ -356,7 +358,7 @@ Income tranches (income ÷ family coefficient 1 / 1.5 / 1.8 / 2.1 / 2.4 for 1 / 
 ### 4.7 Housing benefit (APL)
 
 - **Rules only.** For tenants of "conventionné" housing (most HLM). Amount depends on household size, resources (rolling 12 months, reviewed every 3 months), assets over 30,000 €, rent (capped) and zone (1, 1bis, 2, 3). Paid by the CAF on the 5th of each month. https://www.service-public.gouv.fr/particuliers/vosdroits/F12006 (verified 2026-07-01) [OFFICIAL].
-- **Amounts and rent ceilings for a couple with 2 children: not found.** Service-public points only to the 2019 arrêté and the CAF simulator. For a dual-earner median couple, APL is likely zero or small [UNVERIFIED].
+- **[Superseded → §13.4.3: DREES case types 487 / 304 / 0 €]** **Amounts and rent ceilings for a couple with 2 children: not found.** Service-public points only to the 2019 arrêté and the CAF simulator. For a dual-earner median couple, APL is likely zero or small [UNVERIFIED].
 
 ---
 
@@ -531,14 +533,14 @@ Income ceilings: 28,956 € (1 child), 35,638 € (2), 42,320 € (3), 49,002 �
 **Congé supplémentaire de naissance (new).** https://www.info.gouv.fr/actualite/conge-de-naissance-montant-duree-et-conditions [OFFICIAL]
 - In force **2026-07-01**, for children born or adopted from 2026-01-01.
 - Each parent gets **1 or 2 months**, taken in one block or two, within 9 months of birth and after maternity or paternity leave.
-- Pay: **70% of salary in month 1 and 60% in month 2**, salary capped at the PMSS (4,005 €/month). Maximum ≈ 2,804 € and 2,403 € [DERIVED].
+- Pay: **70% of salary in month 1 and 60% in month 2**, salary capped at the PMSS (4,005 €/month). Maximum ≈ 2,804 € and 2,403 € [DERIVED]. **[Superseded → §13.5: the basis is gross minus 21%; max 72.81 / 62.41 €/day ≈ 2,215 / 1,899 €/month]**
 - Not cumulable with full-rate PreParE.
 
 **PreParE (parental leave benefit, CAF).** https://www.service-public.gouv.fr/particuliers/vosdroits/F32485 (verified 2026-06-01) [OFFICIAL]
 - Full stop **459.70 €/month**; ≤ 50% part-time 297.17 €; 50–80% part-time 171.42 €. A couple's combined total is capped at 459.70 €.
 - **1 child:** 6 months per parent, before the 1st birthday.
 - **2+ children:** up to 24 months per parent, until the youngest turns 3, minus postnatal maternity weeks.
-- The amounts on the page may predate the April 2026 revaluation (the page cites the 2026-03-20 instruction but does not show new figures). **Flag: check against CAF.**
+- The amounts on the page may predate the April 2026 revaluation (the page cites the 2026-03-20 instruction but does not show new figures). **Flag: check against CAF.** **[Resolved → §13.5: 459.70 is the post-April amount]**
 
 **Leave comparison with Taiwan [DERIVED].**
 
@@ -658,7 +660,7 @@ Source: INSEE Première n° 2087, *Bilan démographique 2025*, published **2026-
 | Natural balance | **−6,000**, the first negative since WWII | +17,619 | 2023: +38,534 |
 | Mean age of mothers at birth (all births) | 31.2 | 31.1 | 2005: 29.6 |
 | Mean age of fathers | 34.1 | — | 2005: 32.6 |
-| Mean age at **first** birth | **not found** (not in the bilan) | — | — |
+| Mean age at **first** birth | **not found** (not in the bilan) **[Superseded → §13.8: 29.1 in 2023]** | — | — |
 | Marriages / PACS | 251,000 marriages (2025); 197,200 PACS (2024) | — | — |
 | Population, 1 Jan 2026 | 69.1 M (+0.25%) | — | — |
 
@@ -692,6 +694,8 @@ Debates:
 ---
 
 ## 11. Gaps and conflicts
+
+**[Update]** Most items below are filled or corrected in §13. The table in §13.10 lists what was superseded and what is still missing.
 
 1. **Taiwan PPP factor not found.** The IMF API response was truncated. France PPPEX 2025 = 0.654 EUR per int$.
 2. **2024→2026 wage growth not found.** Needed for `toBase`.
@@ -783,5 +787,566 @@ Debates:
     "uni": {"licence": 178, "master": 255, "cvec": 105}, "studentRentMonthly": 637},
   "childCost": {"hcfMacroMonthlyInclPublic": 1500, "hcfFamilyShare": 0.37, "onpesMonthly3to10": 700, "ucUnder14": 0.3, "uc14plus": 0.5},
   "fertility": {"tfr": {"2010": 2.02, "2023": 1.65, "2024": 1.61, "2025": 1.56}, "births": {"2010": 832799, "2023": 677803, "2024": 660787, "2025": 645000}, "meanAgeMother2025": 31.2, "meanAgeFirstBirth": null}
+}
+```
+
+---
+
+## 13. Gap fill（2026-10-12）
+
+### 13.0 摘要（繁體中文）
+
+這一節補齊第 11 節列出的缺口。新數字以本節為準，被取代的舊數字列在 §13.10。
+
+- **購買力**：台灣的 IMF 隱含 PPP 約 13.65 元／國際元（2025，推算，算法與 jp.md 相同）。法國是 0.654 歐元／國際元。換算下來，以購買力計 1 歐元 ≈ **20.9 台幣**。市場匯率 35.8 讓法國金額看起來多了約 71%。
+- **薪資**：2024→2026 名目成長約 **+3.8%**（2025 年 +1.8%，INSEE 實際值；2026 年 +2.0%，法國央行預測）。2026 年民間全職等值的月薪中位數，稅後淨額約 2,274 歐元，稅前約 3.45–3.59 萬歐元／年（推算）。依年齡的**中位數**仍查不到，只有平均數。
+- **消費（對應生活水準）**：INSEE 2017 年依所得五分位的每消費單位消費，換成 2025 年物價後，2 大 2 小家庭每月約 2,680／4,028／4,933／6,070／8,411 歐元（含住房）。建議：精打細算 ≈ 第 2 組，一般 ≈ 第 3 組，寬裕 ≈ 第 4 組，享受 ≈ 第 5 組。
+- **房租**（2024 年地方租金觀測站，不含管理費；以下是一年內新簽約）：
+  - 巴黎：T2 1,090、T3 1,500、4 房以上 2,400 歐元／月
+  - 里昂（含 Villeurbanne）：700／850／1,209 歐元／月
+  - 網站刊登價更高，巴黎約 32 歐元/m²。
+- **買房稅費**：巴黎、里昂的移轉稅（DMTO）首購 5.81%、非首購 6.32%（官方稅率表）。加上公證人費，總額約 7–8%（未查證）。首購族平均自備 3.4 萬歐元，約占總額 16%。
+- **住房補助**：2 孩夫妻家庭月淨收入超過 2,425 歐元，補助就是 0。雙薪中位數家庭領不到。巴黎社宅占住宅 23.1%，約 29 戶申請者搶 1 戶。
+- **托育**：以中位數雙薪、1 孩為例：
+  - 公托全職每月約 409 歐元；扣 50% 稅額抵減後約 264 歐元。
+  - 新制下請保母，自付約與公托相同。
+  - 巴黎營養午餐每餐 0–7 歐元，中位數家庭為 4.61 歐元。
+- **出生假**：給付基準是「稅前薪資扣 21%」，每日上限 72.81 歐元（第 1 個月）和 62.41 歐元（第 2 個月），約等於每月 2,215／1,899 歐元。這取代先前推算的 2,804／2,403。
+- **驗證**：第一胎平均年齡 29.1 歲（2023 年資料）。
+- **仍缺**：
+  - 里昂：國小午餐、課後照顧、交通月票價格
+  - 房屋稅（taxe foncière）的實際金額
+  - 私立大學學費
+  - 依年齡的薪資中位數
+  - 2025 年以後的觀測站租金
+
+**Session limits.** Direct `curl` is still blocked for insee.fr, imf.org, data.gouv.fr and observatoires-des-loyers.org. The shared web-search budget ran out during this pass. Items after that point were fetched only from known official URLs. The OLL rent tables were read through the data.gouv.fr **tabular API**, which serves the official CSV row by row.
+
+Labels follow `_params.md`: [OFFICIAL] / [NEWS] / [SECONDARY] (private portals, brokers, commercial sites) / [DERIVED] / [ESTIMATE] / [UNVERIFIED].
+
+---
+
+### 13.1 A. Exchange rate and PPP
+
+| Item | Value | Year | Source | Label |
+|---|---|---|---|---|
+| Taiwan IMF implied PPP conversion rate | **≈ 13.65 TWD per international $** | 2025 | IMF WEO (May 2026 update) GDP: PPP 2,102 bn int$, nominal 920.05 bn US$, ratio 2.2847 (https://measuredworld.com/countries/taiwan/economy/gdp). IMF 2025 exchange rate 31.19 TWD/US$ (https://www.globalnote.jp/post-2796.html?cat_no=104). 31.19 ÷ 2.2847 = 13.65. Same method and value as `jp.md` §1. | [DERIVED] |
+| France IMF implied PPP | 0.654 EUR per int$ | 2025 | §1 | [OFFICIAL] |
+| **PPP EUR→TWD** | **≈ 20.87 TWD per EUR** (13.65 ÷ 0.654) | 2025 | — | [DERIVED] |
+| Market rate ÷ PPP rate | 35.768 ÷ 20.87 = **1.71**. At market rates, euro amounts look about 71% larger in TWD than their purchasing power in Taiwan. | 2025–26 | — | [DERIVED] |
+| Cross-check | Taiwan GDP per capita, IMF WEO April 2026: nominal US$39,489 (2025) and US$42,103 (2026). CEIC (WEO, vintage not stated): PPP 83,412.72 int$ (2026). The ratio is consistent with a price level about half the US level. | 2025–26 | https://cdn.technews.tw/2026/04/22/my-countrys-per-capita-gdp/ ; https://ceicdata.com/en/indicator/taiwan/forecast-gdp-ppp-per-capita | [NEWS]/[SECONDARY] |
+
+Still missing: a direct read of IMF PPPEX for "Taiwan Province of China". The DataMapper API response is cut off at JOR, and the WEO report and SDMX endpoints refused the fetch.
+
+---
+
+### 13.2 B. Wages: growth to 2026, gross median, age, bonus
+
+**Nominal wage growth 2024→2026**
+
+| Measure | 2024 | 2025 | 2026 | Source | Label |
+|---|---|---|---|---|---|
+| SMPT (average wage per head), private non-farm, annual average | +2.6% | **+1.8%** | +1.4% (carry-over at mid-year only, not a full-year forecast) | INSEE/Dares Note de conjoncture, 24 March 2026, https://www.insee.fr/fr/statistiques/fichier/8907437/ndc-mars-2026-salaires.pdf | [OFFICIAL] |
+| SMPT, Banque de France projection | — | — | **+2.0%** (2027 +2.6%, 2028 +2.4%) | BdF interim projections, 15 Sept 2026, https://www.banque-france.fr/system/files/2026-09/Projections_macroeconomiques_Septembre_2026.pdf | [OFFICIAL] (projection) |
+| SMB (monthly base wage), private sector, y/y | — | +1.7% (Q4 2025; slowest since 2021) | +1.7% (Q1 2026); **+2.0% (Q2 2026)**, +0.7% q/q | INSEE Conjoncture June 2026, https://www.insee.fr/en/statistiques/9011500?sommaire=9011528 ; Dares Q2 2026 via AFP, 25 Sept 2026, https://bourse.fortuneo.fr/actualites/le-salaire-de-base-dans-le-prive-augmente-plus-vite-que-l-inflation-au-2eme-trimestre-5259463 | [OFFICIAL] / [NEWS quoting Dares] |
+| CPI inflation, annual average | +2.0% | +0.9% | HICP 2.3% (BdF projection) | INSEE IR 15 Jan 2026, https://www.insee.fr/fr/statistiques/8726461 ; BdF | [OFFICIAL] |
+| Mean EQTP wage 2023→2024 (nominal) | gross +3.1%, net +2.8% | — | — | IP 2079 PDF, https://www.insee.fr/fr/statistiques/fichier/8657156/ip2079.pdf | [OFFICIAL] |
+
+- **`WAGE.toBase` (2024 → 2026) = 1.018 × 1.020 = 1.038** [DERIVED]. It uses the 2025 SMPT actual and the 2026 BdF projection. The SMB path (+1.7%, then +2.0%) gives about the same result. A defensible range is 1.035–1.040.
+- **2026 median, brought forward [DERIVED]:**
+  - Net EQTP ≈ 2,190 × 1.038 = **2,274 €/month**.
+  - Gross ≈ **34,500–35,900 €/yr** (33,200–34,600 × 1.038).
+- **Gross median.** The INSEE IP 2079 PDF was re-read. It gives **no gross median and no gross deciles**, only the gross mean (3,602 €). The gross median therefore stays derived (§2.1). No better official figure was found.
+- **EQTP definition** (confirmed, IP 2079): every job counts, including part-time, weighted by paid volume and converted to full-time over the whole year. Bonuses are included. **No separate bonus share is published.** For `bonus months`, use 0 and treat the EQTP salary as annual total pay [ESTIMATE].
+- **Age profile.** IP 2079 gives only mean net EQTP by age band (§2.3), with nominal changes 2023→2024 by band of +0.4% to +1.1% in constant euros. **Medians by age: still missing.** Suggested game curve: use the §2.3 mean ratios, scaled down at older ages by about 5–10%, because the top tail lifts older-age means more [ESTIMATE, not sourced].
+
+---
+
+### 13.3 E. Household consumption by income quintile (lifestyle tiers)
+
+Source: INSEE Première n°1815, *Plus d'épargne chez les plus aisés, plus de dépenses contraintes chez les plus modestes*, 17 Sept 2020, https://insee.fr/fr/statistiques/4764600 [OFFICIAL].
+
+- **Method.** Distributional national accounts, 2017. National-accounts totals are split across households using Budget de famille 2011/2017 and ERFS.
+- **Ranking.** Households are ranked by disposable income per UC.
+- **Scope.** Consumption **includes imputed rents** for owner-occupiers.
+
+| 2017, € per year | Q1 | Q2 | Q3 | Q4 | Q5 | All |
+|---|---|---|---|---|---|---|
+| Disposable income per household | 19,916 | 30,585 | 40,185 | 51,128 | 87,565 | 45,876 |
+| **Consumption per household** | 19,377 | 29,060 | 36,307 | 45,386 | 62,722 | 38,570 |
+| Disposable income per UC | 13,173 | 20,273 | 26,112 | 32,702 | 56,153 | 29,954 |
+| **Consumption per UC** | **12,816** | **19,262** | **23,592** | **29,029** | **40,222** | 25,184 |
+| Savings rate (%) | 2.71 | 4.99 | 9.65 | 11.23 | 28.37 | 15.92 |
+| Housing share of budget, BdF 2017 (%) (https://www.insee.fr/fr/statistiques/2385825) | 22.1 | 20.1 | 17.7 | 14.7 | 12.2 | 16.3 |
+
+**Bringing it to 2025 prices.** CPI annual average (base 2015) was 101.22 in 2017 (https://insee.fr/fr/statistiques/fichier/version-html/3307808/IPC_moyennes_annuelles2017.pdf) and 120.95 in 2025 (https://www.insee.fr/fr/statistiques/8726461). Factor = **1.1949** [DERIVED]. Real consumption growth since 2017 is **not** included, so the levels are slightly conservative.
+
+| Couple + 2 children under 14 (2.1 UC), 2025 €, per month [DERIVED] | Q1 | Q2 | Q3 | Q4 | Q5 |
+|---|---|---|---|---|---|
+| National-accounts consumption, incl. housing and imputed rent | 2,680 | 4,028 | 4,933 | 6,070 | 8,411 |
+| same, ≈ 萬 TWD at market rate | 9.6 | 14.4 | 17.6 | 21.7 | 30.1 |
+| Excluding housing (× (1 − BdF housing share)); an upper bound, because NA housing includes imputed rent | 2,088 | 3,218 | 4,060 | 5,178 | 7,385 |
+| Lower variant: also scaled to the BdF survey level (× 27,592 / 38,570 = 0.715) [ESTIMATE] | 1,493 | 2,302 | 2,905 | 3,704 | 5,283 |
+
+**Suggested tier mapping [ESTIMATE].** 精打細算 = Q2, 一般 = Q3, 寬裕 = Q4, 享受 = Q5. Q1 is close to the poverty line and is better left out as a "choice". Because the game models housing separately, use the "excluding housing" rows:
+- The upper-bound row matches the national-accounts concept.
+- The lower variant is closer to what households report in surveys.
+
+The Budget de famille 2026 survey is in the field. Its results are not out yet (https://www.insee.fr/fr/information/8719834).
+
+**Transport (Paris).** Navigo Mois, all zones: **90.80 €/month** from 2026-01-01. Employers must reimburse **at least 50%** of the commuting pass. https://www.iledefrance-mobilites.fr/titres-et-tarifs/detail/forfait-navigo-mois [OFFICIAL]
+- Lyon TCL monthly pass: **not found**. The tcl.fr tariff PDF could not be fetched.
+- Car ownership cost: **not found**.
+
+---
+
+### 13.4 D. Housing, by city
+
+#### 13.4.1 Rents by size: official OLL/OLAP 2024 results
+
+**Source.** Observatoires locaux des loyers, national results file "Loyers 2024 dans les agglomérations observées" (Base_OP_2024_Nationale.csv). Dataset: https://www.data.gouv.fr/datasets/resultats-nationaux-des-observatoires-locaux-des-loyers. Rows read through the tabular API, resource `13d660de-6108-4df6-8a54-1828a991a186`. [OFFICIAL]
+
+- **Unfurnished** private rentals.
+- Rent **excluding charges**.
+- €/m² is the **median**.
+- Monthly rent is the **median** monthly rent.
+- Surface is the **mean** (field `surface_moyenne`).
+- "Moins de 1 an" = tenants who moved in during the past year (new leases).
+- The 2025 file lists Paris and Lyon zips (uploaded 2026-10-06), but the tabular API returned no Paris/Lyon rows for 2025.
+
+**Paris (intra-muros, OLAP "Ville centre", B7500), apartments, 2024**
+
+| Rooms | All tenants: €/m² | All: €/month | All: mean m² | **New leases (< 1 yr): €/m²** | **New: €/month** | New: mean m² | Obs. (all / new) |
+|---|---|---|---|---|---|---|---|
+| 1P (studio) | 30.2 | 754 | 26 | 31.9 | 764 | 24 | 993 / 125 |
+| 2P (T2) | 26.5 | 1,086 | 43 | 26.7 | **1,090** | 40 | 1,327 / 161 |
+| 3P (T3) | 24.2 | 1,519 | 65 | 25.0 | **1,500** | 62 | 799 / 92 |
+| 4P+ (T4 and more) | 24.1 | 2,253 | 102 | 25.9 | **2,400** | 102 | 544 / 65 |
+| All apartments | 26.6 | 1,099 | 50 | 27.5 | 1,048 | 45 | 3,663 / 443 |
+
+- The 3P median (24.2 €/m²) matches the ANIL synthesis in §4.3.
+- Whole Paris agglomeration, all tenants: 3P 17.6 €/m² (1,080 €), 4P+ 17.3 €/m² (1,498 €). New leases: 3P 18.9 €/m² (1,152 €), 4P+ 19.6 €/m² (1,665 €).
+
+**Lyon (OLL "Ville centre" = Lyon + Villeurbanne, B6900), apartments, 2024**
+
+| Rooms | All: €/m² | All: €/month | All: mean m² | **New (< 1 yr): €/m²** | **New: €/month** | New: mean m² |
+|---|---|---|---|---|---|---|
+| 1P | 17.6 | 510 | 30 | 18.4 | 530 | 30 |
+| 2P (T2) | 14.3 | 660 | 47 | 15.0 | **700** | 47 |
+| 3P (T3) | 12.5 | 839 | 68 | 12.9 | **850** | 68 |
+| 4P+ | 11.6 | 1,086 | 95 | 12.9 | **1,209** | 99 |
+| All apartments | 13.6 | 718 | 58 | 14.5 | 745 | 57 |
+
+- Lyon agglomeration, all tenants: 2P 14.0 (632 €), 3P 11.9 (787 €), 4P+ 11.0 (945 €).
+- New leases in the agglomeration: 3P 12.5 (818 €), 4P+ 11.8 (1,050 €).
+- UrbaLyon's printed report gives the same Lyon/Villeurbanne €/m² by size. Its T4 (4 rooms only) mean surface is **88 m²**, and T5+ is 119 m². https://www.urbalyon.org/sites/default/storage_files/productions/2025-10/Les%20loyers%20dans%20le%20parc%20priv%C3%A9%202024.pdf [OFFICIAL]
+- **Rent control.** In force in Lyon/Villeurbanne since 2021-11-01, with reference, upper (+20%) and lower (−30%) rents set yearly by prefectoral order. Paris also has rent control (§4.3). Compliance rates were **not found**.
+
+**Listing (asking) rents, for comparison:**
+
+| Source | Value | Period | Label |
+|---|---|---|---|
+| SeLoger, Paris listings | 32 €/m² average (19e/20e ≈ 28; 6e/7e ≈ 37) | April 2025 | [SECONDARY], https://edito.seloger.com/node/20386 |
+| Locservice, Paris average | 1,154 €/month for 29.6 m² (mostly small units) | 2025 | [SECONDARY], via https://www.boursedescredits.com/actualite-loyers-paris-2025-hausses-records-malgre-encadrement-28900.php |
+
+- **Paris:** OLAP new-lease medians (≈ 25–27 €/m²) sit **below** portal averages (32 €/m²). Portals are skewed to small, furnished and above-cap listings.
+- **Lyon:** the same gap as in §4.3 (OLL new leases 12.9–15.0 vs listings 17–21 €/m²).
+- **Recommendation:** use OLL new-lease medians as the "market" rent and note that listings run higher [ESTIMATE].
+- **Indexation 2024→2026:** the IRL (rent reference index) changes were **not retrieved**. Keep rents in 2024 €.
+
+**Game rents [DERIVED from the tables above], € per month, excl. charges, 2024:**
+
+| Taiwan option | Paris (new lease) | Lyon (new lease) |
+|---|---|---|
+| 1 房 (T2) | 1,090 | 700 |
+| 2 房 (T3) | 1,500 | 850 |
+| 3 房 (T4+, mean ≈ 100 m²) | 2,400 | 1,209 |
+
+#### 13.4.2 Purchase: prices, sizes, notary fees, down payment, PTZ, local tax, charges
+
+| Item | Paris | Lyon | Year | Source | Label |
+|---|---|---|---|---|---|
+| Existing apartment €/m² | 9,560 | ≈ 4,442 | Q2 2026 / early 2026 | §4.1 (unchanged; no newer Lyon Notaires figure found) | [OFFICIAL] / [NEWS] |
+| Typical family size (mean m², OLL rental stock) | T2 43, T3 65, 4P+ 102 | T2 47, T3 68, T4 88 (4P+ 95) | 2024 | §13.4.1 | [OFFICIAL] |
+| Price of a T3 [DERIVED] | 65 × 9,560 = **621k €** | 68 × 4,442 = **302k €** | 2026 | — | [DERIVED] |
+| Price of a T4 [DERIVED] | 102 × 9,560 ≈ 975k € (4P+ size) | 88 × 4,442 ≈ 391k € | 2026 | — | [DERIVED] |
+| New-build €/m² | **not found** | **not found** | — | — | — |
+
+**DMTO (transfer duties).** Source: DGFiP table "applicables au 1er juin 2026", https://www.impots.gouv.fr/sites/default/files/media/1_metier/3_partenaire/notaires/dmto/dmto_2026-06.pdf [OFFICIAL]
+
+- **Departmental rate.** Paris (75) and Métropole de Lyon (69M) both show **5.00%** (the higher rate allowed by LF 2025 art. 116, "hors primo-accédant") and **4.50%** (art. 1594 D CGI).
+- **Total DMTO.** Total = dept rate + 1.20% communal tax + 2.37% × dept rate (state collection fee). This gives:
+  - **6.32%** for non-first-time buyers
+  - **5.81%** for first-time buyers (no main residence owned in the past 2 years)
+  - Formula and first-time-buyer rules from https://selectra.info/finance/actualites/marche/frais-notaire-primo-accedant-exoneration-hausse (updated 2026-09-24, citing LF 2025 and the DGFiP table). [OFFICIAL rates; NEWS formula; totals DERIVED]
+- **End date.** The +0.5-point increase ends for deeds signed from 2028-04-01 at the latest.
+- **New housing sold with VAT:** reduced duties of 0.70%.
+- **All-in "frais de notaire"** (DMTO + émoluments + débours): about **7–8% for existing** and **2–3% for new** homes. These are standard market figures; the notaires.fr pages fetched gave no percentage [UNVERIFIED].
+  - Suggested game values: 7.5% for existing (first-time buyer, Paris or Lyon) and 2.5% for new [ESTIMATE].
+
+**Down payment and loans.** Source: Banque de France, *Panorama des prêts à l'habitat des ménages*, July 2026, https://www.banque-france.fr/system/files/2026-09/Panorama-prets-immobiliers-menages_juillet_2026.pdf [OFFICIAL]
+
+| | All borrowers | First-time buyers |
+|---|---|---|
+| Average apport (down payment) | "près de 40 k€" | **34 k€** |
+| Average loan | > 200 k€ | **183 k€** |
+| Average initial duration | 22 y 8 m | **23 y 10 m** |
+| Average rate (new loans excl. renegotiation) | 3.30% | — |
+| Share of production | — | 43.9% |
+
+- Apport ÷ (apport + loan) for first-time buyers ≈ 34 / 217 = **15.7%** [DERIVED].
+- Broker figure: average apport 51,800 € at end-2025 (28% of budget). Meilleurtaux via https://mediaterranee.com/1612026-credit-immobilier-lapport-personnel-moyen-en-forte-baisse-en-france.html [SECONDARY]
+- **Game default [ESTIMATE]:** down payment = notary fees + 10% of price. This matches banks' usual expectation that the apport covers at least the fees (§4.5).
+
+**PTZ 2026.** No change to the April-2025 rules in §4.6 was found for 2026.
+- Valid to 2027-12-31.
+- New housing in all zones. Existing housing with works ≥ 25% only in B2/C. **So in Paris and Lyon, only new apartments qualify.**
+- Also opened to BRS (bail réel solidaire) homes, including resales. Deferral up to 15 years.
+- Source for the last two points: SeLoger/Pretto (sponsored), https://edito.seloger.com/financement/aides-financieres/ptz-2026-change-achat-article-22718.html [SECONDARY].
+- **CONFLICT.** The same article's example ("single person up to 37,000 € in zone A") does not match service-public's ceiling table (49,000 € for 1 person, zone A). **Keep service-public (§4.6).**
+
+**Taxe foncière.** Source: UNPI (landlords' federation) Observatoire national des taxes foncières, Oct 2025, https://unpi.org/files/UNPI-Observatoire_national_des_taxes_foncieres-Oct2025.pdf [SECONDARY, based on DGFiP rates]
+
+| City | Total rate excl. TEOM | Incl. TEOM (household-waste tax) | Year |
+|---|---|---|---|
+| Paris | 21.19% | 27.40% | 2024 |
+| Lyon | 32.71% | 37.90% | 2024 |
+
+- The rate applies to 50% of the cadastral rental value. That value is not observable from price data, so **typical euro amounts per apartment are not found**.
+- Game placeholder [ESTIMATE, unsourced]: leave as a parameter with no default, or ask for a later lookup.
+
+**Charges de copropriété.** Source: Matera barometer 2025, via https://www.economiematin.fr/?p=215436 [SECONDARY]
+- Paris **1,423 € per lot per year** (+7.5% y/y). France 913 €.
+- Lyon: **not found**.
+- ≈ 119 €/month in Paris [DERIVED].
+
+#### 13.4.3 Housing benefit (APL/AL) and social housing
+
+**Housing-aid case types.** Source: DREES, *Minima sociaux et prestations sociales*, édition 2025, fiche 04, legislation at 2025-01-01, https://drees.solidarites-sante.gouv.fr/sites/default/files/2025-12/MS2025%20-%20Fiche%2004%20-%20La%20combinaison%20des%20prestations%20et%20ses%20effets%20sur%20le%20niveau%20de%20vie.pdf [OFFICIAL]
+
+| Couple + 2 children, tenant, **zone 2** (Lyon's zone [UNVERIFIED zoning]) | Housing aid €/month |
+|---|---|
+| No earned income | **487** |
+| 1 SMIC, one earner (1,426 € net/month) | **304** |
+| Exit point (aid falls to 0) | net household income ≥ **170% of net SMIC = 2,425 €/month** |
+
+- The DREES case assumes rent at or above the ceiling, and AL rather than APL (marginal difference).
+- **Implication [DERIVED].** A dual-earner median couple (net ≈ 2 × 2,274 = 4,548 €/month in 2026) gets **0** in Lyon. Paris is zone 1, with higher rent ceilings and a somewhat higher exit point, which is **not published** in the fiche. The median couple is still far above it [ESTIMATE].
+- **Formula parameters, for reference** (Previssima, internally inconsistent on year, [NEWS]): https://www.previssima.fr/question-pratique/quel-est-le-montant-de-laide-personnalisee-au-logement.html
+  - APL = capped rent + flat charges − personal contribution.
+  - Rent ceilings, couple + 1 dependant: zone I **449.43 €**, zone II 395.77 €; +65.21 / +57.61 € per extra dependant. Couple + 2 children ≈ 514.64 € (zone I) [DERIVED].
+  - Flat charges, couple + 2: 84.42 €.
+  - Minimum contribution P0: 37.91 €.
+
+**Social housing**
+
+| Item | Paris | Lyon | Year | Source | Label |
+|---|---|---|---|---|---|
+| SRU social-housing rate (share of main residences) | **23.1%** (271,906 units) | Métropole de Lyon **27.22%**; Lyon city **not found** | 1 Jan 2024 / 2025 | APUR, https://www.apur.org/sites/default/files/2025-06/4p275_chiffres_logement_social_paris_2024.pdf ; Grand Lyon press release 2025-03-26, https://www.grandlyon.com/fileadmin/user_upload/media/pdf/espace-presse/cp/2025/20250326_cp_Coh%C3%A9sion-territoriale-Taux-SRU.pdf | [OFFICIAL] |
+| Applicant households | 292,285 (146,468 already living in Paris) | not found | end-2024 | APUR | [OFFICIAL] |
+| Allocations per year | ≈ 10,046 (SNE, 2023), plus ≈ 2,000 non-conventioned | not found | 2023 | APUR | [OFFICIAL] |
+| Applicants per allocation | ≈ **29** | — | — | 292,285 ÷ 10,046 | [DERIVED] |
+| Maximum rent per m² by product | PLAI 6.71 / **PLUS 7.52** / PLS 14.68 €/m² | — | 2024 | APUR | [OFFICIAL] |
+| HLM T3 (65 m²) at the PLUS ceiling | ≈ **489 €/month** (PLS ≈ 954 €) | — | — | 65 × ceiling | [DERIVED] |
+
+- **Model suggestion [ESTIMATE].** Offer "社會住宅" as a housing option with an access probability, not a certainty.
+  - Paris: ≈ 3.4% of applicants housed per year (10,046 ÷ 292,285). Allocation is priority-based, so middle-income dual earners do worse than average.
+  - Waiting times: still **not found**.
+
+---
+
+### 13.5 F. Birth, childcare (0–3) and leave
+
+**Crèche (PSU) for the median couple [DERIVED].**
+- CAF resources = net taxable income after the 10% deduction ≈ 49,000 €/yr (§6.1) → **4,083 €/month**.
+- Fee per hour = 4,083 × rate.
+
+| Children in household | €/hour | 162 h/month | 200 h/month | 162 h after 50% tax credit (cap 3,500 €/child/yr) | 200 h after credit |
+|---|---|---|---|---|---|
+| 1 | 2.53 | **409** | 506 | **264** | 360 |
+| 2 | 2.11 | 341 | 421 | 196 | 276 |
+
+**Assistante maternelle under the reformed CMG.** Source: Cnaf press release 2025-10-14, https://caf.fr/sites/default/files/medias/cnaf/Nous_connaitre/Presse/2025/251014%20CP%20Une%20aide%20%C3%A0%20l%E2%80%99accueil%20de%20l%E2%80%99enfant%20mieux%20adaptee.pdf [OFFICIAL]. Official worked examples, before the tax credit; reference wage 4.85 € net/h in 2025:
+
+| Household | Care | Cost/month | CMG before → after reform | Out-of-pocket before → after |
+|---|---|---|---|---|
+| Couple, 1 child, 3,000 € net/month | 125 h | 606.25 € | 339 → **374** | 267 → **232** |
+| Single parent, 2 children, 1,141 €/month | 110 h | 534 € | 454 → 468 | 80 → 65 |
+| Couple, 1 child (aged 2), 5,000 €/month | 90 h (2 days/week) | ≈ 437 € | n/a → 158 | 233 → ≈ 279 ("= cost of a crèche place") |
+
+- **Median couple, 1 child, 162 h at the 2026 reference 4.91 €/h (795 €)** [DERIVED with the §6.4 formula]:
+  - CMG ≈ 386 €.
+  - Out-of-pocket ≈ **409 €**; ≈ **264 €** after the tax credit.
+  - This is the same as the crèche fee: the reform aligns both on PSU rates.
+  - Childminders paid above the reference wage, and maintenance/meal allowances, add to this. Typical actual wages: **not found**.
+- **Garde à domicile (nanny at home).** Only the ONAPE shared-nanny figures in §6.4 (359–425 €/month after aids) were found. Full-time individual nanny cost: **not found**.
+
+**Congé supplémentaire de naissance: pay basis resolved (supersedes §6.3 maxima)**
+- **Legal text.** Décret n° 2026-425 du 30 mai 2026, in force 2026-07-01, for children born or adopted from 2026-01-01. https://www.associatheque.fr/fr/fichiers/actualite/decret-2026-425-NOR-SFHS2609384D.pdf [OFFICIAL text]
+  - New art. R. 331-5-1 applies coefficients **0.7** (month 1) and **0.6** (month 2).
+  - These apply to the maternity daily allowance computed under R. 331-5 al. 1–2.
+- **Basis.** Gross salary of the last 3 months, capped at the PMSS (4,005 €), ÷ 91.25, **minus a flat 21%**. This is the "net forfaitaire". It is neither payslip net nor full gross.
+  - MSA employer guide: "70 % du salaire net dans la limite du plafond de la sécurité sociale", https://poitou.msa.fr/lfp/documents/98750/67776812/MSA+cong%C3%A9+suppl%C3%A9mentaire+naissance+employeur.pdf [OFFICIAL]
+  - Selectra, citing ameli.fr: "net forfaitaire, soit le brut moins 21 %", https://selectra.info/finance/actualites/marche/conge-naissance-bebe-2026-deux-mois-indemnise [NEWS]
+- **Maxima.**
+  - Daily: **72.81 €** (month 1) and **62.41 €** (month 2), before CSG 6.2% + CRDS 0.5% [NEWS quoting ameli; DERIVED check: 4,005 × 3 / 91.25 × 0.79 = 104.02; × 0.7 = 72.81; × 0.6 = 62.41].
+  - Monthly (× 30.42 days): ≈ **2,215 €** and **1,899 €** [DERIVED].
+  - The §6.3 figures (2,804 / 2,403 €) are **superseded**.
+- **Example (Selectra).** Gross 3,000 €/month gives 54.54 €/day (month 1) and 46.75 €/day (month 2). Two months ≈ 3,093 € before CSG/CRDS, versus 4,740 € of "net forfaitaire" salary [NEWS].
+
+**PreParE (April 2026).**
+- service-public F32485 (verified 2026-06-01, citing the 2026-03-20 revaluation instruction): **459.70 / 297.17 / 171.42 €** [OFFICIAL].
+- MoneyVox lists the post-April maximum as 459.69 €, https://www.moneyvox.fr/votre-argent/actualites/108490/aah-allocations-familiales-les-aides-de-la-caf-qui-vont-reellement-augmenter-le-5-mai-2026 [NEWS].
+- **The 1-cent difference is immaterial. Use 459.70 as the post-April-2026 amount.** The §6.3 flag is resolved.
+
+---
+
+### 13.6 G. School-age costs: canteen, after-school, tutoring
+
+**Paris canteen, public maternelle and élémentaire, 2026-27 grid** (single citywide grid). Source: https://www.paris.fr/pages/la-cantine-2074 (updated 2026-09-03) [OFFICIAL]
+
+| Tranche | Paris QF (€) | € per meal |
+|---|---|---|
+| 1 | < 234 | 0 |
+| 2 | 235–384 | 0 |
+| 3 | 385–548 | 1.62 |
+| 4 | 549–959 | 2.28 |
+| 5 | 960–1,370 | 3.62 |
+| **6** | **1,371–1,900** | **4.61** |
+| 7 | 1,901–2,500 | 4.89 |
+| 8 | 2,501–3,333 | 5.10 |
+| 9 | 3,334–5,000 | 6.00 |
+| 10 | > 5,000 | 7.00 |
+
+- **Free tranches 1–2.** Announced June 2026, about 17,000 children; covers collèges too. https://www.paris.fr/pages/restauration-scolaire-gratuite-pour-17-000-enfants-a-la-rentree-tarifs-geles-pour-les-autres-35461 [OFFICIAL]
+- **Median couple + 2 children [DERIVED].** QF ≈ (monthly income + family benefits) ÷ 3 parts ≈ 1,410–1,560 → **tranche 6, 4.61 €/meal**.
+  - The exact Paris QF formula was not read [UNVERIFIED].
+- **Per year:** ≈ 144 meals (4 days × 36 weeks, [ESTIMATE]) ≈ **664 €/child/yr**. Top tranche ≈ 1,008 €.
+
+**Paris périscolaire, 2026-27** (from 2026-09-01; billed over 10 months, ateliers bleus over 9). Source: https://www.paris.fr/pages/activites-a-l-ecole-2073 [OFFICIAL]
+
+| Activity | Tranche 6 | Tranche 10 |
+|---|---|---|
+| Goûter récréatif (maternelle), 4 per week | 19.52 €/month | 25.00 €/month |
+| Étude surveillée (élémentaire), 4 per week | **25.72 €/month** | 33.28 €/month |
+| Ateliers bleus, 1 per week | 15.07 €/month | 26.80 €/month |
+
+- **Free:** TAP (after-school activity time), midday activities, reading workshops.
+- Centres de loisirs (Wednesday and holidays): prices **not found** (page fetch failed).
+
+**Lyon.**
+- City primary canteen and périscolaire prices: **not found** (lyon.fr pages could not be fetched).
+- Métropole de Lyon **collège** canteen: 1 € to 6 € per meal by QF; 6 € above QF 2,600. Rentrée 2023 grid. https://www.lyoncapitale.fr/?p=343618 [NEWS]
+
+**Tutoring (soutien scolaire)**
+
+| Item | Value | Year | Source | Label |
+|---|---|---|---|---|
+| Hourly price, student tutor | primaire/collège 15–20 €; lycée 20–25 €; supérieur 25–35 € | 2025–26 | Pass-Education, https://www.pass-education.fr/actualites/tarif-des-cours-particuliers-2026-comment-maitriser-son-budget-de-soutien-scolaire/ | [SECONDARY] |
+| Hourly price, certified/experienced teacher | 25–35 € / 30–50 € / 45–70 € | 2025–26 | same | [SECONDARY] |
+| Paris premium | +20–30% vs province | 2025–26 | same | [SECONDARY] |
+| Net cost after the 50% tax credit | half of the above (home services, §5.1) | 2026 | §5.1 | [OFFICIAL rule] |
+| Participation | 9.5% of 6e entrants paid for tutoring (14.5% in the Paris agglomeration, 6.5% rural). 60% of users take ≥ 2 h/week. Older lycée estimates: 18–25% (1989–92). | 2007-08 data, published 2010 | DEPP, Éducation & formations n°79, https://education.gouv.fr/media/21443/download | [OFFICIAL, old] |
+
+**Game cram tiers [ESTIMATE].**
+- **None:** 0.
+- **Some:** 1 h/week with a student tutor at 20 € ≈ 87 €/month (≈ 43 € after the credit).
+- **Heavy:** 3 h/week with a certified teacher at 40 € (lycée) ≈ 520 €/month (≈ 260 € after the credit); Paris +25%.
+- **Frame it as:** heavy cram schooling is rare in France, unlike Taiwan.
+
+---
+
+### 13.7 H. Benefits: corrections only
+
+- **APL.** See §13.4.3. A dual-earner median family gets 0.
+- **PreParE.** See §13.5.
+- **Local top-ups (Paris, Lyon).** Free canteen for Paris tranches 1–2 (§13.6). Other municipal birth or childcare bonuses: **not found**.
+
+---
+
+### 13.8 I. Validation benchmarks
+
+| Item | Value | Year | Source | Label |
+|---|---|---|---|---|
+| **Mean age of mother at first birth** | **29.1** (period measure). 28.2 in 2013; 24.0 in 1974. 3.6% of first births to mothers aged 40+. | 2023 (published 2025-07-16) | INSEE Focus n°356, https://www.insee.fr/fr/statistiques/8608134 | [OFFICIAL] |
+| TFR | 1.56 | 2025 | §9 | [OFFICIAL] |
+| DREES cost-of-child study | Child-specific spending, families with children under 16: **6,005 €/yr** (13.6% of budget). Couples with children spend ≈ **8,400 €/yr** more than couples without. Both parents active with a child under 4: 10,860 € (owners) / 7,260 € (tenants) per year, mostly childcare. Equivalence approach: a child under 14 ≈ 0.3 of the household's needs, about **300 / 500 / 900 €/month** near the poverty line / at the median / at D9 (period not stated). Called a lower bound. | Budget de famille 2011 data, published 2015 | DREES, Dossiers solidarité et santé n°62, https://www.drees.solidarites-sante.gouv.fr/sites/default/files/2020-07/dss62.pdf | [OFFICIAL, old] |
+
+- No newer DREES or INSEE euro estimate of "cost to 18" was found.
+- The 2011 CPI level was not retrieved, so the DREES figures are left in 2011 €.
+
+---
+
+### 13.9 J. Mapping each Taiwan quiz option to France
+
+The table below uses 2024–2026 €, per month unless stated. P = Paris, L = Lyon.
+
+| Taiwan option | Closest French equivalent | Cost to use | Label |
+|---|---|---|---|
+| **住：租屋** | Private unfurnished rental, new lease (OLL < 1 yr). T2 for a couple, T3 with 1 child, T4+ with 2 children. | P: T2 1,090 / T3 1,500 / T4+ 2,400. L: 700 / 850 / 1,209. Plus charges (not sourced). | [OFFICIAL]/[DERIVED] |
+| 住：社會住宅（法國特有，可加選項） | HLM (PLUS). Income-capped, but most median families qualify (§4.4). | P ≈ 489 € for a T3 at the PLUS ceiling. Access ≈ 3.4%/yr of applicants in Paris. | [DERIVED]/[ESTIMATE] |
+| **住：買房** | Existing apartment, 25-year loan at ≈ 3.3%. Debt service ≤ 35% of income. Down payment ≈ fees + 10%. PTZ only for **new** flats in P/L. | T3: P 621k €, L 302k €. Fees: DMTO 5.81% (first-time) + émoluments → ≈ 7.5% all-in. Copro charges P ≈ 119 €/month. Taxe foncière: rates only. | [DERIVED]/[ESTIMATE] |
+| **住：與父母同住** | Uncommon for couples with children; no French statistic retrieved. | Rent 0. Suggest keeping the option with a "rare in France" note. | [ESTIMATE] |
+| **托：父母自己帶 / 辭職** | Parent stops work and takes PreParE. 1st child: 6 months per parent before age 1. 2nd+ child: up to 24 months per parent, to age 3. | +459.70 €/month benefit; lost wages. Mother's 16-week maternity leave and the 1–2 months congé de naissance come first. | [OFFICIAL] |
+| **托：祖父母免費** | Grandparents: main care mode for 3% of under-3s. | 0 | [OFFICIAL] (§6.4) |
+| **托：祖父母付費** | No formal equivalent or statistic. A grandparent can in principle be declared as a paid home carer [UNVERIFIED]. | Suggest the assistante maternelle cost as a proxy, or an informal transfer set by the player. | [ESTIMATE] |
+| **托：公托** | Crèche (EAJE, PSU fee). Main mode for 18% of under-3s; places are rationed. | Median couple, 1 child, 162 h: 409 €, or **264 € after the tax credit** (2 children: 196 €). | [DERIVED] |
+| **托：私托／保母** | Assistante maternelle with CMG (main mode for 20%). Or micro-crèche (PAJE): 615–749 € after aids (§6.4). Or shared nanny at home: 359–425 €. | AM: ≈ same as crèche at the reference wage (≈ 264 € after credit for the median couple); higher if the wage is above 4.91 €/h. | [OFFICIAL]/[DERIVED] |
+| **幼兒園（2–6 歲）：公立** | Age 2: crèche or AM as above. Age 3–6: **école maternelle**, free and compulsory. | Tuition 0. Canteen P tranche 6 ≈ 664 €/yr. Goûter 19.52 €/month. | [OFFICIAL]/[DERIVED] |
+| 幼兒園：私立 | Catholic private school under contract. | ≈ 456 €/yr plus canteen | [NEWS] (§7) |
+| 幼兒園：雙語／國際 | Private international or bilingual schools. | **not found** | — |
+| **國中小高中：公立** | Public school. | Tuition 0. Schooling costs ≈ 1,315 €/yr (Cnaf). Canteen ≈ 664 €/yr (P, tranche 6). ARS is means-tested (median family above the ceiling). | [OFFICIAL]/[NEWS] |
+| 國中小高中：私立 | Private sous contrat (17.4% of pupils). | 456 / 849 / 1,254 €/yr (primary / collège / lycée) plus canteen | [NEWS] |
+| **安親／課後照顧** | Périscolaire: étude surveillée, goûter, ateliers bleus. Centres de loisirs on Wednesdays. | P tranche 6: study 4×/week 25.72 + goûter 19.52 + 1 atelier 15.07 €/month. L: not found. Wednesday care: not found. | [OFFICIAL] |
+| **補習：無／一些／大量** | Private tutoring with a 50% tax credit. | 0 / ≈ 43 € / ≈ 260 € per month after credit (Paris +25%) | [ESTIMATE] |
+| **大學：公立** | Public university (licence). | 178 €/yr + CVEC 105 € | [OFFICIAL] |
+| 大學：私立 | Business or private engineering schools. | **not found** (public engineering 630 €/yr, §7) | — |
+| 大學：離家住宿 | Student renting away from home. | Rent ≈ 637 €/month (FAGE 2026); start-of-year cost 3,240 € | [NEWS] |
+| **交通：大眾運輸** | Navigo (P) / TCL (L). | P 90.80 €/month per adult; employer refunds ≥ 50% → net 45.40 €. L: not found. | [OFFICIAL] |
+| 交通：機車／汽車 | Scooter or car. | **not found** | — |
+| **生活水準：精打細算／一般／寬裕／享受** | Consumption quintiles Q2 / Q3 / Q4 / Q5, excluding housing, 2.1 UC, 2025 €. | Upper variant 3,218 / 4,060 / 5,178 / 7,385 €/month. Lower (survey-level) variant 2,302 / 2,905 / 3,704 / 5,283 €/month. | [DERIVED]/[ESTIMATE] |
+| **孝親費** | No customary monthly allowance. Civil Code art. 205 gives a maintenance duty toward parents in need [UNVERIFIED this session]. | Suggest a default of 0, with an explanatory note. | [ESTIMATE] |
+
+---
+
+### 13.10 Superseded or corrected numbers
+
+| Where | Old | New | Why |
+|---|---|---|---|
+| §1, §11.1, §12 `pppTWN` | not found / null | 13.65 TWD per int$ (2025); PPP EUR→TWD 20.87 | §13.1 |
+| "How this maps", §11.2, §12 `wage.toBase` | not found / null | 1.038 (2024→2026) | §13.2 |
+| §6.3 congé de naissance maxima | ≈ 2,804 / 2,403 €/month (assumed gross) | 72.81 / 62.41 €/day ≈ 2,215 / 1,899 €/month (gross capped at PMSS, −21%) | Décret 2026-425; MSA; ameli via Selectra |
+| §6.3 PreParE flag | "may predate April 2026" | 459.70 confirmed post-April (1-cent conflict with MoneyVox 459.69) | §13.5 |
+| §4.2 and "How this maps" `COST.houseSize` | "median surface" T3 68 / T4 86 m² (Lyon) | **mean** surfaces: Lyon/Villeurbanne T3 68 / T4 88 / 4P+ 95. Paris T2 43 / T3 65 / 4P+ 102. | OLL field is `surface_moyenne`; the UrbaLyon flyer says "moyenne" |
+| §4.3 "Paris rents by size not found" | — | Full OLAP 2024 table, §13.4.1 | data.gouv tabular API |
+| §4.3 illustrative Paris T3 ≈ 1,646 € (24.2 × 68) | — | OLAP median T3 monthly rent 1,519 € (all) / 1,500 € (new leases), 65 m² mean | §13.4.1 |
+| §4.5 notary fees "7–8% / 2–3% [UNVERIFIED]" | — | DMTO 5.81% (first-time) / 6.32% (others) in Paris & Lyon [OFFICIAL rates]; all-in 7–8% still UNVERIFIED | §13.4.2 |
+| §4.5 down payment "not found" | — | BdF July 2026: first-time buyers 34k € apport, 183k € loan (≈ 15.7%) | §13.4.2 |
+| §4.7 APL amounts "not found" | — | DREES case types: 487 / 304 / 0 € (exit at 2,425 € net) | §13.4.3 |
+| §4.4 social-housing share "not found" | — | Paris 23.1%; Métropole de Lyon 27.22%; Paris ≈ 29 applicants per allocation | §13.4.3 |
+| §3.2 / §12 consumption by quintile "not found" | only 2017 average 27,592 € | IP 1815 quintiles (per household and per UC) + CPI to 2025 | §13.3 |
+| §7 canteen / tutoring "not found" | — | Paris canteen grid 2026-27; périscolaire grid; tutoring hourly ranges | §13.6 |
+| §9, §12 `meanAgeFirstBirth` | not found / null | 29.1 (2023) | INSEE Focus 356 |
+
+**Still missing after this pass:**
+- **Wages:** wage medians by age.
+- **Lyon:** primary canteen and périscolaire prices; TCL monthly pass.
+- **Childcare and school:** Paris centres de loisirs prices; individual nanny and actual assistante maternelle hourly wages; international/bilingual school fees; private higher-education fees.
+- **Housing:** new-build €/m²; taxe foncière in euros; Lyon copro charges; HLM waiting times; rent indexation 2024→2026.
+- **Other:** car/scooter costs; IMF Taiwan PPPEX read directly.
+
+---
+
+### 13.11 Updated machine-readable block (EUR; supersedes §12 for overlapping keys)
+
+```json
+{
+  "country": "FR",
+  "compiled": "2026-10-12",
+  "supersedes": "section 12 for overlapping keys",
+  "A_fx_ppp": {
+    "fxTWDperEUR": 35.768, "fxDate": "2026-10-09",
+    "pppIMF": {"FRA_EURperIntl_2025": 0.654, "TWN_TWDperIntl_2025": 13.65, "TWN_label": "DERIVED (IMF WEO May-2026 GDP PPP/nominal ratio x IMF FX 31.19)"},
+    "pppTWDperEUR_2025": 20.87, "marketOverPPP": 1.71
+  },
+  "B_wages": {
+    "baseYear": 2024, "basis": "private sector EQTP, bonuses included",
+    "medianNetMonthly2024": 2190, "medianGrossAnnual2024Derived": [33200, 34600],
+    "growth": {"SMPT_2024": 0.026, "SMPT_2025": 0.018, "SMPT_2026_BdF": 0.020, "SMB_yoy_2026Q2": 0.020},
+    "toBase_2024to2026": 1.038, "toBaseRange": [1.035, 1.040],
+    "medianNetMonthly2026Derived": 2274, "medianGrossAnnual2026Derived": [34500, 35900],
+    "bonusMonths": null, "bonusNote": "included in EQTP; no separate share published",
+    "ageMedianRatios": null, "ageMeanRatios": "see section 12 wage.ageMeanRatio"
+  },
+  "E_living": {
+    "source": "INSEE IP1815 (2017, distributional national accounts, incl. imputed rents)",
+    "consumptionPerUC2017": {"Q1": 12816, "Q2": 19262, "Q3": 23592, "Q4": 29029, "Q5": 40222, "all": 25184},
+    "consumptionPerHousehold2017": {"Q1": 19377, "Q2": 29060, "Q3": 36307, "Q4": 45386, "Q5": 62722, "all": 38570},
+    "savingsRate2017": {"Q1": 0.0271, "Q2": 0.0499, "Q3": 0.0965, "Q4": 0.1123, "Q5": 0.2837},
+    "housingShareBdF2017": {"Q1": 0.221, "Q2": 0.201, "Q3": 0.177, "Q4": 0.147, "Q5": 0.122},
+    "cpi2017to2025": 1.1949,
+    "family2p2kMonthly2025": {
+      "inclHousing": {"Q1": 2680, "Q2": 4028, "Q3": 4933, "Q4": 6070, "Q5": 8411},
+      "exclHousingUpper": {"Q1": 2088, "Q2": 3218, "Q3": 4060, "Q4": 5178, "Q5": 7385},
+      "exclHousingSurveyLevel": {"Q1": 1493, "Q2": 2302, "Q3": 2905, "Q4": 3704, "Q5": 5283}
+    },
+    "tierMap": {"frugal": "Q2", "normal": "Q3", "comfortable": "Q4", "luxury": "Q5"},
+    "transport": {
+      "Paris": {"navigoMonth": 90.80, "from": "2026-01-01", "employerRefundMin": 0.5},
+      "Lyon": {"tclMonth": null}
+    }
+  },
+  "D_housing": {
+    "Paris": {
+      "rentOLL2024": {
+        "basis": "median, unfurnished, excl. charges; surface = mean",
+        "all":      {"1P": [30.2, 754, 26], "2P": [26.5, 1086, 43], "3P": [24.2, 1519, 65], "4P+": [24.1, 2253, 102]},
+        "newLease": {"1P": [31.9, 764, 24], "2P": [26.7, 1090, 40], "3P": [25.0, 1500, 62], "4P+": [25.9, 2400, 102]},
+        "fields": ["eurPerM2", "eurPerMonth", "meanM2"]
+      },
+      "rentListing": {"eurPerM2": 32, "date": "2025-04", "label": "SECONDARY"},
+      "pricePerM2Old": 9560, "pricePeriod": "2026Q2", "pricePerM2New": null,
+      "priceT3Derived": 621400,
+      "dmto": {"firstTime": 0.0581, "other": 0.0632}, "notaryAllInOldEstimate": 0.075, "notaryAllInNewEstimate": 0.025,
+      "taxeFonciereRate2024": {"exclTEOM": 0.2119, "inclTEOM": 0.2740}, "taxeFonciereEurTypical": null,
+      "coproChargesPerLotYear": 1423,
+      "socialHousing": {"sruRate": 0.231, "units": 271906, "applicants": 292285, "allocationsPerYear": 10046, "applicantsPerAllocation": 29, "plusCeilingPerM2": 7.52, "hlmT3Derived": 489},
+      "housingAidZone": 1
+    },
+    "Lyon": {
+      "rentOLL2024": {
+        "area": "Lyon + Villeurbanne (OLL ville centre)",
+        "all":      {"1P": [17.6, 510, 30], "2P": [14.3, 660, 47], "3P": [12.5, 839, 68], "4P+": [11.6, 1086, 95]},
+        "newLease": {"1P": [18.4, 530, 30], "2P": [15.0, 700, 47], "3P": [12.9, 850, 68], "4P+": [12.9, 1209, 99]},
+        "fields": ["eurPerM2", "eurPerMonth", "meanM2"],
+        "meanM2_T4only": 88
+      },
+      "rentListing": {"eurPerM2": [17.3, 21], "label": "SECONDARY"},
+      "pricePerM2Old": 4442, "pricePeriod": "early 2026", "pricePerM2New": null,
+      "priceT3Derived": 302056,
+      "dmto": {"firstTime": 0.0581, "other": 0.0632}, "notaryAllInOldEstimate": 0.075, "notaryAllInNewEstimate": 0.025,
+      "taxeFonciereRate2024": {"exclTEOM": 0.3271, "inclTEOM": 0.3790}, "taxeFonciereEurTypical": null,
+      "coproChargesPerLotYear": null,
+      "socialHousing": {"sruRateMetropole": 0.2722, "sruRateCity": null, "applicants": null},
+      "housingAidZone": 2
+    },
+    "national": {
+      "loansBdF2026_07": {"apportAll": 40000, "apportFirstTime": 34000, "loanFirstTime": 183000, "durationMonthsAll": 272, "durationMonthsFirstTime": 286, "rate": 0.0330, "firstTimeShare": 0.439, "apportShareFirstTimeDerived": 0.157},
+      "ptz": "unchanged from section 4.6 (valid to 2027-12-31; Paris/Lyon new flats only)"
+    }
+  },
+  "F_care": {
+    "crecheMedianCouple": {"resourcesMonthly": 4083, "1child": {"hourly": 2.53, "162h": 409, "162hAfterCredit": 264}, "2children": {"hourly": 2.11, "162h": 341, "162hAfterCredit": 196}},
+    "amMedianCouple1child162h": {"cost": 795, "cmg": 386, "outOfPocket": 409, "afterCredit": 264, "label": "DERIVED, reconstructed formula"},
+    "cnafExamples2025": [
+      {"case": "couple 1 child 3000 net", "hours": 125, "cost": 606.25, "cmg": 374, "rest": 232},
+      {"case": "couple 1 child 5000", "hours": 90, "cost": 437, "cmg": 158, "rest": 279}
+    ],
+    "congeNaissance": {"decree": "2026-425", "basis": "gross capped at PMSS minus 21%", "dailyMax": [72.81, 62.41], "monthlyMaxDerived": [2215, 1899], "rate": [0.7, 0.6]},
+    "prepare": {"full": 459.70, "half": 297.17, "part": 171.42, "effective": "2026-04-01"}
+  },
+  "G_school": {
+    "Paris": {
+      "canteenPerMeal": [0, 0, 1.62, 2.28, 3.62, 4.61, 4.89, 5.10, 6.00, 7.00],
+      "canteenQFUpper": [234, 384, 548, 959, 1370, 1900, 2500, 3333, 5000, null],
+      "medianFamilyTranche": 6, "canteenYearMedianDerived": 664,
+      "periscolaireMonthlyTranche6": {"gouter4pw": 19.52, "etude4pw": 25.72, "atelierBleu1pw": 15.07},
+      "periscolaireMonthlyTranche10": {"gouter4pw": 25.00, "etude4pw": 33.28, "atelierBleu1pw": 26.80},
+      "centreLoisirs": null, "schoolYear": "2026-27"
+    },
+    "Lyon": {"canteenPrimary": null, "canteenCollegeMetropole": {"min": 1, "max": 6, "year": "2023-24"}, "periscolaire": null},
+    "tutoring": {"studentHourly": {"primCollege": [15, 20], "lycee": [20, 25]}, "teacherHourly": {"primCollege": [25, 35], "lycee": [30, 50]}, "parisPremium": [0.2, 0.3], "taxCredit": 0.5,
+      "participation6e2008": 0.095, "participation6eParisAgglo2008": 0.145,
+      "tiersMonthlyAfterCredit": {"none": 0, "some": 43, "heavy": 260}}
+  },
+  "H_benefits": {
+    "housingAidDREES2025_couple2kids_zone2": {"noIncome": 487, "oneSMIC": 304, "exitNetMonthly": 2425},
+    "aplParams": {"rentCeilingCouple1Dep": {"zone1": 449.43, "zone2": 395.77}, "perExtraDep": {"zone1": 65.21, "zone2": 57.61}, "chargesCouple2Kids": 84.42, "P0": 37.91, "label": "NEWS"}
+  },
+  "I_validation": {
+    "meanAgeFirstBirth": {"value": 29.1, "year": 2023}, "tfr2025": 1.56,
+    "dreesChildCost2011": {"childSpecificPerYearUnder16": 6005, "shareOfBudget": 0.136, "coupleWithVsWithoutKidsPerYear": 8400, "eqScaleMonthly": {"nearPoverty": 300, "median": 500, "D9": 900}}
+  },
+  "J_mapping": "see table in section 13.9"
 }
 ```

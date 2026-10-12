@@ -47,12 +47,12 @@ Compiled 2026-10-12. Every number gives its data year and a source URL. Amounts 
 
 | 台灣參數（`src/data.js`） | 日本對應數字 | 備註 |
 |---|---|---|
-| `WAGE.median`（全體受僱者全年總薪資中位數） | 國稅廳平均 487 萬（2025）。中位數**未公布**；由 2024 年級距推算約 **410 萬** [DERIVED] | 國稅廳只公布平均數與級距。見 §2.2 |
-| `WAGE.q`（十分位比值） | 只有粗略級距：P32≈300 萬、P48≈400 萬、P63≈500 萬、P88≈800 萬、P94≈1,000 萬 | **D1–D9 精確值未找到**。OECD 有日本全職者十分位比，本次未取得 |
+| `WAGE.median`（全體受僱者全年總薪資中位數） | 國稅廳平均 487 萬（2025）。中位數**未公布**；由 2024 年級距推算約 **410 萬** [DERIVED]（**已更新 → §13.1.1：2025 年級距推算約 420 萬**） | 國稅廳只公布平均數與級距。見 §2.2 |
+| `WAGE.q`（十分位比值） | 只有粗略級距：P32≈300 萬、P48≈400 萬、P63≈500 萬、P88≈800 萬、P94≈1,000 萬 | **D1–D9 精確值未找到**。OECD 有日本全職者十分位比，本次未取得（**已補 → §13.1.1–13.1.2**） |
 | `WAGE.age`（年齡別／全體） | 厚勞省 2025 年齡別月薪比（對平均）：20–24 0.71；25–29 0.82；30–34 0.92；35–39 1.00；40–44 1.07；45–49 1.11；50–54 1.14；55–59 1.16；60–64 0.97；65–69 0.84 | 這是對**平均數**的比值，不是中位數；只含一般勞工（全職）。§2.3 |
 | `INDUSTRIES[].bonus`（年終月數） | 平均獎金 75 萬 ≈ **2.2 個月**月薪；正職 102 萬 ≈ 2.7 個月 [DERIVED] | 日本獎金分夏、冬兩次發 |
-| `WAGE.toBase`（2024→2026 薪資換算） | 2025 一般勞工月薪 +3.1% | 2026 年漲幅**未找到**。建議暫用 ×1.03 [ESTIMATE] |
-| `HOUSEHOLD.disposable` / `consumption`（五分位） | 年收五分位表**未找到**。可用的有：國民生活基礎調查所得中位數 451 萬、平均 575.2 萬；家計調查勤勞者家戶可支配所得 53.2 萬／月、消費 34.6 萬／月 | 見 §3 |
+| `WAGE.toBase`（2024→2026 薪資換算） | 2025 一般勞工月薪 +3.1% | 2026 年漲幅**未找到**。建議暫用 ×1.03 [ESTIMATE]（**已更新 → §13.1.5：2024→2026 約 ×1.066**） |
+| `HOUSEHOLD.disposable` / `consumption`（五分位） | 年收五分位表**未找到**（**已補 → §13.2：2024 年全國家計構造調查**）。可用的有：國民生活基礎調查所得中位數 451 萬、平均 575.2 萬；家計調查勤勞者家戶可支配所得 53.2 萬／月、消費 34.6 萬／月 | 見 §3 |
 | `TAX.*`（綜所稅） | 全部改為日本制度：所得稅 7 級 5–45%（加 2.1% 復興稅）、住民稅 10% + 均等割 5,000、給與所得控除、基礎控除（2026 年最高 104 萬） | **個人分開課稅**。16 歲以下子女無扶養扣除。見 §5 |
 | `SI.*`（勞健保） | 厚生年金 9.15%（月薪上限 65 萬）；健保約 4.925%；介護 0.81%（40–64 歲）；子育支援金 0.115%；雇用 0.5% | **健保不按眷屬人數加收**，這點與台灣不同 |
 | `BENEFIT.birthPerBaby` | 出產育兒一時金 50 萬，加妊婦支援給付 5 萬 + 5 萬／新生兒 | 一時金幾乎等於分娩費，淨效果接近免費生產 |
@@ -64,7 +64,7 @@ Compiled 2026-10-12. Every number gives its data year and a source URL. Amounts 
 | `COST.uni` | 國立學費標準 535,800／年（入學金 282,000）。私立平均：學費 968,069、入學金 240,365、設施費 172,550（2025） | 多子家庭（同時扶養 3 名以上子女）學費免費，無排富 |
 | `COST.uniAwayRent` | 大學生在外租屋，含學費的年總花費：國立 180.1 萬、私立 268.9 萬 | JASSO 2024 |
 | `COUNTIES[].price` / `priceNew` | 東京 23 區：新屋 210.9 萬／㎡、中古 137.96 萬／㎡。大阪市新屋 116.0 萬／㎡；大阪府中古 55.67 萬／㎡。全國新屋 104.5 萬／㎡ | **專有面積，不含公設**。換成台灣權狀坪比較時，台灣價格要先除以 (1−公設比) |
-| `COUNTIES[].rent` | 23 區單身套房（≤30㎡）募集租金 111,922；分讓大樓出租每 ㎡：23 區 5,078、大阪市 3,508、福岡市 2,577、名古屋 2,343 | 依間取（格局）分的官方租金**未找到**。§4.4 有推算表 |
+| `COUNTIES[].rent` | 23 區單身套房（≤30㎡）募集租金 111,922；分讓大樓出租每 ㎡：23 區 5,078、大阪市 3,508、福岡市 2,577、名古屋 2,343 | 依間取（格局）分的官方租金**未找到**。§4.4 有推算表（**已更新 → §13.3.1 市場租金**） |
 | `COUNTIES[].pir` | Flat35 貸款戶：首都圈新屋大樓 8.4、近畿 7.7、全國 7.5 | 這是購屋者的所得，高於一般家戶 |
 | `BANK` / `QINGAN` | 浮動 ~1.2%、Flat35 3.83%；期間 35 年（50 年房貸已普及）；自備款平均約 13%（新屋大樓 23.5%） | 日本**沒有**類似新青安的政策利率。有「住宅ローン減税」：年底餘額 0.7% 抵稅 13 年 |
 | `COST.houseSize` | 新屋大樓平均：23 區約 64.5 ㎡ [DERIVED]、大阪市 43.3 ㎡、近畿 55.9 ㎡ | |
@@ -85,7 +85,7 @@ Compiled 2026-10-12. Every number gives its data year and a source URL. Amounts 
 7. **面積口徑不同。** 日本房價與租金都以專有面積計算。遊戲的 `houseSize`（坪，含公設）在日本要改用 ㎡ 專有面積，例如 2LDK 約 55–65 ㎡、3LDK 約 65–75 ㎡。
 8. **建物折舊大。** 日本建物會明顯折舊，中古屋比新屋便宜很多，23 區中古單價約是新屋的 65%。房價上漲情境不宜直接套用台灣的 `usedFactor`。
 9. **高中與大學。** 2026 年起高中學費補助不分所得：公立 11.88 萬、私立最高 45.72 萬，私立仍可能有自付差額。大學只有多子家庭與低收入家庭有全額減免。
-10. **生產幾乎不花錢，但「月子中心」不是常態。** 日本的產後照護屬於市町村的「產後ケア事業」，本次未查價。遊戲可以把月子中心選項改成「產後ケア」，或在日本版直接拿掉。
+10. **生產幾乎不花錢，但「月子中心」不是常態。** 日本的產後照護屬於市町村的「產後ケア事業」，本次未查價（**已補 → §13.4.2**）。遊戲可以把月子中心選項改成「產後ケア」，或在日本版直接拿掉。
 
 ---
 
@@ -160,7 +160,7 @@ Covers people employed for the whole year (1年を通じて勤務した給与所
 - P63 ≈ 500万
 - P88 ≈ 800万
 - P94 ≈ 1000万
-- **Median ≈ 410万.** I assumed the 400–500万 band holds about 15.3% and interpolated linearly.
+- **Median ≈ 410万.** I assumed the 400–500万 band holds about 15.3% and interpolated linearly. **[SUPERSEDED → §13.1.1: about 420万 from the full 2025 bands]**
 
 As ratios to the median: P32 ≈ 0.73, P63 ≈ 1.22, P88 ≈ 1.95, P94 ≈ 2.4. Linear interpolation puts P90 at about **2.1×** the median. Taiwan's P90 is 2.45×.
 
@@ -188,7 +188,7 @@ Source: [MHLW z2025 dl/02.pdf](https://www.mhlw.go.jp/toukei/itiran/roudou/ching
 | 65–69 | 285.3 | 304.3 | 240.7 | 0.84 |
 
 - Men's wages peak at 55–59, at 181.4 when 20–24 = 100. Women's curve is much flatter, peaking at 127.6.
-- **Caution:** the 35–39 value is identical to the all-age figure (340.6). This may be a coincidence or an extraction error. Re-check against [zuhyo.xlsx](https://www.mhlw.go.jp/toukei/itiran/roudou/chingin/kouzou/z2025/xls/zuhyo.xlsx) before using it.
+- **[RESOLVED → §13.1.3: the value is printed as 340.6 in the MHLW table; it is a coincidence.]** **Caution:** the 35–39 value is identical to the all-age figure (340.6). This may be a coincidence or an extraction error. Re-check against [zuhyo.xlsx](https://www.mhlw.go.jp/toukei/itiran/roudou/chingin/kouzou/z2025/xls/zuhyo.xlsx) before using it.
 - The ratios use the mean, not the median, and cover full-time workers only. The Japanese age curve is steeper than Taiwan's: 50–59 reaches about 1.15 in Japan versus 1.06–1.14 in Taiwan.
 
 ---
@@ -288,6 +288,8 @@ Official rents by floor plan for Tokyo, Osaka and a regional city were **not fou
 - The at home 23-ward single rent (111,922) is about 12% below the derived 1K.
 - The HOME'S Nerima family rent (22.1万) is well below the derived 2LDK/3LDK.
 
+**[SUPERSEDED → §13.3.1: market asking rents by size now found; the derived table above and these suggestions are kept for reference only.]**
+
 **Suggested game values [ESTIMATE]:** take about 0.75–0.85× the derived family rents. For example, a Tokyo 23-ward 2LDK at about 23–26万 and a 3LDK at about 27–30万. Treat these as rough until an at home or SUUMO table by floor plan is read.
 
 ### 4.5 Mortgages
@@ -379,7 +381,7 @@ The change was enacted 2026-12-01 and applies to 2026 income through the year-en
 | 6.55–23.5M | 0.62M | 0.58M |
 | Phase-out | 0.48M / 0.32M / 0.16M / 0 above 23.5M | same |
 
-- **Note on the 1.32–4.89M rows.** The NTA table cells for these two bands were not captured. MOF describes a temporary add-on of 0.42M for salaries up to about 6.65M, which implies 1.04M across this range. **[UNVERIFIED: re-check before coding]**
+- **Note on the 1.32–4.89M rows.** The NTA table cells for these two bands were not captured. MOF describes a temporary add-on of 0.42M for salaries up to about 6.65M, which implies 1.04M across this range. **[UNVERIFIED: re-check before coding]** **[RESOLVED → §13.6: NTA No.1199 confirms 104万 for all total income ≤ 489万.]**
 - The tax-free threshold (年収の壁) is now **1.78M** for everyone.
 - These amounts are temporary measures for 2026–2027 and are partly indexed to inflation.
 
@@ -447,7 +449,7 @@ Computed with my script (`scratchpad/jp_tax.py`; not part of the repo). Assumpti
 |---|---|---|---|---|
 | 出産育児一時金 (childbirth lump sum, health insurance) | **50万 per baby** (since 2023-04) | 2026 | [かいけつ人事労務](https://www.kaiketsu-j.com/?p=18784) | [NEWS] |
 | Average normal-delivery cost | **≈52万** (+1.3万 YoY). Tokyo 648,309 (highest); Kumamoto 404,411 (lowest). | FY2024 | same, citing the MHLW 医療保険部会 of 2025-10-23 ([MHLW](https://www.mhlw.go.jp/stf/newpage_65085.html)) | [NEWS] |
-| Plan: insurance-covered free normal delivery | A uniform national base price fully covered by health insurance, abolishing the 50万 lump sum. Extras such as celebration meals and photos stay self-paid. Bill planned for the 2026 Diet; start **FY2027 or later**. | 2025-12 | [さきがけ (Kyodo)](https://www.sakigake.jp/news/article/20251203CO0141/) | [NEWS]. Whether the 2026 Diet passed it was **not checked**. |
+| Plan: insurance-covered free normal delivery | A uniform national base price fully covered by health insurance, abolishing the 50万 lump sum. Extras such as celebration meals and photos stay self-paid. Bill planned for the 2026 Diet; start **FY2027 or later**. | 2025-12 | [さきがけ (Kyodo)](https://www.sakigake.jp/news/article/20251203CO0141/) | [NEWS]. Whether the 2026 Diet passed it was **not checked**. **[UPDATED → §13.4.1: passed 2026-05-29; start by about 2028-06.]** |
 | 妊婦のための支援給付 (pregnancy support benefit) | **5万** at pregnancy notification plus **5万 per child** after birth (cash or coupons) | from 2025-04 | [Minato City](https://www.city.minato.tokyo.jp/chiikihoken/kodomo/syusankosodate07.html) | [OFFICIAL] |
 | 出産手当金 (maternity allowance, employees in health insurance) | 2/3 of the standard daily pay for 42 days before and 56 days after birth (98 days) | | not fetched | [UNVERIFIED] |
 | Social-insurance premiums during maternity and childcare leave | Exempt, for both employee and employer | | not fetched | [UNVERIFIED] |
@@ -609,13 +611,15 @@ Source: [MEXT](https://www.mext.go.jp/content/20241225-mxt_chousa01_000039333_1.
 | 2026-08 | Parental-leave benefit caps raised (332,454 / 248,100) | in force |
 | 2026-09 | Osaka City: 0–2 nursery free for the 1st child | in force |
 | 2026-06 → 09 | BOJ raised the policy rate to 1.0% and then 1.25%; Flat35 at 3.83% in October | market |
-| Pending: FY2027 or later | Normal delivery fully covered by health insurance (replaces the 50万 lump sum) | bill planned; passage **not checked** |
+| Pending: FY2027 or later | Normal delivery fully covered by health insurance (replaces the 50万 lump sum) | bill planned; passage **not checked** **[UPDATED → §13.4.1: law passed 2026-05-29; start by about 2028-06]** |
 | Pending | Review of the 扶養控除 for high-school-age children (kept for 2026–27) | under review |
 | Pending | Free school lunch for junior high | not decided (per BCN) |
 
 ---
 
 ## 11. Gaps and conflicts
+
+> **Status after §13 (2026-10-12):** items 1, 2, 3, 5 (2026 growth), 6 and 7 are filled or resolved in §13. Item 4 (nationwide used-condo price) and the 2025 賃金構造 bonus are still open. Of item 11, postpartum care, utilities, car costs and 学童 are partly covered. See §13.10 for what remains.
 
 1. **Wage deciles D1–D9** (an official full distribution) were not found. Only coarse NTA bands from 2024 are available. The median full-time salary is not published by NTA. I estimated the median from bands at about 410万 (all workers, part-time included).
 2. **The 家計調査 income-quintile table** (consumption and disposable income by 五分位) was not found.
@@ -638,6 +642,8 @@ Source: [MEXT](https://www.mext.go.jp/content/20241225-mxt_chousa01_000039333_1.
 ---
 
 ## 12. Machine-readable summary (JSON, JPY, ready to adapt)
+
+> **[SUPERSEDED → §13.11]** The updated JSON at the end of §13 replaces this block where keys overlap (wage median and deciles, household quintiles, basic deduction, rents, delivery, childcare).
 
 ```json
 {
@@ -684,6 +690,542 @@ Source: [MEXT](https://www.mext.go.jp/content/20241225-mxt_chousa01_000039333_1.
     "mortgage": { "variable": 0.012, "flat35": 0.0383, "boj": 0.0125, "date": "2026-10", "years": 35, "downPaymentAvg": 0.131, "downPaymentNewCondo": 0.235 },
     "pirFlat35NewCondo": { "national": 7.5, "shutoken": 8.4, "kinki": 7.7 },
     "netAreaBasis": true
+  },
+  "fertility": { "births": 671270, "tfr": 1.14, "year": 2025, "meanAgeFirstBirth": 31.0, "meanAgeYear": 2024, "costReasonShare": 0.526 },
+  "childCostNCCHD": { "age0to18Excl": 21700000, "age0to18Incl": 25700000, "year": 2024 }
+}
+```
+
+---
+
+## 13. Gap fill（2026-10-12）
+
+### 摘要（繁體中文）
+
+這一節補上第 11 節列出的缺口，並修正幾個數字。被取代的舊數字已在原段落標上「→ §13」。
+- **薪資分布。** 用國稅廳 2025 年（令和7年分）的 14 個薪資級距，以線性內插推算 P10–P90。全年在職受僱者（含兼職）中位數約 **420 萬日圓**，取代先前用 2024 年資料推算的 410 萬。P10 只有中位數的 0.30 倍，P90 是 2.08 倍。因為樣本含大量兼職，低端比台灣低很多。全職者的分布改用厚勞省 2019 年的十分位數：男性 P10 0.64、P90 1.78；女性 P10 0.69、P90 1.60。2020 年起官方概況不再公布十分位數。
+- **薪資成長。** 一般勞工月薪 2024 年 +3.8%、2025 年 +3.1%。2026 年春鬥 5.01%（連合，含定期加薪）。每月勤勞統計 2026 年 8 月現金給與 +3.8%。建議 2024→2026 的換算係數約 ×1.066（推估）。
+- **家庭消費五分位。** 2024 年全國家計構造調查（官方，2025-12 公布）有戶長為受僱者家戶的年收五分位消費。第 I 到第 V 分位每月 16.5 萬、20.8 萬、24.4 萬、29.5 萬、40.3 萬。各分位的家戶人數差很多（1.3 到 3.2 人），換算成等價消費後只差 0.90 到 1.39 倍。
+- **租金。** 找到市場刊登租金，取代先前偏高的推算表。東京 23 區家庭型（2DK–3LDK）2026 年 1 月為 25.2 萬；大阪市 50–70㎡ 家庭型 2025 年 12 月為 16.3 萬。
+- **大阪中古屋。** 大阪市非中心 18 區成交約 47 萬/㎡。全市 70㎡ 換算開價 5,853 萬，約 84 萬/㎡。建議遊戲用約 60 萬/㎡（推估）。
+- **托育與生產。**
+  - 東京與大阪市 0–2 歲認可保育免費已確認。
+  - 東京認證保育所月費上限 8 萬，區公所對第 1 子最多補助 8 萬，實際接近免費。
+  - 公費產後照顧（產後ケア）住一晚只要自付 2,000–7,000 日圓，但最多 7 天。民間產後飯店每晚 5–10 萬以上。
+  - **正常分娩改由健保全額給付的法律已在 2026 年 5 月通過**，預計 2028 年 6 月前上路。
+- **生活費。**
+  - 水電瓦斯每戶每月 24,544；手機每戶 11,464。
+  - 通勤月票一般由公司全額支付（非課稅上限每月 15 萬）。
+  - 新車平均購買價 350 萬、中古車 175 萬。東京 23 區停車位每月 1.6–6.1 萬。
+- **稅與補助複查。** 2026 年基礎控除確認為「合計所得 489 萬以下一律 104 萬」。兒童手當與高中學費補助的 2026 年數字確認無誤。
+- **仍然缺少：**
+  - 厚勞省 2025 年全職者的十分位數與年終獎金。
+  - 家計調查「兩人以上勤勞者戶」的五分位表。
+  - 全國中古大樓每㎡價格。
+  - 大阪市的停車費。
+  - 東京與大阪市的學童保育實際收費。
+
+---
+
+### 13.1 Wages
+
+#### 13.1.1 NTA 2025 pay bands and derived deciles
+
+Source: NTA 民間給与実態統計調査 令和7年分 (released 2026-09-29), band shares as reported by [LIMO](https://limo.media/articles/-/140527). Scope: 51.63 million people employed the whole year, part-timers included; annual pay including bonus. [NEWS], quoting official. The 2025 NTA release PDF itself does not carry the band table (checked this session).
+
+| Pay band (万円) | Share | Cumulative [DERIVED] |
+|---|---|---|
+| ≤100 | 7.2% | 7.2% |
+| 100–200 | 11.3% | 18.5% |
+| 200–300 | 13.1% | 31.5% |
+| 300–400 | 15.5% (799万人) | 47.0% |
+| 400–500 | 15.3% (792万人) | 62.3% |
+| 500–600 | 11.9% | 74.2% |
+| 600–700 | 7.8% | 81.9% |
+| 700–800 | 5.4% | 87.3% |
+| 800–900 | 3.6% | 90.9% |
+| 900–1000 | 2.5% | 93.4% |
+| 1000–1500 | 4.7% | 98.1% |
+| 1500–2000 | 1.2% | 99.3% |
+| 2000–2500 | 0.3% | 99.6% |
+| >2500 | 0.4% | 100.0% |
+
+- Men's modal band is 400–500万 (16.6%), then 500–600万 (14.6%). Women's modal band is 200–300万 (18.7%), then 100–200万 (18.5%).
+
+**Deciles [DERIVED].**
+- **Method:** the shares sum to 100.2%, so I rescaled them to 100. I then interpolated linearly within each band. Script: `scratchpad/calc/dec.py`, not in the repo.
+- **Accuracy:** linear interpolation slightly overstates values in the dense lower bands. Treat the results as ±10万.
+
+| Percentile | Pay (万円) | ÷ median |
+|---|---|---|
+| P10 | 125 | **0.30** |
+| P20 | 212 | **0.51** |
+| P30 | 288 | **0.69** |
+| P40 | 355 | **0.85** |
+| P50 | **420** | 1.00 |
+| P60 | 485 | **1.16** |
+| P70 | 565 | **1.35** |
+| P80 | 675 | **1.61** |
+| P90 | 874 | **2.08** |
+| P95 | 1,169 | 2.79 |
+
+- **Median ≈ 420万. This supersedes the 410万 in §2.2**, which used the 2024 bands.
+- **Mean ÷ median** = 487 ÷ 420 ≈ 1.16.
+- **Comparability with Taiwan.** This scope (all full-year employees, part-time included) is closest to Taiwan's 全年總薪資. Japan's bottom tail is much lower because of its large part-time sector. Non-regular workers average 210万, and many spouses limit their earnings to stay under the 年収の壁.
+
+#### 13.1.2 Full-time distribution proxy: MHLW 2019 deciles
+
+Source: [MHLW 賃金構造基本統計調査 令和元年 概況, 第7表](https://www.mhlw.go.jp/toukei/itiran/roudou/chingin/kouzou/z2019/dl/14.pdf). Scope: monthly 所定内給与 (scheduled pay, no bonus) of general workers (一般労働者, roughly full-time). [OFFICIAL]
+- This is the last year the summary published deciles. The 2020 redesign dropped them from the summary, and the 2024 and 2025 summaries were checked and contain only means.
+- The page gives men and women separately, with no combined figure.
+
+| | P10 | P25 | Median | P75 | P90 | Mean |
+|---|---|---|---|---|---|---|
+| Men (千円) | 190.4 | 231.6 | **297.7** | 399.4 | 530.9 | 338.0 |
+| Men ÷ median [DERIVED] | **0.640** | 0.778 | 1 | 1.342 | **1.783** | 1.135 |
+| Women (千円) | 158.1 | 186.1 | **227.8** | 286.1 | 364.5 | 251.0 |
+| Women ÷ median [DERIVED] | **0.694** | 0.817 | 1 | 1.256 | **1.600** | 1.102 |
+
+- The official decile dispersion coefficient is 0.57 for men and 0.45 for women.
+- **Use:** if the Japan model needs "full-time only" percentiles, these ratios are the best official shape. Annual pay including bonus would be somewhat wider at the top, because bonuses are concentrated among regular staff at large firms.
+- **2025 mean-to-median, full-time [DERIVED, rough]:** with the 2019 mean/median ratio of about 1.12 applied to the 2025 mean of 340.6千円, the 2025 full-time median is about 304千円 per month.
+
+#### 13.1.3 Age profile
+
+**NTA 2025, annual pay including bonus, all full-year employees.** Source: [LIMO, 2026-09-29](https://limo.media/articles/-/140506), quoting NTA. [NEWS] The combined (男女計) row by age was not shown. Ratios are to the all-worker median of 419.6万 [DERIVED].
+
+| Age | Men (万円) | Women (万円) | Men ÷ median | Women ÷ median | Simple average of the two ratios [DERIVED] |
+|---|---|---|---|---|---|
+| 20–24 | 293.8 | 265.4 | 0.70 | 0.63 | 0.67 |
+| 25–29 | 459.6 | 382.7 | 1.10 | 0.91 | 1.00 |
+| 30–34 | 528.7 | 375.6 | 1.26 | 0.90 | 1.08 |
+| 35–39 | 597.7 | 362.3 | 1.42 | 0.86 | 1.14 |
+| 40–44 | 647.8 | 370.1 | 1.54 | 0.88 | 1.21 |
+| 45–49 | 682.6 | 377.0 | 1.63 | 0.90 | 1.26 |
+| 50–54 | 714.8 | 375.5 | 1.70 | 0.89 | 1.30 |
+| 55–59 | 734.1 | 357.1 | 1.75 | 0.85 | 1.30 |
+| 60–64 | 612.5 | 306.8 | 1.46 | 0.73 | 1.10 |
+| 65–69 | 474.1 | 238.0 | 1.13 | 0.57 | 0.85 |
+
+Women's pay is flat from age 25 because many move into part-time work after childbirth. The game should not apply the men's curve to both partners.
+
+**MHLW 2019, full-time medians by age, ratio to the all-age median [DERIVED from OFFICIAL].**
+
+| Age | 20–24 | 25–29 | 30–34 | 35–39 | 40–44 | 45–49 | 50–54 | 55–59 | 60–64 |
+|---|---|---|---|---|---|---|---|---|---|
+| Men | 0.705 | 0.816 | 0.924 | 1.028 | 1.114 | 1.214 | 1.299 | 1.289 | 0.854 |
+| Women | 0.900 | 0.993 | 1.036 | 1.058 | 1.087 | 1.083 | 1.059 | 1.032 | 0.858 |
+
+**§2.3 anomaly resolved.** The MHLW 2025 table ([02.pdf](https://www.mhlw.go.jp/toukei/itiran/roudou/chingin/kouzou/z2025/dl/02.pdf)) does print 340.6 for ages 35–39, the same as the all-age mean. It is a coincidence, not an extraction error. [OFFICIAL]
+
+#### 13.1.4 Bonus
+
+| Item | Value | Year | Source | Label |
+|---|---|---|---|---|
+| Bonus share of annual pay (NTA) | All 15.4% (75 of 487万); regular staff 18.2% (102 of 559万) | 2025 | §2.2 | [OFFICIAL] |
+| Summer bonus, 毎月勤労統計 (establishments with ≥5 employees) | **360,681** per worker across all establishments (+3.2%); 426,337 where paid (+2.9%) | 2025 summer | [JIL Business Labor Trend 2026-01/02](https://www.jil.go.jp/kokunai/blt/backnumber/2026/01_02/c_01.html) | [OFFICIAL] (JIL quoting MHLW) |
+| 賃金構造 annual bonus (年間賞与その他特別給与額) for 2025 | **Still not found.** The 2024 and 2025 summaries (13.pdf, 14.pdf) do not print it. | | | |
+
+#### 13.1.5 Nominal wage growth, 2024 → 2026
+
+| Measure | 2024 | 2025 | 2026 | Source | Label |
+|---|---|---|---|---|---|
+| MHLW 賃金構造, general workers, monthly 所定内給与 (June) | 330,400 (**+3.8%**) | 340,600 (**+3.1%**) | n/a (published 2027-03) | [kaiketsu 2024](https://www.kaiketsu-j.com/?p=14783); §2.1 | [NEWS] quoting official |
+| NTA mean annual pay | 478万 | 487万 (**+1.9%** [DERIVED]) | n/a | §2.2 | [OFFICIAL] |
+| 毎月勤労統計, 現金給与総額, all employees | | 355,919 per month (**+2.3%**); real −1.3% | | [kaiketsu](https://www.kaiketsu-j.com/?p=20590) | [NEWS] quoting official |
+| 毎月勤労統計, August 2026 preliminary | | | 311,364 (**+3.8%** YoY; real +1.5%; 8th straight real rise; nominal ≥3% for 7 straight months) | [kaiketsu](https://www.kaiketsu-j.com/?p=24458) | [NEWS] quoting official |
+| Rengo 春闘 final tally (weighted average, includes 定期昇給) | 5.10% | 5.25% | **5.01%** (16,400円); SMEs 4.69% | [kaiketsu, 2026-07-03](https://www.kaiketsu-j.com/?p=22834) | [NEWS] |
+
+- The 2024 and 2025 Rengo figures come from the article's comparison: 2026 is 0.24 points below 2025. The 2024 value of 5.10% is [UNVERIFIED].
+- **Suggested `WAGE.toBase` [ESTIMATE]:**
+  - 2025 → 2026: about **×1.035**. 春闘 minus roughly 1.5 points of 定昇 gives about 3.5% in base-up terms, and 毎勤 is running at +3.8%.
+  - 2024 → 2026: about **×1.066** (1.03 × 1.035).
+  - **This supersedes the ×1.03 placeholder in the summary table.**
+
+---
+
+### 13.2 Household consumption by income quintile
+
+**2024 全国家計構造調査 (Statistics Bureau, five-yearly; successor of the 全国消費実態調査).** [OFFICIAL]
+- Spending results released 2025-12-19: [youyaku1219.pdf](https://www.stat.go.jp/data/zenkokukakei/2024/pdf/youyaku1219.pdf).
+- Income and assets results released 2026-08-28: [gaiyou0828.pdf](https://www.stat.go.jp/data/zenkokukakei/2024/pdf/gaiyou0828.pdf).
+- Scope: **total households (singles included) headed by an employee**. October–November 2024 average.
+
+| Quintile | Upper bound (Dec-2025 release) | Upper bound (Aug-2026 release) | Mean annual income | Persons | Monthly consumption | Consumption ÷ Q3 | Equivalised consumption (÷√persons) ÷ Q3 [DERIVED] |
+|---|---|---|---|---|---|---|---|
+| I | 351万 | 350万 | 251.6万 | 1.29 | **165,114** | 0.68 | **0.90** |
+| II | 510万 | 502万 | 429.5万 | 1.67 | **207,531** | 0.85 | **0.99** |
+| III | 689万 | 690万 | 594.5万 | 2.26 | **243,788** | 1.00 | **1.00** |
+| IV | 932万 | 939万 | 801.7万 | 2.76 | **294,984** | 1.21 | **1.10** |
+| V | | | 1,282.4万 | 3.19 | **402,639** | 1.65 | **1.39** |
+| Mean | | | 671.9万 | 2.24 | 262,811 | | |
+
+- The two releases give slightly different bounds, probably because the spending and income results use different weights or samples. The Aug-2026 bounds belong to the income table.
+- The two-or-more-person worker-household quintile table from 家計調査 is **still not found**. It is only on e-Stat, which is unreachable from here. Neither the 2025 summary nor the JIL tables include it.
+
+**Families with young children, 家計調査 2025, two-or-more-person worker households by head's age.** Source: [Statistics Bureau 2025 summary](https://www.stat.go.jp/data/kakei/2025np/pdf/summary.pdf). [OFFICIAL]
+
+| Head's age | Persons | 実収入 | 可処分所得 | 消費支出 | Propensity to consume |
+|---|---|---|---|---|---|
+| Under 40 | 3.49 | 645,562 | **541,537** | **301,216** | 55.6% |
+| 40–49 | 3.74 | 713,746 | 578,733 | 353,622 | 61.1% |
+| All | 3.20 | 653,901 | 532,408 | 346,297 | 65.0% |
+
+**2025 consumption by category, two-or-more-person households (all, head aged 60.7, 2.87 persons), per month.** Source: Statistics Bureau, as tabulated by [Okinawa Prefecture](https://www.pref.okinawa.lg.jp/toukeika/fiaes/2025/fi2025ave.pdf). [OFFICIAL]
+- Food 89,754
+- Housing 18,665
+- **Utilities 24,544**
+- Furniture and household goods 12,869
+- Clothing 9,702
+- Health care 15,785
+- **Transport and communication 45,562**
+- Education 11,936
+- Recreation 30,796
+- Other 54,387
+- **Total 314,001**
+
+**Mapping to the game [DERIVED / ESTIMATE].**
+- **Lifestyle tiers.** Japan's equivalised spread is narrow: Q1 ≈ 0.90, Q5 ≈ 1.39 of the middle. A reasonable Japan anchor:
+  - 精打細算 ≈ Q1–Q2 (0.9×)
+  - 一般 = Q3
+  - 寬裕 ≈ Q4–Q5 (1.1–1.4×)
+  - The game's 0.7 / 1.0 / 1.4 multipliers can stay as a design choice, but 0.7 sits below Japan's observed bottom quintile.
+- **`COST.adultBase` analog.** Food, clothing, health, recreation and household goods total 158,906 per month for 2.87 persons, about **55,400 per person per month**. Add mobile at about 11,500 per household. The 2+ household sample is elderly-heavy and children count as persons, so treat this as a rough anchor.
+- **`HOUSEHOLD.consumption` (per-household percentiles).** Use the 2024 quintile means × 12, treated as P10/P30/P50/P70/P90 as in Taiwan, then × about 1.04 to reach 2026. For example, P50 is about 243,788 × 12 × 1.04 ≈ **304万 per year** [DERIVED].
+
+---
+
+### 13.3 Housing
+
+#### 13.3.1 Market rents by size (supersedes the upward-biased §4.4 derived table)
+
+| Area | Size band | Asking rent per month | Period | Source | Label |
+|---|---|---|---|---|---|
+| Tokyo 23 wards, マンション | Single (≤30 ㎡) | 103,265 | 2025-07 | at home, via [現代ビジネス](https://gendai.media/articles/-/158379) | [NEWS] |
+| Tokyo 23 wards | Single (≤30 ㎡) | **111,922** (+13.0%) | 2026-03 | at home, via [fptrendy](https://fptrendy.com/2026/04/23/tokyo-23ku-rent-record-high-2026-03/) | [NEWS] |
+| Tokyo 23 wards | Couple (30–50 ㎡, ≈1LDK) | **168,765** | 2025-07 | at home, via 現代ビジネス | [NEWS] |
+| Tokyo 23 wards | Family (50–70 ㎡, ≈2LDK) | **247,375** | 2025-07 | same | [NEWS] |
+| Tokyo 23 wards, LIFULL HOME'S listings | Single type (1R/1K/1DK/1LDK/2K) | 125,814 (+18.5%) | 2026-01 | [LIFULL PDF](https://lifull.com/doc/2026/02/cf8f3c0e9a3212f0fe6870f37298f6df.pdf) | [SECONDARY] |
+| Tokyo 23 wards, LIFULL HOME'S listings | Family type (2DK/2LDK/3K/3DK/3LDK+) | **252,464** (+13.4%) | 2026-01 | same | [SECONDARY] |
+| Tokyo 23 wards, 東京カンテイ condo rents | YoY change | +8.2% | 2026-05 | via [健美家](https://www.kenbiya.com/ar/ns/research/chintai_market/10331.html) | [SECONDARY] |
+| Osaka City, マンション | Single (≤30 ㎡) | **70,843** | 2025-12 | at home, via [健美家](https://www.kenbiya.com/ar/ns/research/chintai_market/9920.html) | [SECONDARY] |
+| Osaka City | Couple (30–50 ㎡) | **111,356** | 2025-12 | same | [SECONDARY] |
+| Osaka City | Family (50–70 ㎡) | **163,066** (LIFULL family type +18.9% over 2025) | 2025-12 | same | [SECONDARY] |
+| Osaka City | Large family (>70 ㎡) | 263,892 | 2025-12 | same | [SECONDARY] |
+| Osaka City | Single | 73,179 (+9.0%) | 2026-03 | fptrendy | [NEWS] |
+
+**Suggested 2026 game rents (`COUNTIES[].rent`) [ESTIMATE].** These are asking rents. Contract rents are usually a little lower, so keep the game's `rentListingFactor` logic.
+
+| | 1K / single | 1LDK / couple | 2LDK (≈60 ㎡) | 3LDK (≈70 ㎡) |
+|---|---|---|---|---|
+| Tokyo 23 wards | 115,000 | 180,000 | 260,000 | 300,000 |
+| Osaka City | 73,000 | 115,000 | 170,000 | 210,000 |
+
+How the table was built:
+- 2025 values were moved forward by the observed growth (Tokyo +5–8%, Osaka +4–5%).
+- 3LDK uses the family-band rent per ㎡ × 70 ㎡. For Tokyo that is 247,375 ÷ 60 × 70 ≈ 289,000, plus growth.
+- Osaka's >70 ㎡ average (26.4万) was not used because it is skewed by large central and luxury units.
+- Earlier §4.4 suggested a Tokyo 2LDK at 23–26万 and a 3LDK at 27–30万, so this is broadly confirmed at the top of that range.
+
+#### 13.3.2 Osaka City used condominiums
+
+| Item | Value | Period | Source | Label |
+|---|---|---|---|---|
+| Osaka City, 18 non-central wards, closed sales | 2,908万; sold area 61.77 ㎡ → **≈47.1万 per ㎡** [DERIVED] | 2026-08 | [Diamond不動産研究所](https://diamond-fudosan.jp/articles/-/1113322) | [NEWS] |
+| Osaka City, central 6 wards, closed sales | 6,225万 (area not given) | 2026-08 | same | [NEWS] |
+| Osaka Prefecture, closed sales | 3,423万; **51.54万 per ㎡** (−8.1% YoY). Asking 4,437万, so asking ÷ closed ≈ 1.30. | 2026-08 | same | [NEWS] |
+| Asking price, 70 ㎡ equivalent: Osaka City / Osaka Prefecture / Kinki | **5,853万** (≈83.6万 per ㎡) / 3,994万 / 3,358万 | 2026-01 | 東京カンテイ, via [suminavi](https://www.suminavi.com/report/pdf-cms/61f9747efafc2a246564e1572c93bc4bdb87e75f.pdf) | [SECONDARY] |
+| Asking price, 70 ㎡ equivalent: Tokyo 23 wards / Greater Tokyo | 12,123万 (≈173万 per ㎡) / 6,672万 | 2026-01 | same | [SECONDARY] |
+
+**Suggested Osaka City used price for the game: about 60万 per ㎡ [ESTIMATE].** The city-wide asking price of 83.6万 divided by the prefecture's asking/closed gap of 1.30 gives about 64万. The outer 18 wards close at about 47万. The central 6 wards are well above both.
+
+**Typical family size.** Used units sold in the outer 18 wards average 61.8 ㎡. Kinki new condos average 55.9 ㎡ (§4.1).
+
+**Nationwide used-condo price per ㎡: still not found.**
+
+---
+
+### 13.4 Birth, postpartum care, and childcare ages 0–2
+
+#### 13.4.1 Delivery cost and the insurance-coverage reform
+
+| Item | Value | Source | Label |
+|---|---|---|---|
+| Status of "free normal delivery" | The revised Health Insurance Act was **passed by the House of Councillors on 2026-05-29** (lower house passed 2026-04-28). Normal delivery gets a uniform national price fully paid by public insurance. Caesarean sections stay insured with the usual 30% copay. All pregnant women also get a fixed cash benefit, amount not stated. Start is expected **by about June 2028**, as facilities become ready. | [さきがけ (Kyodo) 2026-05-29](https://www.sakigake.jp/news/article/20260529CO0066/); [さきがけ 2026-04-28](https://www.sakigake.jp/news/article/20260428CO0085/) | [NEWS]. The passage date is read from the article URL and its "29日". Whether the 50万 lump sum is formally abolished is not stated. |
+| Out-of-pocket until then (normal delivery) [DERIVED] | Tokyo ≈ 648,309 − 500,000 = **≈14.8万**; national average ≈ 52万 − 50万 = **≈2万** | §6.1 | [DERIVED] |
+
+**Game suggestion [ESTIMATE].** For births from mid-2028, normal delivery costs about 0 apart from extras. Before then, use the derived out-of-pocket figures. This **supersedes the "passage not checked" notes in §6.1 and §10.**
+
+#### 13.4.2 Postpartum care (産後ケア), the counterpart of 月子中心
+
+| Provider | Type | Self-pay (resident-tax-paying household) | Limit | Period | Source | Label |
+|---|---|---|---|---|---|---|
+| Osaka City | Short stay (1 night/2 days, 5 meals) | **4,250** first stay, then **2,125 per extra day** | 7 days in total (6 nights). Full 7 days ≈ **14,875** [DERIVED]. | 2026-04 | [Osaka City leaflet](https://www.city.osaka.lg.jp/kodomo/cmsfiles/contents/0000370/370578/annaichirashi.pdf) | [OFFICIAL] |
+| Osaka City | Day care | 1,500 per day | 7 days | 2026-04 | same | [OFFICIAL] |
+| Osaka City | Home visit (about 2 h) | 500 per visit | 5 visits | 2026-04 | same | [OFFICIAL] |
+| Suginami (Tokyo) | Stay | **7,000** for 1 night/2 days, then 3,500 per extra day | Stays ≤ 4 nights/5 days; 10 uses in total | FY2026 | [Suginami flyer](https://www.city.suginami.tokyo.jp/documents/1123/2026sangocare.pdf) | [OFFICIAL]; the table was garbled, so the fee-to-type mapping is inferred |
+| Suginami | Day (individual / group) | 2,000 / 1,000 per day | | FY2026 | same | [OFFICIAL] |
+| Bunkyo (Tokyo) | Stay (1 night/2 days) | 3,520–7,200 depending on facility; extra days 3,210–3,600 | 2,500 reduction for up to 5 uses | undated | [Bunkyo list](https://www.city.bunkyo.lg.jp/documents/1556/itiranhyou0226.pdf) | [OFFICIAL] |
+| National rule | Reduction of 2,500 per use for all non-exempt households | | | from FY2023 | [NLI Research](https://www.nli-research.co.jp/files/topics/81833_ext_18_0.pdf?site=nli) | [SECONDARY] |
+| Private 産後ケアホテル (Kanto) | Per night | about **5万 to over 10万** | none | undated | same | [SECONDARY] |
+
+**Mapping [DERIVED / ESTIMATE].**
+- **Taiwan 月子中心 (28 days):** Japan has no common equivalent.
+  - The public option is at most about 7 days for about 1.5–2万 self-pay.
+  - A private 28-night stay would cost about 140万–280万+ (5–10万 × 28). That is a luxury choice few families make.
+  - Suggest: "center" maps to municipal 産後ケア at about 1.5–2万, or to a 7-night private stay at about 35–70万 as a premium option.
+- **"family":** maps to 里帰り出産 (going back to the mother's parents), with cost close to 0.
+- **"nanny" (月嫂):** no sourced Japanese price. Postpartum doula or housekeeping services exist, but no figure was found.
+
+#### 13.4.3 Childcare fees ages 0–2 after the free-first-child policies
+
+| Item | Value | Period | Source | Label |
+|---|---|---|---|---|
+| Tokyo wards: licensed care (認可, 認定こども園, small-scale) | **Free for all 0–2 children from 2025-09**, no application needed. Extended-hours fees excluded. | 2025-09 | [Meguro City](https://www.city.meguro.tokyo.jp/hoiku/kosodatekyouiku/hoikuennado/rinnku_daiissi.html); [Sumida City](https://www.city.sumida.lg.jp/kosodate_kyouiku/kosodate_site/azukeru/hoikuen/nyuuen/riyou_annai/a.files/R7-musyouka.pdf) | [OFFICIAL] |
+| Sumida caveat | Funded by a Tokyo Metropolitan subsidy. If it ends, the 2nd child pays half and the 3rd+ child is free. | | Sumida | [OFFICIAL] |
+| Tokyo 認証保育所 fee cap | **80,000 per month** under age 3 (77,000 at 3+) for ≤220 h per month, meals and materials included. Operators set fees freely below the cap. | current | [Tokyo Fukushi Bureau](https://www.fukushi.metro.tokyo.lg.jp/kodomo/hoiku/ninsyo/ninsyo) | [OFFICIAL] |
+| Meguro subsidy for 認証 and unlicensed care, first child 0–2, taxable household | 40,000 (利用者支援) + 40,000 (第1子支援) = **80,000** | from 2025-09 | Meguro | [OFFICIAL]. The page does not state the period; probably monthly. |
+| Osaka City | 0–2 first child free from **2026-09** for 認可保育所等 and 企業主導型 (up to the national standard amount). **Unlicensed (認可外) care is not mentioned.** FY2026 budget 75.25億 + 12.35億 yen. | 2026-09 | [Osaka City press release](https://www.city.osaka.lg.jp/hodoshiryo/seisakukikakushitsu/0000669117.html) | [OFFICIAL] |
+| National 無償化 caps for unlicensed care | Ages 3–5: up to **37,000 per month** (needs 保育の必要性の認定). Ages 0–2: **42,000** for resident-tax-exempt households only. Kindergarten cap **25,700**; 預かり保育 **11,300**. Transport, food ingredients and event fees remain parent-paid. | 2019– | [Shimane Prefecture](https://www.pref.shimane.lg.jp/education/syoushika/kosodate/hoikusho/hoikumusyouka.html) | [OFFICIAL] |
+| Babysitter subsidy (Tokyo wards, e.g. Sumida FY2026) | Up to **2,500 per hour** daytime and 3,500 at night; **144 h per child per year** (288 for twins or single parents); children up to about grade 3 | FY2026 | [Sumida flyer](https://www.city.sumida.lg.jp/kosodate_kyouiku/kosodate_site/azukeru/hoiku_service/babysitter_hojo.files/R8-chirashi.pdf) | [OFFICIAL] |
+
+**Game mapping for 0–2 care [ESTIMATE].**
+- **public / quasi:** 0 in Tokyo 23 wards and Osaka City (from 2026-09; before that, see §6.4 income-based fees).
+- **private:** in Tokyo, a 認証保育所 costs at most 80,000, with ward subsidies up to 80,000, so close to 0 for a first child. In Osaka City, unlicensed fees are unsourced and unsubsidised.
+
+---
+
+### 13.5 Living costs
+
+| Item | Value | Period | Source | Label |
+|---|---|---|---|---|
+| Utilities (光熱・水道), two-or-more-person households | **24,544 per month** | 2025 | §13.2 | [OFFICIAL] |
+| Mobile phone charges (スマホ・携帯 通信・通話), two-or-more-person households | **11,464 per month** (Kanto 11,328; Kinki 10,900) | 2025 | 家計消費状況調査, via [LIMO](https://limo.media/articles/-/133988) | [NEWS] |
+| Transport and communication, all two-or-more-person households | 45,562 per month | 2025 | §13.2 | [OFFICIAL] |
+| Commuting | Employers almost always pay a commuting allowance. The tax-free limit for transit users is **150,000 per month**. | as of 2026-04 | [NTA No.2582](https://www.nta.go.jp/taxes/shiraberu/taxanswer/gensen/2582.htm) | [OFFICIAL] for the limit. "Almost always paid" is [UNVERIFIED]: common practice, no survey share found. |
+| Average purchase price: new car / used car | **350.1万 / 175.2万** | 2025 | Recruit 自動車購入実態調査2025, via [DIME](https://dime.jp/genre/2107380/) | [NEWS] |
+| Average monthly upkeep reported by drivers | **14,100** (kei cars 10,200; SUVs 18,500). Rising for 5 straight years. Average 6,728 km per year. | 2025 | ソニー損保 カーライフ実態調査, via [Response](https://matome.response.jp/articles/6725) | [NEWS]. The survey does not say whether loans or parking are included. |
+| Itemised annual cost, 1.2 L compact, 5,000 km | Vehicle tax 30,500; inspection (with weight tax and compulsory insurance) 25,000–50,000; optional insurance 75,000; fuel 42,000; maintenance 20,000–30,000. **≈19–23万 per year excluding parking** [DERIVED from the line items]. | 2022 prices | [くるまのニュース](https://kuruma-news.jp/post/572911) | [SECONDARY]; the article's own total is internally inconsistent, so I re-added the items |
+| Monthly parking, Tokyo 23 wards (平面 / 機械式 average by ward) | From 16,022 (Adachi) and 16,884 (Katsushika) to 61,248 (Chuo, 平面). Residential wards: Setagaya 26,302; Nerima 17,195; Suginami 22,883; Edogawa 18,259. | 2025-04-10 | 日本駐車場検索, via [Financial Field](https://financial-field.com/living/entry-394551) | [SECONDARY] |
+| Monthly parking, Osaka City | **not found** | | | |
+
+**Game mapping [DERIVED / ESTIMATE].**
+- **`transit`:** commuting cost about 0 for employees. Family non-commute fares were not sourced separately, so use part of the 家計調査 transport line. Most Tokyo and Osaka City families with young children have no car [UNVERIFIED].
+- **`used` car:** buy about 175万, running about 20万 per year plus parking × 12.
+- **`new` car:** buy about 350万, same running cost.
+- **Tokyo outer wards, total per year:** about 20万 + 12 × 2–3万 ≈ **44–56万**, excluding purchase.
+- **`scooter` and `import`:** no Japanese cost sourced. Suggest hiding the scooter option for Japan (uncommon for families in both cities) and treating import cars as a new car × 1.5 [ESTIMATE].
+- **`utilBase` / `utilPerPerson`:** 24,544 for 2.87 persons. Following Taiwan's form (base + per person), a rough split is about 12,000 + 4,400 per person [ESTIMATE].
+
+---
+
+### 13.6 Tax re-check: 2026 basic deduction (resolves gap 6)
+
+Source: [NTA No.1199](https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm), as of 2026-04-01. The 令和8年分 column shows 104万 in a cell merged across the first three bands. [OFFICIAL] [MoneyForward](https://biz.moneyforward.com/payroll/basic/111924/) confirms the breakdown as a base of 62万 plus a special add-on of 42万 up to 489万. [SECONDARY]
+
+| Total income (合計所得) | 2026–27 basic deduction |
+|---|---|
+| ≤ 489万 (salary ≤ about 665.6万) | **104万** (62 + special 42) |
+| 489–655万 | 67万 (62 + 5) |
+| 655–2,350万 | 62万 |
+| 2,350–2,400万 / 2,400–2,450万 / 2,450–2,500万 / > 2,500万 | 48万 / 32万 / 16万 / 0 |
+
+- **The "[UNVERIFIED: re-check before coding]" note in §5.1 is resolved.** The §5.4 take-home calculations used this reading, so they stand.
+- An extraction of the NTA withholding pamphlet ([2026kaisei.pdf](https://www.nta.go.jp/publication/pamph/gensen/2026kaisei.pdf)) came back garbled, showing 99万 and 62万 for the middle bands. It was **not adopted**, because the NTA tax-answer page and MoneyForward agree on 104万.
+- **Effective date:** the 2026 provisions take effect on 2026-12-01 and are applied through the year-end adjustment (NTA note 1).
+- **Resident-tax basic deduction:** 43万 (MoneyForward). [SECONDARY]; was [UNVERIFIED].
+- **Dependant income limit 2026–27:** total income ≤ 62万 (salary ≤ 136万). A new 特定親族特別控除 applies to dependants aged 19–22 earning 62–123万 of income (salary 136–197万), with a deduction of 63万 tapering to 3万 (NTA pamphlet). [OFFICIAL]
+
+---
+
+### 13.7 Benefits re-check
+
+| Item | Verified value | Source | Label |
+|---|---|---|---|
+| 児童手当 | Under 3: **15,000**. Age 3 through high-school age: **10,000**. 3rd child onward: **30,000** at every age. Paid in even months, two months at a time. The 2024-10 expansion is unchanged as of 2026-10. No income cap: the こども家庭庁 page does not mention one, and Osaka Prefecture states it was abolished (§6.2). | [こども家庭庁](https://www.cfa.go.jp/policies/kokoseido/jidouteate/annai) | [OFFICIAL] |
+| High-school support (就学支援金) | Public **118,800 per year** (9,900 per month). Private cap **457,200** (38,100 per month), or actual tuition if lower. **No income limit.** Effective **2026-04-01** under 令和8年法律第8号, enacted 2026-03-31. | [実務ガイド](https://jitsumu-guide.com/high-school-tuition-support-2026/), citing MEXT | [SECONDARY]; matches §6.5 |
+| Tokyo 018サポート | **5,000 per month** per child (≤ 60,000 per year), ages 0–18, **no income limit** | [Tokyo 018 flyer](https://018support.metro.tokyo.lg.jp/common/pdf/flyer.pdf) | [OFFICIAL]. The flyer is from FY2023–24; that it continues in FY2026 is [UNVERIFIED]. |
+| Osaka City 習い事・塾代助成 | Up to **10,000 per month** for lessons or cram school, grade 5 to junior-high grade 3, **no income limit**. Digital coupons from FY2026. | [ベスト進学ネット, 2026-09-10](https://bestjuku.com/shingaku/s-article/28668/) | [SECONDARY] |
+
+---
+
+### 13.8 After-school care, preschool extras, international school
+
+| Item | Value | Period | Source | Label |
+|---|---|---|---|---|
+| Public 学童保育 (放課後児童クラブ) | Usually **3,000–7,000 per month**, plus snacks | 2023 (updated 2025) | [Financial Field](https://financial-field.com/living/entry-240739/2) | [SECONDARY]; the article gives no survey basis |
+| Private 学童 | **30,000–50,000+ per month** | same | same | [SECONDARY] |
+| Osaka City いきいき放課後事業 | Open to all elementary pupils at school. A fee is not mentioned in the city plan. | 2025 plan | [Osaka City](https://www.city.osaka.lg.jp/kodomo/cmsfiles/contents/0000620/620366/r6-3_sannkousiryou1.pdf) | [OFFICIAL] for the description; the fee level is [UNVERIFIED] |
+| International preschool, Tokyo | Pal International (Minato): 66万–195万 per year (1–5 days a week), entrance 20万. Another guide: about 150万–200万 per year, fees included. | 2017 / 2020 | [All About](https://allabout.co.jp/gm/gc/409956/); [HugKum](https://hugkum.sho.jp/165736) | [SECONDARY], dated |
+| International school (K–12), Tokyo | American School in Japan: 240.3万 per year; entrance 30万 | 2017 | All About | [SECONDARY], dated |
+
+---
+
+### 13.9 Mapping of Taiwan quiz options to Japan (section J)
+
+Costs are JPY for 2026 unless noted. "Net" means after Japanese subsidies.
+
+| Taiwan question → option | Closest Japanese equivalent | Cost | Label / note |
+|---|---|---|---|
+| housing → rent | 賃貸マンション | Tokyo 23 wards: 1K 11.5万, 1LDK 18万, 2LDK 26万, 3LDK 30万. Osaka City: 7.3万 / 11.5万 / 17万 / 21万 per month. | [ESTIMATE] (§13.3.1). Move-in and renewal fees (礼金, 更新料, often about 1 month each) are [UNVERIFIED]. |
+| housing → buy | 中古 or 新築マンション, variable-rate loan | Tokyo 23 wards: used 138万 per ㎡, new 211万. Osaka City: used ≈60万, new 116万. Variable rate about 1.2%, 35 years, down payment about 13% (new condos 23.5%). Mortgage tax credit 0.7% × balance for 13 years. | §4, §13.3 |
+| housing → family (live with elders) | 親と同居 or 二世帯住宅 | 0 rent | as in Taiwan |
+| room size | 2LDK ≈ 55–65 ㎡; 3LDK ≈ 65–75 ㎡ (net area) | | [ESTIMATE] (§4.3) |
+| postpartum → center | Municipal 産後ケア (≤7 days) or private 産後ケアホテル | Public about 1.5–2万 self-pay in total. Private 5–10万+ per night. | §13.4.2 |
+| postpartum → nanny | Postpartum doula or housekeeping service | **not sourced** | gap |
+| postpartum → family | 里帰り出産 or family help | about 0 | |
+| care 0–2 → public / quasi | 認可保育所, 小規模保育, 認定こども園 | **0** in Tokyo 23 wards and Osaka City (from 2026-09). Extended hours extra. | [OFFICIAL] |
+| care → private | Tokyo 認証保育所 or unlicensed; babysitter | Tokyo: fee ≤ 80,000 with a ward subsidy of up to 80,000, so about 0 net for a first child. Osaka unlicensed: not sourced. Babysitter subsidy 2,500 per hour, 144 h per year. | §13.4.3 |
+| care → grandParents paid / free | 祖父母 help, usually unpaid | No Japanese norm for paying grandparents. Suggest offering only "free" for Japan. | [ESTIMATE] |
+| care → helper (foreign domestic worker) | Only in National Strategic Special Zones, via agencies | **not sourced**. Suggest hiding for Japan. | [UNVERIFIED] |
+| care → quit | One parent leaves work or extends 育休 (up to age 2 if no daycare place) | Lost income. 育休 pays 67% then 50%, tax-free and exempt from social insurance. | §6.3 |
+| leave | 育児休業給付 | 67% for 180 days then 50%. Caps 332,454 / 248,100. Up to 12 months (24 maximum). Both parents: +13% for 28 days. | §6.3 |
+| preschool 2–6 → public | 公立幼稚園 or 認可保育所 | 3–5 free. 公立幼稚園 学習費 18.5万 per year in total, of which school costs 6.9万. Age 2 counts as 0–2 care (free in both cities). | §7.1 |
+| preschool → quasi / private | 私立幼稚園 or 認定こども園 | Free up to 25,700 per month (kindergarten). 学習費 34.7万 per year in total (school costs 15.4万). | §7.1, §13.4.3 |
+| preschool → bilingual | International preschool (mostly unlicensed) | About 150–200万 per year. Subsidy up to 37,000 × 12 = 44.4万 only if working parents get 保育の必要性認定, giving about **105–155万 net** [DERIVED]. | dated sources |
+| school → public | 公立小・中・高 | MEXT FY2023 school costs: elementary 8.2万 + lunch 3.8万 (lunch falls to about 0–1万 from 2026). Junior high 15.1万 + lunch 3.6万. High school 35.1万 − 11.9万 tuition support = **23.3万**. | §7.2 |
+| school → privateJH | 中学受験 then 私立中高 | Private junior high school costs 112.8万 per year. Private high school 76.6万 − 45.7万 support = **30.9万** [DERIVED]. | §7.2 |
+| school → private (all) | 私立小 then 私立中高 | Private elementary school costs 105.4万 per year | §7.2 |
+| school → intl | International school | About 240万 per year (2017) | dated |
+| after → none | No 学童 (Osaka City's いきいき is open to all) | 0 | |
+| after → anqin | 公設学童 or 民間学童 | Public 3,000–7,000 per month. Private 3–5万+. | §13.8 |
+| after → anqin + 1 or 3 activities | 学童 plus 習い事 | MEXT public elementary out-of-school spending averages 21.6万 per year (about 18,000 per month, all activities) [OFFICIAL average]. A per-activity price was not sourced. | §7.2 |
+| cram → none / some / full | 塾 | Some ≈ 15,000 per month; full ≈ 32,000 per month in the exam year [ESTIMATE, §7.2]. Osaka City coupon −10,000 per month for grades 5–9. | §7.2, §13.7 |
+| uni → public / private / mixed | 国立 / 私立 | National 535,800 per year + 282,000 entrance. Private 968,069 + 240,365 entrance + 172,550 facilities. Free for 多子世帯. | §7.3 |
+| uni → living away | 下宿 | About +60万 (national) to +78万 (private) per year over living at home | §7.3 |
+| support → master abroad | n/a | Japan-specific values not researched | gap |
+| transport → transit | 電車 and bus; commuting paid by employer | about 0 for commuting | §13.5 |
+| transport → scooter | 原付 or 125cc | **not sourced**; suggest hiding | |
+| transport → used / new car | 中古車 / 新車 | Purchase 175万 / 350万. Running about 20万 per year + parking (Tokyo 1.6–6.1万 per month). | §13.5 |
+| transport → import | 輸入車 | not sourced; ×1.5 of a new car [ESTIMATE] | |
+| lifestyle → frugal / normal / comfy (/ luxury) | 家計 quintiles | Equivalised consumption 0.90 / 1.00 / 1.10–1.39 of Q3. Adult anchor about 55,000 per person per month plus phone. | §13.2 |
+| elder → monthly allowance to parents | 仕送り | No Japanese norm or survey found. Most working-age couples do not pay their parents [UNVERIFIED]. Suggest default 0 and keep it as an optional input. | gap |
+
+**Japan-specific items with no Taiwan counterpart, and how to simplify [ESTIMATE].**
+- **Tokyo 018サポート** (5,000 per month to age 18): add to the Tokyo child allowance.
+- **Osaka City 塾代助成** (10,000 per month for grades 5–9): subtract from cram or after-school costs in Osaka.
+- **Delivery insurance coverage from 2028:** switch the birth cost by year of birth.
+- **Commuting allowance:** remove transit pass costs for employees.
+- **Childcare is free in both cities, and the allowance is paid regardless of care choice.** In the Japan model, the 0–2 care choice mostly affects whether a parent works, not fees.
+
+---
+
+### 13.10 Still missing after this pass
+
+1. The MHLW 2025 full-time distribution (deciles, or bands of 所定内給与) and the 2025 annual bonus from 賃金構造. Both exist only as e-Stat tables, which this proxy cannot reach.
+2. The OECD Japan decile ratios (D9/D1, D5/D1). The OECD SDMX fetch needed a permission that was not granted. DBnomics is blocked by robots.
+3. The 家計調査 two-or-more-person worker-household quintile table for 2025 (only on e-Stat).
+4. A nationwide used-condo price per ㎡, and an official Osaka City city-wide closed price per ㎡ (only the outer 18 wards can be derived).
+5. Osaka City parking fees; Tokyo and Osaka City 学童 fee schedules; Osaka unlicensed childcare fees.
+6. Prices for a postpartum doula or 月嫂 equivalent; costs for foreign domestic helpers.
+7. A survey of family non-commute transit spending; the 家計調査 transport sub-items (交通, 自動車等関係費).
+8. Whether Tokyo 018サポート continues unchanged in FY2026 (likely, but not confirmed this session).
+9. Japan values for a master's degree abroad, and Rengo 2024 and 2025 figures read directly.
+
+---
+
+### 13.11 Updated machine-readable summary (supersedes §12 where keys overlap)
+
+```json
+{
+  "country": "JP",
+  "updated": "2026-10-12",
+  "fx": { "jpyToTwd": 0.2017, "date": "2026-10-08", "pppJpyPerIntl": 94.694, "pppTwdPerIntl": 13.65, "pppJpyToTwd": 0.144, "pppYear": 2025, "pppTwdDerived": true },
+  "wage": {
+    "meanAllFullYear": 4870000, "meanRegular": 5590000, "meanNonRegular": 2100000, "year": 2025,
+    "medianAllEst": 4200000, "medianEst": true, "medianMethod": "NTA 2025 pay bands, linear interpolation (was 4100000 from 2024 bands)",
+    "q": [[10, 0.298], [20, 0.505], [30, 0.687], [40, 0.845], [50, 1], [60, 1.156], [70, 1.347], [80, 1.609], [90, 2.084], [95, 2.786]],
+    "qYear": 2025, "qDerived": true, "qScope": "all full-year employees incl. part-time; annual pay incl. bonus",
+    "qFullTimeProxy": { "year": 2019, "basis": "MHLW monthly scheduled pay, general workers",
+      "men": [[10, 0.640], [25, 0.778], [50, 1], [75, 1.342], [90, 1.783]], "menMeanToMedian": 1.135,
+      "women": [[10, 0.694], [25, 0.817], [50, 1], [75, 1.256], [90, 1.600]], "womenMeanToMedian": 1.102 },
+    "ageVsMedianNTA2025": {
+      "men":   [[22, 0.70], [27, 1.10], [32, 1.26], [37, 1.42], [42, 1.54], [47, 1.63], [52, 1.70], [57, 1.75], [62, 1.46], [67, 1.13]],
+      "women": [[22, 0.63], [27, 0.91], [32, 0.90], [37, 0.86], [42, 0.88], [47, 0.90], [52, 0.89], [57, 0.85], [62, 0.73], [67, 0.57]] },
+    "ageVsMean": [[22, 0.713], [27, 0.82], [32, 0.917], [37, 1.0], [42, 1.07], [47, 1.11], [52, 1.142], [57, 1.163], [62, 0.967], [67, 0.838]],
+    "ageVsMeanNote": "MHLW 2025 full-time monthly; 35-39 = all-age mean confirmed as printed",
+    "bonusMonthsAll": 2.2, "bonusMonthsRegular": 2.7, "bonusShareAll": 0.154, "bonusShareRegular": 0.182,
+    "growth": { "mhlwGeneral2024": 0.038, "mhlwGeneral2025": 0.031, "ntaMean2025": 0.019, "maikinTotal2025": 0.023, "shunto2026": 0.0501, "maikinAug2026": 0.038 },
+    "toBase2025to2026Est": 1.035, "toBase2024to2026Est": 1.066
+  },
+  "household": {
+    "incomeMedian": 4510000, "incomeMean": 5752000, "incomeMeanWithKids": 8573000, "incomeYear": 2024,
+    "workerHhDisposableMonthly": 532408, "workerHhConsumptionMonthly": 346297, "kakeiYear": 2025,
+    "workerHhUnder40": { "persons": 3.49, "disposableMonthly": 541537, "consumptionMonthly": 301216, "apc": 0.556, "year": 2025 },
+    "quintiles": {
+      "source": "2024 National Survey of Family Income, Consumption and Wealth; total households headed by an employee; Oct-Nov 2024",
+      "consumptionMonthly": [165114, 207531, 243788, 294984, 402639], "consumptionMeanMonthly": 262811,
+      "persons": [1.29, 1.67, 2.26, 2.76, 3.19],
+      "incomeMean": [2516000, 4295000, 5945000, 8017000, 12824000], "incomeMeanAll": 6719000,
+      "incomeUpperBounds": [3500000, 5020000, 6900000, 9390000],
+      "equivConsRatioToQ3": [0.896, 0.990, 1.0, 1.095, 1.390]
+    },
+    "consumptionByCategory2plusMonthly2025": { "food": 89754, "housing": 18665, "utilities": 24544, "furniture": 12869, "clothing": 9702, "health": 15785, "transportComm": 45562, "education": 11936, "recreation": 30796, "other": 54387, "total": 314001, "persons": 2.87 },
+    "adultBasePerPersonMonthlyEst": 55400
+  },
+  "tax": {
+    "brackets": [[1949000, 0.05, 0], [3299000, 0.10, 97500], [6949000, 0.20, 427500], [8999000, 0.23, 636000], [17999000, 0.33, 1536000], [39999000, 0.40, 2796000], [null, 0.45, 4796000]],
+    "surtax": 0.021,
+    "salaryDeduction2026": [[2200000, "740000"], [3600000, "0.30x+80000"], [6600000, "0.20x+440000"], [8500000, "0.10x+1100000"], [null, "1950000"]],
+    "basic2026": [[4890000, 1040000], [6550000, 670000], [23500000, 620000], [24000000, 480000], [24500000, 320000], [25000000, 160000], [null, 0]],
+    "basic2026Verified": true, "basic2026Effective": "2026-12-01 (via year-end adjustment)",
+    "dependent16": 380000, "dependent19to22": 630000, "under16": 0, "spouse": 380000,
+    "dependentIncomeLimit2026": 620000,
+    "resident": { "rate": 0.10, "flat": 5000, "basic": 430000, "basicLabel": "SECONDARY", "lagYears": 1 }
+  },
+  "si": { "pension": 0.0915, "pensionCapMonthly": 650000, "health": 0.04925, "care40to64": 0.0081, "childSupportLevy": 0.00115, "employment": 0.005, "perDependentPremium": false, "year": 2026 },
+  "benefit": {
+    "birthLumpSum": 500000, "deliveryCostAvg": 520000, "deliveryCostTokyo": 648309, "pregnancySupport": [50000, 50000],
+    "delivery": { "insuranceCoverageLawPassed": "2026-05-29", "startBy": "2028-06 (approx.)", "oopTokyoBefore": 148309, "oopNationalBefore": 20000, "oopNormalAfter": 0, "cesareanCopay": 0.3 },
+    "childAllowance": { "under3": 15000, "3to18": 10000, "thirdPlus": 30000, "incomeCap": false, "endAge": 18, "verified": "2026-10" },
+    "tokyo018Monthly": 5000,
+    "osakaCityJukuCouponMonthly": { "amount": 10000, "grades": "5-9", "incomeCap": false },
+    "leave": { "rateFirst180d": 0.67, "rateAfter": 0.50, "capMonthly67": 332454, "capMonthly50": 248100, "bonus13pct28d": true, "taxFree": true, "siExempt": true, "maxMonths": 12, "maxMonthsExt": 24 },
+    "nursery02": { "tokyoFree": "2025-09", "osakaCityFree": "2026-09", "elseMonthlyTypicalAt6M": [21900, 34900],
+      "tokyoNinshoCapUnder3": 80000, "tokyoNinshoSubsidyFirstChildMeguro": 80000, "osakaCityUnlicensedCovered": false,
+      "babysitterSubsidyTokyo": { "perHourDay": 2500, "perHourNight": 3500, "hoursPerYear": 144 } },
+    "preschool35Free": true, "unlicensed35Cap": 37000, "unlicensed02CapNonTaxable": 42000, "kindergartenCap": 25700, "azukariCap": 11300,
+    "highSchoolSupport": { "public": 118800, "private": 457200, "incomeCap": false, "from": "2026-04", "law": "2026 Act No.8, enacted 2026-03-31" },
+    "uniMultiChildFree": { "nationalTuitionCap": 540000, "privateTuitionCap": 700000, "nationalEntryCap": 280000, "privateEntryCap": 260000 },
+    "schoolLunchElemMonthlyCap": 5200
+  },
+  "postpartum": {
+    "osakaCity": { "stayFirst1Night": 4250, "extraDay": 2125, "max7DaysTotal": 14875, "dayCare": 1500, "homeVisit": 500, "year": "2026-04" },
+    "suginami": { "stayFirst1Night": 7000, "extraDay": 3500, "dayCare": 2000, "year": "FY2026" },
+    "privateHotelPerNight": [50000, 100000]
+  },
+  "education": {
+    "mext2023": { "kgPublic": 184646, "kgPrivate": 347338, "elemPublic": 336265, "elemPrivate": 1828112, "jhPublic": 542475, "jhPrivate": 1560359, "hsPublic": 597752, "hsPrivate": 1030283, "jhPublicCram": 271528 },
+    "uni": { "nationalTuition": 535800, "nationalEntry": 282000, "privateTuition": 968069, "privateEntry": 240365, "privateFacility": 172550, "privateYear": 2025 },
+    "jasso2024": { "nationalAway": 1800700, "nationalHome": 1202600, "privateAway": 2689100, "privateHome": 1905400 },
+    "afterSchoolMonthly": { "public": [3000, 7000], "private": [30000, 50000] },
+    "intlPreschoolYear": [1500000, 2000000], "intlPreschoolYearNote": "2020 guide; Pal Intl 2017 range 660000-1950000",
+    "intlSchoolYear": 2403000, "intlSchoolYearNote": "ASIJ 2017"
+  },
+  "housing": {
+    "newPerSqm": { "tokyo23": 2109000, "shutoken": 1392000, "osakaCity": 1160000, "kinki": 953000, "national": 1045000, "year": 2025 },
+    "usedPerSqm": { "tokyo23": 1379600, "shutoken": 862600, "osakaPref": 515400, "osakaPrefPeriod": "2026-08",
+      "osakaCity18WardsClosedDerived": 471000, "osakaCityAsking70Derived": 836000, "tokyo23Asking70Derived": 1732000,
+      "osakaCityGameEst": 600000, "national": null },
+    "rentMarket": {
+      "tokyo23": { "single": 111922, "singlePeriod": "2026-03", "couple": 168765, "family50to70": 247375, "athomePeriod": "2025-07", "lifullSingleType": 125814, "lifullFamilyType": 252464, "lifullPeriod": "2026-01" },
+      "osakaCity": { "single": 70843, "couple": 111356, "family50to70": 163066, "family70plus": 263892, "period": "2025-12" }
+    },
+    "rentGame2026Est": { "tokyo23": { "1K": 115000, "1LDK": 180000, "2LDK": 260000, "3LDK": 300000 }, "osakaCity": { "1K": 73000, "1LDK": 115000, "2LDK": 170000, "3LDK": 210000 } },
+    "rentPerSqmKantei": { "tokyo23": 5078, "osakaCity": 3508, "nagoya": 2343, "fukuokaCity": 2577, "period": "2026-05", "biasHigh": true, "superseded": "use rentMarket" },
+    "rentExistingNational": 65496, "rentExistingTokyo23": 100530,
+    "mortgage": { "variable": 0.012, "flat35": 0.0383, "boj": 0.0125, "date": "2026-10", "years": 35, "downPaymentAvg": 0.131, "downPaymentNewCondo": 0.235 },
+    "pirFlat35NewCondo": { "national": 7.5, "shutoken": 8.4, "kinki": 7.7 },
+    "familyUnitSqm": { "2LDK": [55, 65], "3LDK": [65, 75], "osakaCity18WardsUsedSold": 61.77 },
+    "netAreaBasis": true
+  },
+  "living": {
+    "utilitiesMonthly2plus": 24544, "utilBaseEst": 12000, "utilPerPersonEst": 4400,
+    "mobileMonthlyHousehold": 11464,
+    "commuteEmployerPaid": true, "commuteTaxFreeCapMonthly": 150000,
+    "car": { "newAvgPrice": 3501000, "usedAvgPrice": 1752000, "upkeepMonthlySurvey": 14100, "runAnnualExParkingEst": [190000, 230000],
+      "parkingTokyo23MonthlyRange": [16022, 61248], "parkingOsakaCity": null },
+    "scooter": null
   },
   "fertility": { "births": 671270, "tfr": 1.14, "year": 2025, "meanAgeFirstBirth": 31.0, "meanAgeYear": 2024, "costReasonShare": 0.526 },
   "childCostNCCHD": { "age0to18Excl": 21700000, "age0to18Incl": 25700000, "year": 2024 }
