@@ -97,6 +97,24 @@ APP.screens.method = function (main) {
     '本試算不含：意外與重大疾病、失業期間、資產投資的大起大落、遺產與贈與、房價上漲帶來的資產增值（預設實質房價不變；買房者的報告會另外顯示房屋淨值）。'
   ]));
 
+  if (typeof WORLD !== 'undefined' && ENGINE.countries().length > 1) {
+    inn.appendChild(h('h2', { id: 'world' }, '七之一、換到別的國家（試算版）'));
+    inn.appendChild(p('報告書會把你的每個選擇換成當地最接近的做法（例如準公共托育換成東京的認可保育所），用同一套逐年試算，找出在當地需要的收入排名。'));
+    inn.appendChild(ul([
+      '收入排名以該國全國同年齡的受僱者計算，不分產業。中國大陸官方不公布薪資中位數，分布為估計。',
+      '你填的存款、長輩資助與孝親費，依兩地薪資中位數的比例換算。',
+      '大人的日常開銷，各國用同一個規則：當地每人消費（不含住房與水電）乘上台灣的比例；孩子的生活費沿用台灣孩子與大人的比例。',
+      '城市內不分區，沿用你在台灣選的區域等級。韓國的全稅押金以每年 4.1% 換算成每月成本；中國大陸假設有本地戶籍。'
+    ]));
+    var wsrc = h('details', { class: 'wd-why' }, h('summary', {}, '各國資料來源'));
+    ENGINE.countries().forEach(function (cid) {
+      var K = ENGINE.country(cid); if (cid === 'TW' || !K.sources) return;
+      wsrc.appendChild(h('h4', {}, K.name));
+      K.sources.forEach(function (sr) { wsrc.appendChild(h('div', { class: 'src src-wide' }, h('a', { href: sr[1], target: '_blank', rel: 'noopener' }, sr[0]), h('span', {}, ''))); });
+    });
+    inn.appendChild(wsrc);
+  }
+
   inn.appendChild(h('h2', {}, COMM.st.backend === 'local' ? '八、資料與隱私' : '八、匿名資料與隱私'));
   if (COMM.st.backend !== 'local') inn.appendChild(p('只有在你同意後，才會分享你的設定。分享的內容是：縣市與區域、孩子數、每一題的選擇、收入 PR（四捨五入到 5）、年齡區間（每 5 歲一組）、審查結果。不會分享姓名、帳號資料、確切年齡、確切年薪與存款。你可以在報告頁隨時取消分享，資料會刪除。你的存檔只有你自己看得到。'));
   inn.appendChild(p(COMM.st.backend === 'local'
