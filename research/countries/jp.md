@@ -1263,3 +1263,21 @@ The model keeps `cons` 1.15 for the 23 wards. The wards cost more than the Tama 
 ### 14.3 Not found
 
 Osaka's FY2024 average delivery cost. The national figure is about 520,000 yen and Tokyo's is 648,309 yen [NEWS]. The Osaka estimate of 560,000 yen stays.
+
+### 14.4 Osaka resale condos, and a rent cross-check
+
+**Osaka resale condos (近畿レインズ, July 2026)** [OFFICIAL], via https://diamond-fudosan.jp/articles/-/1113296:
+
+| | 中心6区 (central 6 wards) | Other 18 wards |
+|---|---|---|
+| Average contract price | 5,826万 | 2,935万 |
+| Average floor area | 56.25㎡ | not published |
+| Price per ㎡ | ≈104万 | ≈47万 (assuming about 62㎡) |
+| Contracts | 192 | 233 |
+
+Osaka Prefecture overall averages 55.67万 per ㎡. The model keeps 60万 per ㎡ for a middle district.
+
+**Rent cross-check (住宅新報 asking rents, January 2026)** [SECONDARY]:
+- Tokyo 23 wards average 15,239円 per 坪, about 4,610円 per ㎡. The model's Tokyo rents work out to about 4,300–4,500 per ㎡, which is consistent.
+- Osaka 1LDK averages 9,088円 per 坪, about 2,750 per ㎡. The model's 1LDK works out to about 2,875 per ㎡.
+- Osaka family layouts could not be checked, because at home's tables are published only as images. The 3LDK at 210,000 may be about 10% high.

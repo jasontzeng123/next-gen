@@ -868,3 +868,9 @@ Suggested sizes for the model: 1 room → studio 62.5만 + 8.4만; 2 rooms → n
 - A household puts at most half of its savings plus existing deposit into the deposit.
 - If that is short, the deposit falls and the gap is paid as monthly rent at the conversion rate: Seoul 4.7%, Busan 5.3% (national) (§4.4).
 - The deposit counts as the family's money: it is returned when they buy, and it is not counted as spending.
+
+### 13.3 Seoul consumption, an older anchor
+
+Per-capita private consumption in 2012 regional income was 1,761만 in Seoul, 1,451만 in Ulsan and 1,408만 in Gyeonggi [NEWS] https://bizhankook.com/articles/2185.html.
+
+With national private consumption per capita of about 1,350만 that year, Seoul was about 1.3 times the national level. That supports the model's 1.22, which is conservative. The 2024 per-region figures (KOSIS) could not be fetched.

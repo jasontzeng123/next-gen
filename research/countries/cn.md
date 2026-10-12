@@ -770,3 +770,32 @@ Chengdu: per depositor 1,800/month (central districts, registered lease) or 1,20
 ### 14.4 Not changed
 
 Shanghai second-hand price (52,000 per ㎡): one 2026 article cites a Lianjia figure of "above 110,000 per ㎡" with no clear basis, and a reported deal in Xuhui Meilong sold at about 47,400 per ㎡. The estimate stays.
+
+### 14.5 Wage median: cross-checks (not changed)
+
+The model's urban employee median (2025) is 7.5万, or 7.7万 for 2026. New anchors:
+
+**Official (NBS, 2025 average wages)** [OFFICIAL]:
+- 规模以上企业, by position:
+  - production workers 80,739
+  - service workers 79,857
+  - clerical staff 94,936
+  - professional and technical staff 155,491
+  - managers 210,016
+- Migrant workers earn 5,075 a month on average, about 60,900 a year.
+
+**Hunan 2024 enterprise wage survey, industry medians** [NEWS] https://www.sohu.com/a/971336721_392415:
+
+| Industry | Median |
+|---|---|
+| Accommodation and catering | 43,700 |
+| Agriculture | 46,000 |
+| IT | 68,400 |
+| Utilities | 77,500 |
+| Finance | 107,300 |
+
+Hunan's wages are below the national level.
+
+**Secondary estimate (zhihu; page could not be fetched):** the 2024 national employee median is 5,000–5,150 a month, and 7–9% earn over 10,000 a month. This includes rural employees.
+
+**Reading:** the urban employee median may be about 5–10% lower than the model's 7.5万, and the evidence is not strong enough to change it. **Sensitivity:** a 10% lower median raises Shanghai's and Chengdu's threshold PR by about 6–7 points when renting.
