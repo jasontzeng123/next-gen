@@ -3,9 +3,9 @@
   'use strict';
   var h = U.h, A = APP, D = DATA, E = ENGINE;
   var L = A.lab = A.lab || { exp: 'current', inc: 'current', tab: U.store.get('labTab', 'map'), metric: 'th', level: 'tw', sel: null, era: 'current' };
-  // 門檻 PR 分六級：綠（容易）→ 黃（中間收入附近）→ 橘紅（困難）→ 黑（PR 95 以上或再高也不夠）
-  // 色盲友善模式改用藍 → 黃 → 橘 → 黑（兩組都以相鄰色的色盲模擬差異檢查過）
-  var PAL = { normal: ['#0f8a73', '#6db36a', '#edc948', '#e86a2c', '#bf2c34', '#17181a'], cvd: ['#2a6fb8', '#82b8e3', '#ecd060', '#e9792e', '#a8342a', '#17181a'] };
+  // 門檻 PR 分六級：綠（容易）→ 黃（中間收入附近）→ 橘紅（困難）→ 偏黑的深紅（PR 95 以上或再高也不夠）
+  // 色盲友善模式改用藍 → 黃 → 橘 → 深咖啡紅（相鄰兩級的明暗差距夠大，深色模式下也看得到）
+  var PAL = { normal: ['#0f8a73', '#6db36a', '#edc948', '#e86a2c', '#bf2c34', '#7a1424'], cvd: ['#2a6fb8', '#82b8e3', '#ecd060', '#e9792e', '#a8342a', '#5e1c12'] };
   var BINS = [{ max: 25, t: 'PR 25 以下' }, { max: 40, t: 'PR 25–40' }, { max: 60, t: 'PR 40–60' }, { max: 80, t: 'PR 60–80' }, { max: 95, t: 'PR 80–95' }, { max: Infinity, t: 'PR 95 以上' }];
   function pal() { return U.cvd() ? PAL.cvd : PAL.normal; }
   function heatIdx(pr) { if (pr == null) return 5; for (var i = 0; i < BINS.length; i++) if (pr <= BINS[i].max) return i; return 5; }
@@ -187,8 +187,7 @@
         });
         var paint = function () {
           if (dotsOn) {
-            var dark = U.isDark(), black = pal()[5];
-            map.dots(colorOf, { bg: U.cssVar('--sheet') || '#fbfcfa', ring: function (c) { return dark && c === black ? '#d9d4ca' : null; } });
+            map.dots(colorOf, { bg: U.cssVar('--sheet') || '#fbfcfa' });
             map.paint(null, L.sel || s.county); return;
           }
           map.paint(colorOf, L.sel || s.county);
