@@ -802,13 +802,7 @@ button.wd-li:hover { background: var(--sheet-2); }
 @keyframes rvIn { from { opacity: 0; visibility: visible; } to { opacity: 1; visibility: visible; } }
 @media (prefers-reduced-motion: reduce) { .rv-share { visibility: visible; opacity: 1; animation: none; } }
 
-/* 題目頁尾：「用一般家庭的標準，直接看結果」＋「繼續填寫」 */
-.qfoot-quick { gap: 8px; }
-.quick-btn { flex-wrap: wrap; column-gap: 0; row-gap: 0; text-align: center; line-height: 1.3; }
-.quick-btn span { white-space: nowrap; }
-@media (max-width: 640px) {
-  .qfoot-quick .qback { padding: 10px 11px; }
-  .qfoot-quick .qback-t { display: none; }
-  .quick-btn { flex-direction: column; font-size: 13px; padding: 6px 12px; }
-  .qfoot-quick #next-btn { padding: 11px 16px; }
-}
+/* 第一部分最後一題下方：「只選是否購屋，直接看結果」 */
+.quick-row { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--rule-soft); display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.quick-row .quick-btn { border-color: var(--rule); }
+.quick-note { margin: -4px 0 16px; }

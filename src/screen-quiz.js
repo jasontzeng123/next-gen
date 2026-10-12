@@ -53,6 +53,9 @@
     inn.appendChild(h('div', { class: 'qhead' },
       h('div', { class: 'qno' }, '（' + U.cn(partQs.indexOf(q) + 1) + '）'),
       h('div', {}, h('h2', { class: 'qtitle', id: 'qt' }, QS.title(q, s)), q.hint ? h('p', { class: 'qhint' }, QS.hint(q, s)) : null)));
+    // 快速模式（第一部分結束時選「只選是否購屋，直接看結果」）：住房這題選完就送出
+    var quickHere = !!A.quick && q.id === 'housing';
+    if (quickHere) inn.appendChild(h('p', { class: 'qnote quick-note' }, '只要選住房方式就能送出，其他題目先用一般家庭的標準計算（例如準公共托育、公立學校、一般生活水準），看完結果還能在報告裡調整。'));
     var body = h('div', { class: 'qbody' });
     inn.appendChild(body);
     var noteBox = h('div');
@@ -95,35 +98,41 @@
     else renderChoice();
     setNote();
 
+    // 第一部分（起點）的最後一題下方：「只選是否購屋，直接看結果」，免得沒耐心的人半途離開
+    var p1 = vis.filter(function (x) { return x.part === 1; });
+    var hIdx = vis.findIndex(function (x) { return x.id === 'housing'; });
+    if (q === p1[p1.length - 1] && hIdx > A.qi) {
+      inn.insertBefore(h('div', { class: 'quick-row' },
+        h('button', { class: 'btn ghost quick-btn', type: 'button', onclick: quickStart }, '只選是否購屋，直接看結果', U.icon('next')),
+        h('p', { class: 'xs muted' }, '其他題目用一般家庭的標準計算。')), foot);
+    }
+
     // ---- 頁尾 ----
     var canNext = !needsAnswer(q) || isSeen(q);
-    var last = A.qi === vis.length - 1;
-    // 第一部分（起點）的最後一題：可以用一般家庭的標準直接看結果，免得沒耐心的人半途離開
-    var p1 = vis.filter(function (x) { return x.part === 1; });
-    var quickOK = !last && q === p1[p1.length - 1];
-    if (quickOK) {
-      foot.classList.add('qfoot-quick');
-      foot.appendChild(h('button', { class: 'btn ghost qback', type: 'button', onclick: prev, 'aria-label': '上一題' }, U.icon('back'), h('span', { class: 'qback-t' }, '上一題')));
-      foot.appendChild(h('span', { class: 'spacer' }));
-      foot.appendChild(h('button', { class: 'btn ghost quick-btn', type: 'button', onclick: quick }, h('span', {}, '用一般家庭的標準，'), h('span', {}, '直接看結果')));
-      foot.appendChild(h('button', { class: 'btn', type: 'button', disabled: !canNext, onclick: next, id: 'next-btn' }, '繼續填寫', U.icon('next')));
-    } else {
-      foot.appendChild(h('button', { class: 'btn ghost', type: 'button', onclick: prev }, U.icon('back'), A.qi === 0 ? '封面' : '上一題'));
-      foot.appendChild(h('span', { class: 'spacer' }));
-      if (!canNext) foot.appendChild(h('span', { class: 'xs muted' }, q.type === 'county' ? '請選一個縣市' : '請勾選一項'));
-      foot.appendChild(h('button', { class: 'btn' + (last ? ' seal' : ''), type: 'button', disabled: !canNext, onclick: next, id: 'next-btn' }, last ? '送出審查' : '下一題', U.icon('next')));
+    var last = A.qi === vis.length - 1, submitNow = last || quickHere;
+    foot.appendChild(h('button', { class: 'btn ghost', type: 'button', onclick: prev }, U.icon('back'), A.qi === 0 ? '封面' : '上一題'));
+    foot.appendChild(h('span', { class: 'spacer' }));
+    if (!canNext) foot.appendChild(h('span', { class: 'xs muted' }, q.type === 'county' ? '請選一個縣市' : '請勾選一項'));
+    foot.appendChild(h('button', { class: 'btn' + (submitNow ? ' seal' : ''), type: 'button', disabled: !canNext, onclick: next, id: 'next-btn' }, submitNow ? '送出審查' : '下一題', U.icon('next')));
+
+    // 快速模式：跳到住房那題（跳過「孩子要不要自己的房間」）
+    function quickStart() {
+      A.seen[q.id] = true;
+      A.quick = true;
+      A.qi = hIdx; A.persist(); A.go('quiz');
     }
-    // 直接看結果：還沒回答的題目用預設（一般家庭）的選項；沒填收入就看門檻。
+    // 快速模式送出：其他題目用預設（一般家庭）的選項，沒填收入就看門檻。
     // 這樣送出的結果不分享到「大家怎麼選」，免得預設選項灌進統計
-    function quick() {
+    function quickSubmit() {
+      if (!isSeen(q)) return;
       if (!A.seen.mode) A.set('incomeMode', 'threshold');
       QS.visible(A.s).forEach(function (x) { A.seen[x.id] = true; });
-      A.quick = true;
       A.persist();
       A.go('reveal');
     }
 
     function next() {
+      if (quickHere) { quickSubmit(); return; }
       if (needsAnswer(q) && !isSeen(q)) return;
       A.seen[q.id] = true;
       var v2 = QS.visible(A.s);
@@ -131,7 +140,12 @@
       if (idx === v2.length - 1) { A.persist(); finish(); return; }
       A.qi = idx + 1; A.persist(); A.go('quiz');
     }
-    function prev() { if (A.qi === 0) { A.go('cover'); return; } A.qi--; A.persist(); A.go('quiz'); }
+    function prev() {
+      if (A.qi === 0) { A.go('cover'); return; }
+      // 快速模式在住房那題按「上一題」：回到生育計畫，改回完整填寫
+      if (quickHere) { A.quick = false; A.qi = vis.indexOf(p1[p1.length - 1]); A.persist(); A.go('quiz'); return; }
+      A.qi--; A.persist(); A.go('quiz');
+    }
     var onKey = function (e) {
       if (U.modalOpen()) return;
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;

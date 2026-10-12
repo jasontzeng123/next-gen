@@ -118,6 +118,7 @@
     }, 'store');
     // 只有第一次送出會自動分享；之後要在報告裡按「更新」
     U.safe(function () { if (A.consent && !A.quick && COMM.st.canShare && !COMM.hasShared()) COMM.submit(COMM.buildDoc(s, res, th), A.submitted); }, 'submit');
+    A.quick = false; // 快速模式只影響這一次送出；之後回去修改答案就是一般流程
     COMM.diag('reveal');
 
     var rows = res.years.slice(0, res.Tv + 1);
