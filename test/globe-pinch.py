@@ -32,9 +32,15 @@ with sync_playwright() as p:
     zoom = lambda: round(pg.evaluate('APP.lab.globe.st.zoom'), 2)
     sy0 = pg.evaluate('window.scrollY')
     print('start zoom', zoom())
-    z = pinch(60, 120); pg.wait_for_timeout(500); print('pinch x2 → during', round(z, 2), 'after', zoom())
-    z = pinch(40, 300); print('pinch way out → during', round(z, 2)); pg.wait_for_timeout(600); print('   after bounce', zoom())
-    z = pinch(300, 30); print('pinch way in → during', round(z, 2)); pg.wait_for_timeout(600); print('   after bounce', zoom())
+    def case(label, d0, d1):
+        z = pinch(d0, d1); pg.wait_for_timeout(600); print(label.ljust(34), 'during', round(z, 2), '→ settles at', zoom())
+    case('small pinch out (1.5 → ×1.1)', 100, 110)
+    case('pinch out a bit (1.5 → ×1.4)', 100, 140)
+    case('pinch in a bit (5 → ×0.75)', 100, 75)
+    case('pinch in a lot (1.5 → ×0.5)', 200, 100)
+    case('pinch out a lot (1 → ×6)', 40, 240)
+    case('overshoot past max (5 → ×2)', 60, 120)
+    case('pinch way in (5 → ×0.1)', 300, 30)
     print('page scrolled by gesture:', pg.evaluate('window.scrollY') - sy0, '| page zoom:', pg.evaluate('window.visualViewport.scale'))
     # 單指點一下城市以外的地方不會出錯；拖曳仍可旋轉
     lon0 = pg.evaluate('APP.lab.globe.st.lon')
