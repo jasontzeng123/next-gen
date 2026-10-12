@@ -24,6 +24,7 @@ with sync_playwright() as p:
     pg.add_init_script(MOCK)
     pg.goto('file://'+ROOT+'/test/page.html'); pg.wait_for_timeout(800)
     pg.click('text=開始填寫申請書'); pg.wait_for_timeout(300)
+    if pg.query_selector('.notice'): pg.click('text=我了解了，開始填寫'); pg.wait_for_timeout(300)
     for n in range(40):
         if pg.query_selector('#county-sel'): pg.select_option('#county-sel','TPE'); pg.wait_for_timeout(150)
         elif pg.query_selector('.opts'):

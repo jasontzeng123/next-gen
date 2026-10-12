@@ -38,6 +38,7 @@ def fill(pg):
     touch=pg.evaluate('navigator.maxTouchPoints>0')
     T_=(lambda sel: pg.tap(sel)) if touch else (lambda sel: pg.click(sel))
     T_('text=開始填寫申請書'); pg.wait_for_timeout(400); consent=False
+    if pg.query_selector('.notice'): T_('text=我了解了，開始填寫'); pg.wait_for_timeout(300)
     for n in range(50):
         if pg.query_selector('.modal'):
             consent=True; T_('.modal .actions .btn:not(.ghost)'); pg.wait_for_timeout(300); continue

@@ -92,7 +92,7 @@ var APP = (function () {
   A.go = function (screen, opts) {
     if (A.cleanup) { try { A.cleanup(); } catch (e) { /* 忽略 */ } A.cleanup = null; }
     A.screen = screen; A.opts = opts || {};
-    var token = { cover: '', quiz: 'form', reveal: 'form', report: 'report', lab: 'lab', method: 'method' }[screen];
+    var token = { cover: '', notice: 'start', quiz: 'form', reveal: 'form', report: 'report', lab: 'lab', method: 'method' }[screen];
     try {
       var url = token ? '#' + token : location.pathname + location.search;
       var st = { screen: screen === 'reveal' ? 'report' : screen, qi: A.qi };
@@ -102,6 +102,8 @@ var APP = (function () {
     A.render();
     if (!A.opts.keepScroll) window.scrollTo(0, 0);
   };
+  // 第一次開始填寫：先看填寫須知
+  A.startQuiz = function () { A.qi = 0; A.go(U.store.get('noticeOk', null) ? 'quiz' : 'notice'); };
   A.render = function () {
     renderTop();
     var main = document.getElementById('main');
@@ -187,7 +189,7 @@ var APP = (function () {
     });
     window.addEventListener('hashchange', function () {
       var tok = (location.hash || '').replace('#', '');
-      var map = { form: 'quiz', report: 'report', lab: 'lab', method: 'method', '': 'cover' };
+      var map = { start: 'notice', form: 'quiz', report: 'report', lab: 'lab', method: 'method', '': 'cover' };
       var scr = map[tok]; if (!scr || scr === A.screen) return;
       if ((scr === 'lab' || scr === 'report') && !A.unlocked) return;
       if (scr === 'report') A.compute();

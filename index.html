@@ -765,6 +765,15 @@ p { margin: 0; }
 .fb .fb-alt a, .verify-links a { color: var(--pen); }
 .verify-callout { margin: 14px 0 6px; padding: 12px 14px; border-left: 3px solid var(--pen); background: var(--pen-soft); border-radius: 0 6px 6px 0; font-size: 14.5px; }
 .verify-links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 6px; }
+/* 填寫須知 */
+.notice .sheet { max-width: 640px; margin: 0 auto; }
+.notice-title { font-family: var(--f-serif); font-weight: 900; font-size: clamp(32px, 7vw, 44px); line-height: 1.2; margin: 12px 0 8px; }
+.notice-item { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 14px; padding: 16px 0; border-top: 1px solid var(--rule-soft); }
+.notice-ic { width: 36px; height: 36px; border-radius: 50%; background: var(--pen-soft); color: var(--pen); display: grid; place-items: center; }
+.notice-ic svg { width: 19px; height: 19px; }
+.notice-item h2 { font-family: var(--f-serif); font-size: 18px; font-weight: 700; margin: 6px 0 4px; }
+.notice-item p { color: var(--ink-2); font-size: 15px; line-height: 1.7; margin: 0; }
+.notice-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-top: 18px; border-top: 1px solid var(--rule-soft); }
 
 </style>
 <script>window.TWKIDS = {"target":"web","siteUrl":"https://jasontzeng123.github.io/next-gen/","repoUrl":"https://github.com/jasontzeng123/next-gen","sb":{"url":"https://yzmqgrtxbibufjmllimv.supabase.co","key":"sb_publishable_BOnfiTrQN53RzycO4nffGg_b8o-i0Nk"}};</script>
@@ -780,7 +789,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-11T19:41', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-12T02:12', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -2244,7 +2253,8 @@ var COMM = (function () {
   function load() {
     if (!st.db) return Promise.resolve();
     if (st.backend === 'web') {
-      return rpc('crowd_stats', { p_id: st.uid }).then(function (r) {
+      // 只有分享過的裝置才帶上匿名代號（用來顯示「你已分享」）；沒分享過就什麼都不送
+      return rpc('crowd_stats', { p_id: shared() ? st.uid : null }).then(function (r) {
         if (!r || typeof r !== 'object' || r.n == null) throw { code: 'bad_stats' };
         st.server = true; st.rows = []; st.mineFlag = !!r.mine;
         st.realN = r.realN || 0; st.demoN = r.demoN || 0; st.demoOn = !!r.demoOn;
@@ -3472,7 +3482,7 @@ var APP = (function () {
   A.go = function (screen, opts) {
     if (A.cleanup) { try { A.cleanup(); } catch (e) { /* 忽略 */ } A.cleanup = null; }
     A.screen = screen; A.opts = opts || {};
-    var token = { cover: '', quiz: 'form', reveal: 'form', report: 'report', lab: 'lab', method: 'method' }[screen];
+    var token = { cover: '', notice: 'start', quiz: 'form', reveal: 'form', report: 'report', lab: 'lab', method: 'method' }[screen];
     try {
       var url = token ? '#' + token : location.pathname + location.search;
       var st = { screen: screen === 'reveal' ? 'report' : screen, qi: A.qi };
@@ -3482,6 +3492,8 @@ var APP = (function () {
     A.render();
     if (!A.opts.keepScroll) window.scrollTo(0, 0);
   };
+  // 第一次開始填寫：先看填寫須知
+  A.startQuiz = function () { A.qi = 0; A.go(U.store.get('noticeOk', null) ? 'quiz' : 'notice'); };
   A.render = function () {
     renderTop();
     var main = document.getElementById('main');
@@ -3567,7 +3579,7 @@ var APP = (function () {
     });
     window.addEventListener('hashchange', function () {
       var tok = (location.hash || '').replace('#', '');
-      var map = { form: 'quiz', report: 'report', lab: 'lab', method: 'method', '': 'cover' };
+      var map = { start: 'notice', form: 'quiz', report: 'report', lab: 'lab', method: 'method', '': 'cover' };
       var scr = map[tok]; if (!scr || scr === A.screen) return;
       if ((scr === 'lab' || scr === 'report') && !A.unlocked) return;
       if (scr === 'report') A.compute();
@@ -3614,7 +3626,7 @@ APP.screens.cover = function (main) {
     cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.go('quiz'); } }, '繼續填寫（第 ' + (A.qi + 1) + ' 題）', U.icon('next')));
     cta.appendChild(h('button', { class: 'btn ghost', onclick: function () { A.restart(); } }, '重新開始'));
   } else {
-    cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.qi = 0; A.go('quiz'); } }, '開始填寫申請書', U.icon('next')));
+    cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.startQuiz(); } }, '開始填寫申請書', U.icon('next')));
   }
   inn.appendChild(cta);
   // 色盲友善配色
@@ -3638,6 +3650,34 @@ APP.screens.cover = function (main) {
   side.appendChild(b);
   wrap.appendChild(side);
   main.appendChild(wrap);
+};
+
+/* ---- screen-notice.js ---- */
+/* 填寫須知：按下「開始填寫」後、第一題之前，用四句話說清楚隱私、資料、限制與開源 */
+APP.screens.notice = function (main) {
+  'use strict';
+  var h = U.h, A = APP;
+  var local = COMM.st.backend === 'local' || !(window.TWKIDS && window.TWKIDS.sb);
+  var wrap = h('div', { class: 'notice fade-in' });
+  var sheet = h('div', { class: 'sheet' }), inn = h('div', { class: 'sheet-in' });
+  inn.appendChild(h('div', { class: 'form-kicker' }, '生育資格審查申請書・填寫須知'));
+  inn.appendChild(h('h1', { class: 'notice-title' }, '開始之前'));
+  [
+    ['lock', '資料只在你的手機裡', local
+      ? '答案與試算都在這個瀏覽器裡完成，不用登入。這個版本不會上傳任何資料。'
+      : '答案與試算都在這個瀏覽器裡完成，不用登入。填完時可以選擇要不要匿名分享部分答案；不同意，就什麼都不會送出。'],
+    ['book', '都是真實數據', '房價、租金、薪資、補助與稅制，來自主計總處、實價登錄等 51 個公開來源。'],
+    ['info', '這只是試算', '用平均值與現行政策估算，算不到你家的所有狀況。結果只回答「錢夠不夠」，不代表你適不適合當爸媽。'],
+    ['code', '計算方式公開', '程式碼與資料來源都開源在 GitHub，歡迎檢查、抓錯。']
+  ].forEach(function (r) {
+    inn.appendChild(h('div', { class: 'notice-item' },
+      h('div', { class: 'notice-ic', 'aria-hidden': 'true' }, U.icon(r[0])),
+      h('div', {}, h('h2', {}, r[1]), h('p', {}, r[2]))));
+  });
+  inn.appendChild(h('div', { class: 'notice-cta' },
+    h('button', { class: 'btn seal', type: 'button', onclick: function () { U.store.set('noticeOk', Date.now()); A.qi = 0; A.go('quiz'); } }, '我了解了，開始填寫', U.icon('next')),
+    h('button', { class: 'linkbtn', type: 'button', onclick: function () { A.go('method'); } }, '完整說明')));
+  sheet.appendChild(inn); wrap.appendChild(sheet); main.appendChild(wrap);
 };
 
 /* ---- screen-quiz.js ---- */

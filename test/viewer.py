@@ -49,6 +49,7 @@ with sync_playwright() as p:
         pg.goto('file://' + ROOT + '/test/page.html'); pg.wait_for_timeout(900)
         print('==', role, '| canShare', pg.evaluate('COMM.st.canShare'), 'canWrite', pg.evaluate('COMM.st.canWrite'), 'db', pg.evaluate('!!COMM.st.db'))
         pg.tap('text=開始填寫申請書'); pg.wait_for_timeout(400)
+        if pg.query_selector('.notice'): pg.tap('text=我了解了，開始填寫'); pg.wait_for_timeout(300)
         consent = False
         for n in range(45):
             if pg.query_selector('.modal'):

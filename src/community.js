@@ -108,7 +108,8 @@ var COMM = (function () {
   function load() {
     if (!st.db) return Promise.resolve();
     if (st.backend === 'web') {
-      return rpc('crowd_stats', { p_id: st.uid }).then(function (r) {
+      // 只有分享過的裝置才帶上匿名代號（用來顯示「你已分享」）；沒分享過就什麼都不送
+      return rpc('crowd_stats', { p_id: shared() ? st.uid : null }).then(function (r) {
         if (!r || typeof r !== 'object' || r.n == null) throw { code: 'bad_stats' };
         st.server = true; st.rows = []; st.mineFlag = !!r.mine;
         st.realN = r.realN || 0; st.demoN = r.demoN || 0; st.demoOn = !!r.demoOn;

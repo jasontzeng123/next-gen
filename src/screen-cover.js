@@ -27,7 +27,7 @@ APP.screens.cover = function (main) {
     cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.go('quiz'); } }, '繼續填寫（第 ' + (A.qi + 1) + ' 題）', U.icon('next')));
     cta.appendChild(h('button', { class: 'btn ghost', onclick: function () { A.restart(); } }, '重新開始'));
   } else {
-    cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.qi = 0; A.go('quiz'); } }, '開始填寫申請書', U.icon('next')));
+    cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.startQuiz(); } }, '開始填寫申請書', U.icon('next')));
   }
   inn.appendChild(cta);
   // 色盲友善配色
