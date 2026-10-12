@@ -1398,3 +1398,16 @@ Price per meal by quotient familial (QF) band [OFFICIAL] https://www.grandlyon.c
 | > 2,600 | 6 € |
 
 These are close to Paris prices in the same bands, so Lyon `schoolFactor` goes from 0.9 to 1.0.
+
+### 14.5 Lyon price per ㎡ (notaires data via iad, consulted 2026-03-23) [SECONDARY]
+
+https://blog.iadfrance.fr/actualites/prix-du-m%C2%B2-a-lyon-quels-sont-les-prix-de-limmobilier-en-2026/
+
+| Type | Low | Median | High |
+|---|---|---|---|
+| Existing apartments | 3,723 | 4,442 | 5,167 |
+| New apartments | 5,477 | 6,049 | 6,644 |
+
+- Existing apartments are stable year on year and about −15% over five years.
+- For new apartments, the same article also states a median of about 5,529 (−11% y/y) and does not explain the conflict.
+- The model's Lyon new-build price of 6,000 sits within this range.
