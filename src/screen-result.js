@@ -10,10 +10,10 @@
     var t = document.createElement('template');
     var col = 'var(--seal)';
     var txt = '';
-    if (lines.length === 1) txt = '<text x="100" y="' + (sub ? 104 : 124) + '" text-anchor="middle" font-family="var(--f-serif)" font-weight="900" font-size="' + (lines[0].length > 2 ? 46 : 70) + '" fill="' + col + '" letter-spacing="4">' + lines[0] + '</text>';
+    if (lines.length === 1) txt = '<text x="100" y="' + (sub ? 112 : 124) + '" text-anchor="middle" font-family="var(--f-serif)" font-weight="900" font-size="' + (lines[0].length > 2 ? 46 : 70) + '" fill="' + col + '" letter-spacing="4">' + lines[0] + '</text>';
     else txt = lines.map(function (l, i) { return '<text x="100" y="' + (88 + i * 52) + '" text-anchor="middle" font-family="var(--f-serif)" font-weight="900" font-size="44" fill="' + col + '" letter-spacing="3">' + l + '</text>'; }).join('');
-    // 副標（PR 值）放大約兩倍；字多（如 PR 99.9）就縮小一點，放得進內圈
-    if (sub) txt += '<text x="100" y="' + (lines.length === 1 ? 154 : 168) + '" text-anchor="middle" font-family="var(--f-sans)" font-weight="700" font-size="' + (lines.length === 1 ? (sub.length > 5 ? 28 : 34) : 17) + '" fill="' + col + '">' + sub + '</text>';
+    // 副標（PR 值）放大約 1.6 倍（17 → 27）；字多（如 PR 99.9）就縮小一點，放得進內圈。門檻字與外框維持原樣
+    if (sub) txt += '<text x="100" y="' + (lines.length === 1 ? 155 : 168) + '" text-anchor="middle" font-family="var(--f-sans)" font-weight="700" font-size="' + (lines.length === 1 ? (sub.length > 5 ? 23 : 27) : 17) + '" fill="' + col + '">' + sub + '</text>';
     var shape = kind === 'round'
       ? '<circle cx="100" cy="100" r="88" fill="none" stroke="' + col + '" stroke-width="7"/><circle cx="100" cy="100" r="77" fill="none" stroke="' + col + '" stroke-width="2"/>'
       : '<rect x="14" y="14" width="172" height="172" rx="10" fill="none" stroke="' + col + '" stroke-width="8"/><rect x="26" y="26" width="148" height="148" rx="4" fill="none" stroke="' + col + '" stroke-width="2"/>';
@@ -977,10 +977,10 @@
     if (vi.stamp.k === 'round') { c.beginPath(); c.arc(0, 0, R, 0, Math.PI * 2); c.stroke(); c.lineWidth = R * 0.027; c.beginPath(); c.arc(0, 0, R * 0.866, 0, Math.PI * 2); c.stroke(); }
     else { c.strokeRect(-R, -R, R * 2, R * 2); c.lineWidth = R * 0.027; c.strokeRect(-R * 0.853, -R * 0.853, R * 1.706, R * 1.706); }
     var L = vi.stamp.l, sub = vi.stamp.sub;
-    if (L.length === 1) { c.font = '900 ' + Math.round(R * (L[0].length > 2 ? 0.52 : sub ? 0.52 : 0.8)) + 'px ' + F_SERIF; c.fillText(L[0], 0, sub ? -R * 0.06 : R * 0.28); }
+    if (L.length === 1) { c.font = '900 ' + Math.round(R * (L[0].length > 2 ? 0.52 : 0.8)) + 'px ' + F_SERIF; c.fillText(L[0], 0, sub ? R * 0.067 : R * 0.28); }
     else { c.font = '900 ' + Math.round(R * 0.507) + 'px ' + F_SERIF; c.fillText(L[0], 0, -R * 0.093); c.fillText(L[1], 0, R * 0.507); }
-    // 副標（PR 值）放大約兩倍；太寬就縮到印章內圈放得下
-    if (sub) { var sf = R * 0.5; c.font = '700 ' + Math.round(sf) + 'px ' + F_SANS; var sw = c.measureText(sub).width; if (sw > R * 1.22) { sf *= R * 1.22 / sw; c.font = '700 ' + Math.round(sf) + 'px ' + F_SANS; } c.fillText(sub, 0, R * 0.56); }
+    // 副標（PR 值）放大約 1.6 倍（0.267R → 0.427R）；太寬就縮到印章內圈放得下。門檻字與外框維持原樣
+    if (sub) { var sf = R * 0.427; c.font = '700 ' + Math.round(sf) + 'px ' + F_SANS; var sw = c.measureText(sub).width; if (sw > R * 1.28) { sf *= R * 1.28 / sw; c.font = '700 ' + Math.round(sf) + 'px ' + F_SANS; } c.fillText(sub, 0, R * 0.56); }
     c.restore(); c.textAlign = 'left';
   }
   // 自動換行（中文避頭尾、數字與單位不拆開、優先在逗號後換行）；回傳最後一行的 y
