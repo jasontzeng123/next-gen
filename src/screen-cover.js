@@ -9,25 +9,25 @@ APP.screens.cover = function (main) {
   var sheet = h('div', { class: 'sheet' });
   var inn = h('div', { class: 'sheet-in' });
   inn.appendChild(h('div', { class: 'form-head' },
-    h('div', {}, h('div', { class: 'form-kicker' }, '台灣・生育資格審查申請書'), h('div', { class: 'form-kicker', style: { marginTop: '2px', letterSpacing: '.06em' } }, '2026 年版')),
-    h('div', { class: 'form-no' }, '表單編號 115-TW', h('br'), '審查依據：現行補助與稅制')));
+    h('div', {}, h('div', { class: 'form-kicker' }, '台灣・生育資格審查・模擬試算'), h('div', { class: 'form-kicker', style: { marginTop: '2px', letterSpacing: '.06em' } }, '2026 年版')),
+    h('div', { class: 'form-no' }, '試算編號 115-TW', h('br'), '審查依據：現行補助與稅制')));
   inn.appendChild(h('h1', { class: 'cover-title' }, '你有資格', h('br'), '生下一代嗎', h('span', { class: 'q' }, '？')));
   inn.appendChild(h('p', { class: 'cover-lede' }, '用你心中「養孩子的最低標準」，加上台灣真實的房價、薪資、補助與稅制，從孩子出生一路算到他獨立。看看存款會不會撐過去，或者，收入要在前百分之幾才撐得住。'));
   var fields = h('div', { class: 'cover-fields' });
-  [['申請人', '你（與伴侶）'], ['審查項目', '有沒有足夠的錢，把孩子養大'], ['審查依據', '2026 年房價、租金、薪資分布、補助、稅制'], ['填寫時間', '約 5 分鐘，隨時可以回頭修改']].forEach(function (r) {
+  [['試算對象', '你（與伴侶）'], ['審查項目', '有沒有足夠的錢，把孩子養大'], ['審查依據', '2026 年房價、租金、薪資分布、補助、稅制'], ['填寫時間', '約 5 分鐘，隨時可以回頭修改']].forEach(function (r) {
     fields.appendChild(h('div', { class: 'cover-field' }, h('span', {}, r[0]), h('b', {}, r[1])));
   });
   inn.appendChild(fields);
   var cta = h('div', { class: 'cover-cta' });
   if (submitted) {
     cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.compute(true); A.go('report'); } }, '查看我的審查報告', U.icon('next')));
-    cta.appendChild(h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '修改申請書'));
+    cta.appendChild(h('button', { class: 'btn ghost', onclick: function () { A.qi = 0; A.go('quiz'); } }, '修改答案'));
     cta.appendChild(h('button', { class: 'linkbtn', onclick: function () { A.restart(); } }, '全部重新填寫'));
   } else if (hasDraft) {
     cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.go('quiz'); } }, '繼續填寫（第 ' + (A.qi + 1) + ' 題）', U.icon('next')));
     cta.appendChild(h('button', { class: 'btn ghost', onclick: function () { A.restart(); } }, '重新開始'));
   } else {
-    cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.startQuiz(); } }, '開始填寫申請書', U.icon('next')));
+    cta.appendChild(h('button', { class: 'btn seal', onclick: function () { A.startQuiz(); } }, '開始試算', U.icon('next')));
   }
   inn.appendChild(cta);
   // 色盲友善配色

@@ -157,7 +157,7 @@ var APP = (function () {
   function lockedNotice() {
     U.modal(function (box, close) {
       box.appendChild(h('h3', {}, '實驗室還沒開放'));
-      box.appendChild(h('p', {}, '完成一次申請書、拿到審查結果後，實驗室就會解鎖。你可以載入自己的支出與收入設定，比較各縣市、不同收入水準，甚至回到 30 年前（1996 年）的台灣。'));
+      box.appendChild(h('p', {}, '完成一次試算、拿到審查結果後，實驗室就會解鎖。你可以載入自己的支出與收入設定，比較各縣市、不同收入水準，甚至回到 30 年前（1996 年）的台灣。'));
       box.appendChild(h('div', { class: 'actions' }, h('button', { class: 'btn ghost', onclick: close }, '知道了'), h('button', { class: 'btn', onclick: function () { close(); A.go('quiz'); } }, '開始填寫')));
     });
   }

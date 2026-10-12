@@ -1,4 +1,4 @@
-/* 填寫申請書 */
+/* 填寫題目 */
 (function () {
   'use strict';
   var h = U.h, A = APP, D = DATA;
@@ -7,12 +7,12 @@
   function needsAnswer(q) { return (q.key && q.options) || q.type === 'county'; }
   function isSeen(q) { return !!A.seen[q.id]; }
 
-  // 第一次填寫時不顯示「其他申請人」的比例，避免影響作答；送出過一次之後回來修改才顯示
+  // 第一次填寫時不顯示「其他人」的比例，避免影響作答；送出過一次之後回來修改才顯示
   function crowdAllowed() { return !!(A.submitted || U.store.get('submitted', null)); }
   function crowdFor(key, v) {
     if (!crowdAllowed()) return null;
     var c = COMM.share(key, v); if (!c || Math.round(c.pct) < 1) return null;
-    return h('div', { class: 'crowd' }, h('span', { class: 'crowd-bar' }, h('i', { style: { width: Math.max(2, c.pct).toFixed(0) + '%' } })), h('span', {}, '其他申請人 ' + Math.round(c.pct) + '%'));
+    return h('div', { class: 'crowd' }, h('span', { class: 'crowd-bar' }, h('i', { style: { width: Math.max(2, c.pct).toFixed(0) + '%' } })), h('span', {}, '其他人 ' + Math.round(c.pct) + '%'));
   }
   function optEl(q, o, checked, onPick, showCrowd) {
     var s = A.s;
@@ -141,7 +141,7 @@
         list.appendChild(optEl(q, o, checked, function () { pick(o.v); }, isSeen(q)));
       });
       body.appendChild(list);
-      if (isSeen(q) && COMM.st.demoOn && list.querySelector('.crowd')) body.appendChild(h('p', { class: 'xs muted demo-note' }, '「其他申請人」的比例目前含作者產生的示範資料。'));
+      if (isSeen(q) && COMM.st.demoOn && list.querySelector('.crowd')) body.appendChild(h('p', { class: 'xs muted demo-note' }, '「其他人」的比例目前含作者產生的示範資料。'));
       if (q.subs) q.subs.forEach(function (sq) {
         if (sq.when && !sq.when(s)) return;
         if (!isSeen(q)) return;
@@ -172,7 +172,7 @@
       });
       grp.appendChild(chips); body.appendChild(grp);
       var c = crowdAllowed() ? COMM.share('elder', s.elder) : null;
-      if (c && Math.round(c.pct) >= 1) body.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } }, '其他申請人中有 ' + Math.round(c.pct) + '% 選了一樣的金額。'));
+      if (c && Math.round(c.pct) >= 1) body.appendChild(h('p', { class: 'sm muted', style: { marginTop: '8px' } }, '其他人中有 ' + Math.round(c.pct) + '% 選了一樣的金額。'));
       var g2 = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, '長輩未來需要照顧時'));
       var ch2 = h('div', { class: 'chips', role: 'radiogroup' });
       ch2.appendChild(chipEl({ label: '不另外分擔' }, !s.elderCare, function () { A.set('elderCare', false); refresh(); }, s, 'ec:0'));
@@ -196,7 +196,7 @@
       body.appendChild(box);
       body.appendChild(timeline(s));
     }
-    function crowdLine(key, v) { var c = crowdAllowed() ? COMM.share(key, v) : null; return c && Math.round(c.pct) >= 1 ? '其他申請人 ' + Math.round(c.pct) + '% 也選這個' : ''; }
+    function crowdLine(key, v) { var c = crowdAllowed() ? COMM.share(key, v) : null; return c && Math.round(c.pct) >= 1 ? '其他人 ' + Math.round(c.pct) + '% 也選這個' : ''; }
     function timeline(s) {
       var end = ENGINE.supportEndAge(s.support);
       var births = []; for (var i = 0; i < s.kids; i++) births.push(s.firstBirthAge + i * s.spacing);
@@ -426,11 +426,11 @@
   function consentModal(after) {
     U.modal(function (box, close) {
       box.appendChild(h('h3', {}, '要匿名分享你的設定嗎？'));
-      box.appendChild(h('p', {}, '分享後，其他申請人會在題目旁看到「大家怎麼選」，你也能在報告裡看到自己在所有申請人中的位置。'));
+      box.appendChild(h('p', {}, '分享後，其他人會在題目旁看到「大家怎麼選」，你也能在報告裡看到自己在所有分享者中的位置。'));
       box.appendChild(h('ul', {},
         h('li', {}, '會分享：縣市與區域、孩子數、每一題的選擇、收入 PR（四捨五入到 5）、年齡區間（每 5 歲一組）、審查結果。'),
         h('li', {}, '不會分享：姓名、帳號資料、確切年齡、確切年薪與存款金額。'),
-        h('li', {}, '只會分享這次送出的申請書。之後修改或在報告裡調整設定都不會覆蓋，除非你在報告裡按「更新」。'),
+        h('li', {}, '只會分享這次送出的答案。之後修改或在報告裡調整設定都不會覆蓋，除非你在報告裡按「更新」。'),
         h('li', {}, COMM.st.backend === 'web' ? '隨時可以在報告頁取消分享，資料會刪除（請用同一台裝置的同一個瀏覽器）。' : '隨時可以在報告頁取消分享，資料會刪除。')));
       box.appendChild(h('div', { class: 'actions' },
         h('button', { class: 'btn ghost', onclick: function () { A.consent = false; U.store.set('consent', false); close(); after(); } }, '不分享'),

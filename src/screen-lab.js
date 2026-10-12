@@ -64,10 +64,10 @@
     var s = labSettings();
     wrap.appendChild(h('p', { class: 'sm muted' }, '目前組合：' + QS.placeName(s) + '・' + s.kids + ' 個孩子・' + QS.labelOf('housing', s.housing) + '・' + A.incName(s) + '。', h('button', { class: 'linkbtn', style: { marginLeft: '8px' }, onclick: function () { manageModal(); } }, '管理存檔')));
     var tabs = h('div', { class: 'tabs', role: 'tablist' });
-    // 申請人資料：有足夠的共享資料、或自己能加入時才顯示
+    // 大家的資料：有足夠的共享資料、或自己能加入時才顯示
     var crowdOk = COMM.st.canShare || (COMM.st.stats && COMM.st.stats.n >= COMM.MIN_N);
     if (L.tab === 'crowd' && !crowdOk) L.tab = 'map';
-    [['map', '縣市地圖'], ['curve', '門檻分析'], ['time', '時光機']].concat(crowdOk ? [['crowd', '申請人資料']] : []).forEach(function (t) {
+    [['map', '縣市地圖'], ['curve', '門檻分析'], ['time', '時光機']].concat(crowdOk ? [['crowd', '大家的資料']] : []).forEach(function (t) {
       tabs.appendChild(h('button', { role: 'tab', 'aria-selected': L.tab === t[0] ? 'true' : 'false', onclick: function () { L.tab = t[0]; U.store.set('labTab', t[0]); A.go('lab', { keepScroll: true }); } }, t[1]));
     });
     wrap.appendChild(tabs);
@@ -467,31 +467,31 @@
   function crowdTab(panel, s) {
     var st = COMM.st, S = st.stats;
     var sec = h('div', { class: 'rsec' });
-    sec.appendChild(h('h2', {}, '所有申請人的門檻分布'));
+    sec.appendChild(h('h2', {}, '所有人的門檻分布'));
     panel.appendChild(sec);
-    if (!st.db || (st.backend === 'web' && st.loadErr)) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, st.backend === 'web' ? '暫時連不上資料庫' : '這個檢視無法讀取共享資料'), st.backend === 'web' ? '請稍後再試；你的試算不受影響。' : '在 claude.ai 登入後開啟，就能看到所有申請人的資料。')); return; }
+    if (!st.db || (st.backend === 'web' && st.loadErr)) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, st.backend === 'web' ? '暫時連不上資料庫' : '這個檢視無法讀取共享資料'), st.backend === 'web' ? '請稍後再試；你的試算不受影響。' : '在 claude.ai 登入後開啟，就能看到大家分享的資料。')); return; }
     if (st.demoOn) sec.appendChild(h('p', { class: 'xs muted demo-note', style: { marginBottom: '10px' } }, COMM.demoNote()));
-    if (!S || S.n < COMM.MIN_N) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + (S ? S.n : 0) + ' 位申請人分享'), '累積到 ' + COMM.MIN_N + ' 位以上就會顯示。完成申請書時選擇「匿名分享」，就能加入統計。')); return; }
+    if (!S || S.n < COMM.MIN_N) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + (S ? S.n : 0) + ' 人分享'), '累積到 ' + COMM.MIN_N + ' 人以上就會顯示。完成試算時選擇「匿名分享」，就能加入統計。')); return; }
     var th = A.th && A.th.pr;
     var bins = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     (S.thHist || []).forEach(function (c, v) { bins[Math.min(10, Math.floor(v / 10))] += c; });
     var mx = Math.max.apply(null, bins.concat([1]));
     var Wd = 640, Hh = 200, bw = Wd / 11;
-    var svg = U.svg('svg', { viewBox: '0 0 ' + Wd + ' ' + (Hh + 30), role: 'img', 'aria-label': '申請人門檻 PR 分布' });
+    var svg = U.svg('svg', { viewBox: '0 0 ' + Wd + ' ' + (Hh + 30), role: 'img', 'aria-label': '大家的門檻 PR 分布' });
     bins.forEach(function (n, i) {
       var hh = n / mx * (Hh - 20), mine = th != null && Math.min(10, Math.floor(th / 10)) === i;
       svg.appendChild(U.svg('rect', { x: i * bw + 4, y: Hh - hh, width: bw - 8, height: Math.max(1, hh), rx: 3, fill: mine ? 'var(--pen)' : 'var(--rule)' }));
       svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh + 18, 'text-anchor': 'middle', text: i === 10 ? '100' : (i * 10) + '–', style: 'font-size:11px;fill:var(--ink-3)' }));
       if (n) svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh - hh - 6, 'text-anchor': 'middle', text: String(n), style: 'font-size:11px;fill:var(--ink-2)' }));
     });
-    sec.appendChild(h('p', { class: 'rsec-lede' }, S.n + ' 位申請人，各自心中的養育標準需要的收入 PR。藍色是你所在的區間。'));
+    sec.appendChild(h('p', { class: 'rsec-lede' }, S.n + ' 位分享者，各自心中的養育標準需要的收入 PR。藍色是你所在的區間。'));
     sec.appendChild(h('div', { class: 'chart-box' }, svg));
     // 各縣市
     var byC = S.byCounty || {};
     var rows = Object.keys(byC).filter(function (k) { return D.COUNTY[k] && byC[k].n >= 3; }).map(function (k) { return [k, byC[k].med, byC[k].n]; }).sort(function (a, b) { return a[1] - b[1]; });
     if (rows.length) {
       var sec2 = h('div', { class: 'rsec' });
-      sec2.appendChild(h('h2', {}, '各縣市申請人的門檻中位數'));
+      sec2.appendChild(h('h2', {}, '各縣市分享者的門檻中位數'));
       var b = h('div', { class: 'bars' });
       rows.forEach(function (r) { b.appendChild(h('div', { class: 'bar-row' }, h('span', { class: 'bl' }, D.COUNTY[r[0]].name + '（' + r[2] + '）'), h('span', { class: 'bt' }, h('i', { style: { width: r[1] + '%', background: heat(r[1]) } })), h('span', { class: 'bv' }, 'PR ' + U.pr(r[1])))); });
       sec2.appendChild(b);

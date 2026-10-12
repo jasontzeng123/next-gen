@@ -5,7 +5,7 @@ APP.screens.notice = function (main) {
   var local = COMM.st.backend === 'local' || !(window.TWKIDS && window.TWKIDS.sb);
   var wrap = h('div', { class: 'notice fade-in' });
   var sheet = h('div', { class: 'sheet' }), inn = h('div', { class: 'sheet-in' });
-  inn.appendChild(h('div', { class: 'form-kicker' }, '生育資格審查申請書・填寫須知'));
+  inn.appendChild(h('div', { class: 'form-kicker' }, '生育資格審查・填寫須知'));
   inn.appendChild(h('h1', { class: 'notice-title' }, '開始之前'));
   [
     ['lock', '資料只在你的手機裡', local
