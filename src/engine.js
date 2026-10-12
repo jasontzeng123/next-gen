@@ -54,6 +54,7 @@ var ENGINE = (function (D) {
      rentDeposit(c, rooms, rentMult, x)（可省略）→ 租屋押金裡要自己拿出的現金（韓國全稅）；
        押金的增減記在 e.deposit（不是花掉的錢，不算進住房），買房時退回，押金算在淨資產裡；
        x.S、x.depHeld 是年初的存款與已付押金
+     afterHousing(x)（可省略）→ 住房算完、報稅之前：要看住房補助或是否自有住宅的補助（法國就業津貼）
      taxes(x) → { si, tax }
   */
   var COUNTRIES = {}, ORDER = [];
@@ -593,6 +594,7 @@ var ENGINE = (function (D) {
       var carDebt = 0; carPays.forEach(function (cp) { carDebt += cp.amt * cp.left; });
       // ---- 稅與保費 ----
       x.renting = renting; x.mortInt = mortInt; x.loanBalReal = loanBalReal; x.ly = buy && t >= tb ? t - tb : -1;
+      if (K.afterHousing) K.afterHousing(x); // 要知道住房補助才能算的補助（法國就業津貼）
       var tx = K.taxes(x);
       var si = tx.si, tax = tx.tax;
 

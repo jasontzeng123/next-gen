@@ -744,3 +744,29 @@ Released 2026-05-29. Based on CFPS microdata, a mixed-effects model and NBS macr
   }
 }
 ```
+
+## 14. Round 2 additions (2026-10-12)
+
+### 14.1 City consumption per person (same definition as Taiwan: urban residents, incl. housing)
+
+| Item | Value | Source |
+|---|---|---|
+| National urban per-capita consumption, 2025 | 35,869 | [OFFICIAL] NBS, 2026-01-19, https://www.stats.gov.cn/sj/zxfb/202601/t20260119_1962321.html |
+| Shanghai urban (城镇常住居民) per-capita consumption, 2025 | 57,076 (all residents 54,765) | [OFFICIAL] Shanghai Statistics Bureau, https://www.shanghai.gov.cn/nw48810/20260203/2bed33e23b324e27ae846d3a88bade53.html |
+| Chengdu urban per-capita consumption, 2025 | 37,100 (+5.3%) | [OFFICIAL] 2025 Chengdu statistical bulletin, reprinted at https://finance.sina.com.cn/jjxw/2026-04-15/doc-inhupeis3814625.shtml |
+
+Model: Shanghai `cons` 57,076 ÷ 35,869 = **1.59** (was 1.53 using all residents). Chengdu 37,100 ÷ 35,869 = **1.03** (was the 1.05 estimate).
+
+### 14.2 Chengdu rent (official street-level table)
+
+Chengdu Housing and Urban-Rural Development Bureau, "2026年2季度成都市租赁住房平均租金水平" (published 2026-07-15; reprinted at https://news.qq.com/rain/a/20260716A04I7Y00 and https://www.sohu.com/a/1051000443_121106884) [OFFICIAL]. The first value per row, read as 住宅类, for the 65 streets of the central districts (锦江、青羊、金牛、武侯、成华、高新): median **33.8** yuan/㎡/month, quartiles 30.7–38.2, range 20.6–46.6. Outer districts are mostly 10–27.
+
+Model: rent 1,700 / 2,500 / 3,200 / 4,000 for 50 / 75 / 100 / 130 ㎡ (≈34 / 33 / 32 / 31 per ㎡) [DERIVED]. This replaces the 38 per ㎡ estimate and settles the 49 vs 34 conflict in §12.
+
+### 14.3 Housing provident fund rent withdrawal
+
+Chengdu: per depositor 1,800/month (central districts, registered lease) or 1,200 (unregistered or suburban), +50% for multi-child families; a proposal (comment period 2026-07-14 to 07-20) would make 1,800 uniform [NEWS] https://cbgc.scol.com.cn/news/7758678. Shanghai's 2026 cap was not verified. At threshold incomes a couple's yearly contributions (employee + employer) are below these caps, so the model applies no cap [DERIVED].
+
+### 14.4 Not changed
+
+Shanghai second-hand price (52,000 per ㎡): one 2026 article cites a Lianjia figure of "above 110,000 per ㎡" with no clear basis, and a reported deal in Xuhui Meilong sold at about 47,400 per ㎡. The estimate stays.

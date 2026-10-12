@@ -1231,3 +1231,35 @@ Costs are JPY for 2026 unless noted. "Net" means after Japanese subsidies.
   "childCostNCCHD": { "age0to18Excl": 21700000, "age0to18Incl": 25700000, "year": 2024 }
 }
 ```
+
+## 14. Round 2 additions (2026-10-12)
+
+### 14.1 Health insurance FY2026 (協会けんぽ, from March 2026 contributions)
+
+[OFFICIAL] https://www.kyoukaikenpo.or.jp/about/business/insurance_rate/rate_prefectures/r08
+
+- Tokyo 9.85% (employee pays half, 4.925%).
+- Osaka 10.13% (5.065%). The model had used 5.05% as an estimate.
+- Long-term care insurance (ages 40–64) is 1.62% nationwide.
+- The 子ども・子育て支援金 is 0.23% from April 2026.
+
+### 14.2 Tokyo consumption vs national
+
+Tokyo Metropolitan Government, 2022 家計 summary [OFFICIAL] https://www.toukei.metro.tokyo.lg.jp/seikei/2022/sb22qf0002.pdf:
+
+| | Tokyo | National |
+|---|---|---|
+| Worker households, consumption per household per month | 350,149 yen | 320,627 yen |
+| Ratio to national | 1.09 | 1 |
+| Household size | 3.27 | 3.24 |
+| Housing (住居), all households | 26,865 yen | 18,645 yen |
+
+Housing for all households is 1.44 times the national level. The survey excludes imputed rent.
+
+Tokyo's 都民経済計算 for FY2023 gives household final consumption of 47.03 trillion yen, which includes imputed rent. Its basis (residents vs domestic) was not confirmed, so it is not used.
+
+The model keeps `cons` 1.15 for the 23 wards. The wards cost more than the Tama area, and imputed rent would raise the ratio.
+
+### 14.3 Not found
+
+Osaka's FY2024 average delivery cost. The national figure is about 520,000 yen and Tokyo's is 648,309 yen [NEWS]. The Osaka estimate of 560,000 yen stays.

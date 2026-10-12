@@ -1350,3 +1350,51 @@ The table below uses 2024–2026 €, per month unless stated. P = Paris, L = Ly
   "J_mapping": "see table in section 13.9"
 }
 ```
+
+## 14. Round 2 additions (2026-10-12)
+
+### 14.1 City consumption (Paris)
+
+INSEE, Budget de famille 2017 ("Les comportements de consommation en 2017", https://www.insee.fr/fr/statistiques/4127596) [OFFICIAL]:
+- France average spending per household is 33,970 € a year, or 22,220 € per consumption unit (UC).
+- In the Paris agglomeration, spending per UC is **+18%** above the national average, at 39,410 € per household.
+- In urban units of 100,000–1,999,999 people (the band Lyon is in), spending per UC is **0%** above average.
+- Imputed rents are excluded.
+
+Paris city proper has higher incomes than its agglomeration, and its owners' imputed rents are large, so the model uses `cons` **1.2** for Paris. This is a conservative value. Lyon stays at 1.0.
+
+### 14.2 Not found
+
+Lyon (Ville de Lyon) primary-school meal tariffs. The lyon.fr page could not be fetched.
+
+### 14.3 Prime d'activité (from 1 April 2026), now modeled
+
+- Montant forfaitaire 638.28 € (décret n° 2026-222). Earned income counts at **59.85%**. The bonification individuelle starts at a net income of **709.18 €** a month. Forfait logement is 76.59 / 153.19 / 189.57 € [OFFICIAL] https://www.economie.gouv.fr/node/34212.
+- Base by household [SECONDARY] https://www.previssima.fr/actualite/prime-dactivite-quels-sont-les-nouveaux-montants-au-1er-avril-2026.html:
+  - single person 638.28 €
+  - couple, or single parent with one child: 957.42 €
+  - couple with one child: 1,148.90 €
+  - couple with two children: 1,340.38 €
+  - each further dependant: +255.31 €
+- 2026 reform: the bonification maximum rises from about 184–186 € to about 239–241 €, reached at 1.15 SMIC (about 1,699 € net social) instead of 1 SMIC [NEWS] https://www.journaldeleconomie.fr/prime-d-activite-reforme-2026/.
+- Model formula: forfaitaire + 59.85% × net earnings + bonifications − max(forfaitaire, net earnings + family benefits (PAJE base, AF, CF, PreParE) + forfait logement).
+  - Forfait logement is counted for owners, for people housed by family, and for APL recipients.
+  - The model uses yearly averages, and the benefit is paid only when it is at least 15 € a month.
+- Effect at default settings: Lyon's threshold PR changes 42.1 → 41.5.
+
+### 14.4 Lyon collège canteen (Métropole de Lyon)
+
+Price per meal by quotient familial (QF) band [OFFICIAL] https://www.grandlyon.com/mes-services-au-quotidien/connaitre-les-services-pour-les-familles/comprendre-le-prix-de-la-cantine (page updated 2026-02-20):
+
+| QF band (€) | Price per meal |
+|---|---|
+| < 400 | 1 € |
+| 400–800 | 2 € |
+| 801–1,200 | 3 € |
+| 1,201–1,600 | 3.90 € |
+| 1,601–1,900 | 4.50 € |
+| 1,901–2,300 | 5 € |
+| 2,301–2,600 | 5.50 € |
+| > 2,600 | 6 € |
+
+These are close to Paris prices in the same bands, so Lyon `schoolFactor` goes from 0.9 to 1.0.

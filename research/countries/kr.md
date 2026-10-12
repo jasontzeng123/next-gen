@@ -846,3 +846,25 @@ Suggested sizes for the model: 1 room → studio 62.5만 + 8.4만; 2 rooms → n
   }
 }
 ```
+
+## 13. Round 2 additions (2026-10-12)
+
+### 13.1 Regional per-capita figures
+
+- 2024 per-capita personal income (2025-12-23 release) [NEWS] https://www.mt.co.kr/economy/2025/12/23/2025122308304485531:
+
+  | Region | 만원 | Ratio to national |
+  |---|---|---|
+  | National | 2,782 | 1 |
+  | Seoul | 3,222 | 1.16 |
+  | Busan | 2,616 | 0.94 |
+
+- Per-capita private consumption by region (KOSIS 1인당 민간소비지출액) could not be fetched. Seoul's `cons` of 1.22 and Busan's 0.97 stay as estimates.
+
+### 13.2 Jeonse deposit, now modeled as cash
+
+- Jeonse loans cover up to 80% of the deposit. The HF general jeonse guarantee caps them at 4억 [SECONDARY] https://wikidocs.net/blog/@Insight_Lab/24298/ (2026-07).
+- **Own cash** is the rest of the deposit. Its cost is 2% inflation a year, because the deposit earns no interest, plus the savings return the household gives up.
+- A household puts at most half of its savings plus existing deposit into the deposit.
+- If that is short, the deposit falls and the gap is paid as monthly rent at the conversion rate: Seoul 4.7%, Busan 5.3% (national) (§4.4).
+- The deposit counts as the family's money: it is returned when they buy, and it is not counted as spending.

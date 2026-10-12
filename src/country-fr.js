@@ -14,6 +14,9 @@
   // ---------- 制度參數 ----------
   var PASS = 48060, PMSS = 4005;   // 2026 社會安全年度／月上限 §5.2［OFFICIAL］
   var PREPARE = 459.70;            // 育兒假津貼 PreParE 全職停職，每月（2026-04 起）§13.5［OFFICIAL］
+  // 就業津貼（prime d'activité，2026-04 起）§14.3：基本額 638.28 €／月；工作收入計入 59.85%［OFFICIAL：economie.gouv.fr］；
+  // 個人加給從月淨收入 709.18 € 起［OFFICIAL］，2026 改革後在 1.15 倍最低工資（約 1,699 €）達到上限約 240 €［NEWS］
+  var PA = { mf: 638.28, rate: 0.5985, bonLo: 709.18, bonHi: 1699, bonMax: 240, forfait: [76.59, 153.19, 189.57] };
   var SMIC_NET = 1443;             // 2026 最低工資淨額，每月（毛額 1,823）［ESTIMATE，未查證］
   var MEALS = 144;                 // 學校午餐每年餐數：每週 4 天 × 36 週 §13.6［ESTIMATE］
   var CL_DAYS = 61;                // 休閒中心（centre de loisirs）每年天數：週三 36 天＋假期約 25 天［ESTIMATE］
@@ -39,6 +42,9 @@
     fx: { toTWD: FX, pppToTWD: 20.87, date: '2026-10-09' }, // PPP：IMF 2025 法國 0.654、台灣約 13.65（推算）§13.1
     careEnd: 3, // 0–2 歲托嬰或保母，3 歲起進幼兒學校（義務教育）
     sources: [
+      ['經濟部 就業津貼（prime d’activité）2026 年 4 月起', 'https://www.economie.gouv.fr/node/34212'],
+      ['就業津貼 2026 各家庭基本額（Previssima）', 'https://www.previssima.fr/actualite/prime-dactivite-quels-sont-les-nouveaux-montants-au-1er-avril-2026.html'],
+      ['INSEE 2017 家庭預算調查：各地區消費支出', 'https://www.insee.fr/fr/statistiques/4127596'],
       ['INSEE 民間薪資 2024（IP 2079）', 'https://www.insee.fr/fr/statistiques/8657156'],
       ['INSEE 家庭消費（Budget de famille 2017）', 'https://www.cor-retraites.fr/sites/default/files/2026-02/Doc_08_Conso%20budget%20de%20famille_SGCOR-INSEE.pdf'],
       ['service-public 所得稅級距與家庭商數', 'https://www.service-public.gouv.fr/particuliers/vosdroits/F1419'],
@@ -82,7 +88,9 @@
     CITY: {
       paris: {
         id: 'paris', name: '巴黎（市區）', short: '巴黎',
-        cons: 1.15,   // 和台灣同一種算法（含住房的每人消費 ÷ 全國）推估；只看日常物價約 +6%［ESTIMATE，未查證］
+        // 和台灣同一種算法（含住房的每人消費 ÷ 全國）。INSEE 家庭預算調查（BdF 2017）：巴黎都會區每消費單位支出
+        // 比全國高 18%（不含自有住宅設算租金）§14.1［OFFICIAL］；巴黎市區所得更高、自有住宅設算租金也更高，取 1.2［DERIVED，偏保守］
+        cons: 1.2,
         // 新簽約月租（不含管理費，2024 中位數）：T2、T3、T4、T5 §13.4.1［OFFICIAL］
         // T4＝4 房以上每 ㎡ 25.9 × 約 89 ㎡；T5＝25.9 × 約 115 ㎡［ESTIMATE］
         rent: [1090, 1500, 2300, 3000],
@@ -125,7 +133,9 @@
         amWage: 5.0,        // 登記保母每小時淨薪（參考值 4.91 略加）［ESTIMATE］
         amUpkeep: 75,
         microExtra: 50, nannyExtra: 30,
-        schoolFactor: 0.9,  // 里昂國小午餐與課後收費未查到：巴黎收費表 × 0.9［ESTIMATE］
+        // 里昂市國小收費未查到；里昂都會區國中午餐依家庭商數 1–6 €，同級距和巴黎相近（QF 1,601–1,900：4.50，巴黎 4.61）
+        // §14.4［OFFICIAL：grandlyon.com］，所以直接用巴黎收費表
+        schoolFactor: 1.0,
         privFactor: 1.2, privMeal: 5.5,
         bilingualKG: 7000, intlFee: 16000,
         cramFactor: 1.0
@@ -297,11 +307,11 @@
       var s = x.s, c = x.c, tr = x.tr, ages = x.atHome, R = res(x);
       var n20 = kidsUnder(x, 20), y = R.year, i;
       var cnt = function (lo, hi) { var m = 0; for (var j = 0; j < ages.length; j++) if (ages[j] >= lo && ages[j] < hi) m++; return m; };
-      var n3 = cnt(0, 3);
+      var n3 = cnt(0, 3), prest = 0; // prest：就業津貼要算進「家庭資源」的家庭給付（每年）
       // PAJE 基本津貼：3 歲前，每個家庭同時只領一份；全額 198.16、半額 99.08 €/月［OFFICIAL］
       if (n3 > 0) {
         var amt = y < abFull(n20, R.two) ? 198.16 : y <= pajeCeil(n20, R.two) ? 99.08 : 0;
-        tr.allowance += amt * (cnt(1, 3) > 0 ? 12 : 11);
+        tr.allowance += amt * (cnt(1, 3) > 0 ? 12 : 11); prest += amt * (cnt(1, 3) > 0 ? 12 : 11);
       }
       // 家庭津貼（第 2 個孩子起，到 20 歲）：依所得分三級［OFFICIAL］
       if (n20 >= 2) {
@@ -313,13 +323,14 @@
         // 3 個孩子以上：孩子滿 20 歲那年的一次性加給
         var n20th = cnt(20, 21);
         if (n20th && n20 + n20th >= 3) af += n20th * [96.27, 48.14, 24.07][b];
-        tr.allowance += af * 12;
+        tr.allowance += af * 12; prest += af * 12;
       }
       // 家庭補充津貼：3 個以上孩子、都滿 3 歲；198.16 或低所得 297.27 €/月［OFFICIAL］
       var nCF = cnt(3, 21);
       if (n3 === 0 && nCF >= 3) {
         var majT = (R.two ? 27367 : 22372) + 3728 * (nCF - 3); // 4 個孩子以上的級距依比例推估［ESTIMATE］
-        tr.allowance += (y <= majT ? 297.27 : y <= abFull(nCF, R.two) ? 198.16 : 0) * 12;
+        var cf = (y <= majT ? 297.27 : y <= abFull(nCF, R.two) ? 198.16 : 0) * 12;
+        tr.allowance += cf; prest += cf;
       }
       // 開學津貼（6–18 歲，每年 8 月）［OFFICIAL］
       if (y <= 28956 + 6682 * (Math.max(1, n20) - 1)) {
@@ -329,14 +340,34 @@
       if (x.quit && x.t >= x.quitStart && x.t < x.quitEnd && x.kAges.length) {
         var youngest = Math.min.apply(null, x.kAges);
         var months = x.kAges.length === 1 ? (youngest === 0 ? 6 : 0) : (youngest <= 1 ? 12 : 0);
-        tr.leave += PREPARE * months;
+        tr.leave += PREPARE * months; prest += PREPARE * months;
       }
+      x.y.frPrest = prest / 12;
       // 到府保母（兩家共用 garde partagée）：扣 CMG 與稅額抵減後，月收入 1.5 倍最低工資以下 261、2–3 倍 359、3 倍以上 425 €
       //（Cnaf／ONAPE 2025 報告，2024 法規）§6.4［OFFICIAL］× 1.04 到 2026，一位保母照顧家中所有 3 歲以下孩子
       if (x.helperMonths > 0) {
         var nm = U.interp([[1.5, 261], [2, 359], [3, 359], [3.5, 425]], R.netFT / SMIC_NET) * 1.04 + c.nannyExtra;
         x.e.kidsCare += nm * x.helperMonths;
       }
+    },
+
+    // 就業津貼（prime d'activité）：基本額（依家庭人數加成）＋ 59.85% 工作收入＋每位工作者的個人加給
+    // − max(基本額, 工作收入＋家庭給付＋住宅定額)。住宅定額：自有住宅、和長輩同住或有領住房補助時計入。
+    // 每季依前 3 個月收入計算，這裡用全年平均；育嬰期間的給付未計入工作收入（略為高估）［ESTIMATE］
+    afterHousing: function (x) {
+      var s = x.s;
+      var m = [earner(x.gA, x.workFracA).net / 12, s.partner ? earner(x.gB, x.workFracB).net / 12 : 0];
+      var pro = m[0] + m[1];
+      if (!(pro > 0)) return;
+      var nk = 0; for (var i = 0; i < x.atHome.length; i++) if (x.atHome[i] < 25) nk++;
+      var mf = PA.mf * (s.partner ? 1.5 : 1);
+      for (var k = 0; k < nk; k++) mf += PA.mf * (k >= 2 ? 0.4 : (!s.partner && k === 0) ? 0.5 : 0.3);
+      var persons = (s.partner ? 2 : 1) + nk;
+      var forfait = !x.renting || x.tr.rent > 0 ? PA.forfait[Math.min(persons, 3) - 1] : 0;
+      var bon = 0;
+      m.forEach(function (v) { if (v >= PA.bonLo) bon += PA.bonMax * Math.min(1, (v - PA.bonLo) / (PA.bonHi - PA.bonLo)); });
+      var p = mf + PA.rate * pro + bon - Math.max(mf, pro + (x.y.frPrest || 0) + forfait);
+      if (p >= 15) x.tr.allowance += p * 12; // 每月不到 15 € 不發
     },
 
     // ---------- 住房 ----------
