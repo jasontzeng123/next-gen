@@ -207,6 +207,7 @@
     document.addEventListener('keydown', onEsc);
     main.appendChild(drawerBtn);
     function closeDrawer() { if (!side.classList.contains('open')) return; side.classList.remove('open'); drawerBtn.setAttribute('aria-expanded', 'false'); document.body.style.overflow = ''; if (scrim && scrim.parentNode) scrim.parentNode.removeChild(scrim); scrim = null; }
+    swipeToClose(side, closeDrawer);
     var redrawPending = false;
     var redraw = function () { if (redrawPending) return; redrawPending = true; U.task(function () { redrawPending = false; A.compute(); drawMain(); }, 'report-redraw'); };
     buildPanel(side, function () { redraw(); }, closeDrawer);
@@ -234,6 +235,42 @@
     A.redrawReport = function () { A.dirty = true; A.compute(); drawMain(); U.clear(side); buildPanel(side, function () { redraw(); }, closeDrawer); };
   };
 
+  // 手機的設定抽屜：在最上方往下滑就跟著手指移動，放開時滑得夠遠（或夠快）就關掉，否則彈回
+  function swipeToClose(el, close) {
+    var y0 = 0, t0 = 0, dy = 0, mode = null;
+    var reset = function (anim) {
+      el.style.transition = anim ? 'transform .2s ease' : '';
+      el.style.transform = '';
+      if (anim) setTimeout(function () { el.style.transition = ''; }, 220);
+    };
+    el.addEventListener('touchstart', function (e) {
+      if (!el.classList.contains('open') || e.touches.length !== 1) { mode = null; return; }
+      y0 = e.touches[0].clientY; t0 = Date.now(); dy = 0; mode = 'wait';
+    }, { passive: true });
+    el.addEventListener('touchmove', function (e) {
+      if (!mode) return;
+      var d = e.touches[0].clientY - y0;
+      if (mode === 'wait') {
+        if (Math.abs(d) < 6) return;
+        // 往下拉、而且內容已經捲到最上面，才算是要關掉；其他情況照常捲動
+        mode = d > 0 && el.scrollTop <= 0 ? 'drag' : null;
+        if (!mode) return;
+      }
+      dy = Math.max(0, d);
+      el.style.transition = 'none';
+      el.style.transform = 'translateY(' + dy + 'px)';
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false });
+    var end = function () {
+      if (mode !== 'drag') { mode = null; return; }
+      mode = null;
+      var v = dy / Math.max(1, Date.now() - t0);
+      if (dy > Math.min(140, el.offsetHeight * 0.25) || (v > 0.6 && dy > 30)) { el.style.transition = ''; el.style.transform = ''; close(); }
+      else reset(true);
+    };
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+  }
   // 捲到報告裡的某一段；後面的章節陸續算完、高度改變時繼續對齊，玩家自己捲動就停止
   function followTo(id) {
     var stop = false, until = Date.now() + 2500;
@@ -987,6 +1024,7 @@
   // ---------- 設定面板 ----------
   function buildPanel(side, onChange, closeDrawer) {
     var panel = h('div', { class: 'panel' });
+    panel.appendChild(h('div', { class: 'drawer-grip', 'aria-hidden': 'true' }));
     panel.appendChild(h('div', { class: 'panel-h' }, h('h3', {}, '調整設定'), h('div', { style: { display: 'flex', gap: '6px' } },
       h('button', { class: 'btn ghost small', onclick: function () { if (A.submitted) { A.undo.push(JSON.parse(JSON.stringify(A.strip(A.s)))); A.s = ENGINE.normalize(A.submitted); A.persist(); A.redrawReport(); U.toast('已還原成送出時的設定'); } } }, U.icon('redo'), '還原'),
       h('button', { class: 'btn ghost small drawer-close', onclick: closeDrawer, 'aria-label': '關閉' }, U.icon('close')))));

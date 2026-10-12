@@ -762,3 +762,11 @@ p { margin: 0; }
 .quick-or { align-self: center; font-size: 13px; color: var(--ink-3); opacity: .8; }
 .quick-row p { text-align: center; }
 .quick-note { margin: -4px 0 16px; }
+
+/* 手機設定抽屜上方的把手：提示可以往下滑關掉 */
+.drawer-grip { display: none; }
+@media (max-width: 1040px) {
+  .report-side.drawer .drawer-grip { display: block; width: 44px; height: 5px; border-radius: 3px; background: var(--rule); opacity: .7; margin: 9px auto 0; }
+  .report-side.drawer .panel-h { padding-top: 8px; }
+  .report-side.drawer { overscroll-behavior: contain; }
+}
