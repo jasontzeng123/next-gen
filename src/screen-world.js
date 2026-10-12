@@ -37,7 +37,7 @@
   }
 
   // 你的選擇在當地怎麼對應
-  var MAP_KEYS = [['housing', '住房'], ['build', '房子'], ['loan', '房貸'], ['postpartum', '坐月子'], ['care', '0–2 歲'], ['preschool', '幼兒園'], ['school', '學校'], ['after', '放學後'], ['cram', '補習'], ['uni', '大學'], ['transport', '交通']];
+  var MAP_KEYS = [['housing', '住房'], ['build', '房子'], ['loan', '房貸'], ['postpartum', '坐月子'], ['care', '0–2 歲'], ['preschool', '幼兒園'], ['school', '學校'], ['after', '放學後'], ['cram', '補習'], ['uni', '大學'], ['transport', '交通'], ['leave', '育嬰假']];
   function mapList(K, s) {
     var ul = h('ul', { class: 'wd-map' });
     MAP_KEYS.forEach(function (kk) {
@@ -81,7 +81,8 @@
       var sal = who === 'B' ? r.salaryB : r.salaryA;
       var name = mine ? r.name : (K.CITY[r.city].short || r.name);
       var sub = r.pr == null ? '收入再高也不夠' : r.pr <= 1 ? '幾乎任何收入都夠'
-        : (s.partner && who === 'both' ? '每人' : '') + '年薪約 ' + money(sal, K) + (mine ? '' : '（' + twd(sal, K) + '）');
+        : (s.partner && who === 'both' ? '每人' : '') + '年薪約 ' + money(sal, K) + (mine ? '' : '（' + twd(sal, K) + '）') +
+          (r.ratio ? '，同齡中位數的 ' + r.ratio.toFixed(1) + ' 倍' : '');
       var verdict = null;
       if (full && r.verdict) {
         var ok = r.minS >= 0;
@@ -129,7 +130,7 @@
     show(ids.indexOf(A.worldTab) >= 0 ? A.worldTab : ids[0]);
     box.appendChild(how);
 
-    box.appendChild(h('p', { class: 'sm muted wd-note' }, '試算版：各國數字來自官方統計與新聞，部分是估計，仍在核對。存款、長輩資助與孝親費依兩地薪資中位數換算。'));
+    box.appendChild(h('p', { class: 'sm muted wd-note' }, '試算版：各國數字來自官方統計與新聞，部分是估計，仍在核對。各國薪資統計的範圍不完全相同，排名較低時的比較比較粗略。台幣以市場匯率換算；存款、長輩資助與孝親費依兩地薪資中位數換算。'));
   }
 
   A.worldMoney = money;

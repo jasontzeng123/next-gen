@@ -14,6 +14,15 @@ var WORLD = (function (E, D) {
   // ---------- 國家模組的共用設定 ----------
   // 其他國家沒有產業別資料：只有「全體」與「沒有工作」
   function setupCountry(K) {
+    // 十分位從 P5 或 P10 開始的國家：以前兩點的斜率往下延伸到 P1、P5，
+    // 否則最低的那一段薪資都一樣，門檻會被誤判成「PR 1」
+    var q = K.W.q;
+    if (q[0][0] > 1 && q.length > 1) {
+      var sl = (Math.log(q[1][1]) - Math.log(q[0][1])) / (q[1][0] - q[0][0]);
+      [5, 1].forEach(function (p) {
+        if (q[0][0] > p) q.unshift([p, Math.max(0.05, q[0][1] * Math.exp(-sl * (q[0][0] - p)))]);
+      });
+    }
     K.IND = K.IND || {};
     if (!K.IND.all) K.IND.all = { id: 'all', name: '全體受僱者', median: K.W.median, k: 1, bonus: K.W.bonus || 1 };
     if (!K.IND.none) K.IND.none = { id: 'none', name: '沒有工作', median: 0, k: 0, bonus: 0 };
@@ -155,9 +164,9 @@ var WORLD = (function (E, D) {
   function breakdown(r) {
     var o = {}, tt = r.totals;
     Object.keys(CAT).forEach(function (k) { o[k] = CAT[k](tt); });
-    var tax = 0, si = 0, gross = 0, cash = 0;
-    for (var i = 0; i <= r.Tv && i < r.years.length; i++) { var y = r.years[i]; tax += y.tax; si += y.si; gross += y.gross; cash += y.transfers - y.tr.pension; }
-    o.tax = tax; o.si = si; o.gross = gross; o.cash = cash; o.years = Math.min(r.Tv + 1, r.years.length);
+    var tax = 0, si = 0, gross = 0, cash = 0, fund = 0;
+    for (var i = 0; i <= r.Tv && i < r.years.length; i++) { var y = r.years[i]; tax += y.tax; si += y.si; gross += y.gross; cash += y.transfers - y.tr.pension - (y.tr.fund || 0); fund += y.tr.fund || 0; }
+    o.tax = tax; o.si = si; o.gross = gross; o.cash = cash; o.fund = fund; o.years = Math.min(r.Tv + 1, r.years.length);
     return o;
   }
   function row(raw, cid, cityId, opts) {
@@ -167,6 +176,9 @@ var WORLD = (function (E, D) {
     var o = { cid: K.id, city: K.id === 'TW' ? ls.county : ls.city, cur: K.cur, fx: K.fx, s: ls, pr: th.pr, who: th.who,
       salaryA: th.salaryA, salaryB: th.salaryB, overall: th.overall, grossBirth: th.grossBirth };
     o.name = K.id === 'TW' ? D.COUNTY[ls.county].name : K.CITY[ls.city].name;
+    // 門檻年薪是同年齡全體受僱者中位數的幾倍（各國統計口徑不同時，比 PR 更好比較）
+    var ageW = th.who === 'B' ? ls.ageB : ls.ageA, salW = th.who === 'B' ? th.salaryB : th.salaryA;
+    o.ratio = salW ? salW / (K.W.median * E.ageFactor(ageW, K)) : null;
     o.country = K.name;
     // 在門檻收入下（找不到門檻就用 PR 99.9）的花費結構
     var p = th.pr != null ? th.pr : 99.9;

@@ -42,9 +42,10 @@
     W: {
       // 2024 年每月中位數 288 萬 × 12 = 3,456 萬［NEWS］，× 2024→2026 名目成長 1.052–1.061（取 1.056）［DERIVED］
       median: 36500000,
-      // §2.2 由級距推算的十分位；P10、P20 因含大量短工時工作，往上修（§12.2 建議）［ESTIMATE］
+      // §2.2 由級距推算的十分位。統計單位是「工作」（含短期、短工時與兼差），低端偏低；
+      // 依 §12.2 建議把 P10、P20 往台灣的形狀修（P10 0.55–0.60、P20 約 0.70），P30 一起微調讓曲線平順［ESTIMATE］
       // P95：級距 800–1,000 萬內插約 962 萬 ÷ 288 萬［DERIVED］
-      q: [[10, 0.50], [20, 0.60], [30, 0.68], [40, 0.84], [50, 1], [60, 1.19], [70, 1.47], [80, 1.86], [90, 2.59], [95, 3.34]],
+      q: [[10, 0.55], [20, 0.64], [30, 0.72], [40, 0.84], [50, 1], [60, 1.19], [70, 1.47], [80, 1.86], [90, 2.59], [95, 3.34]],
       paretoAlpha: 2.4, // 4.3% 月薪 1,000 萬以上、國稅廳 1.39% 年薪 2 億以上、0.52% 3 億以上 → 約 2.2–2.4［DERIVED］
       ageSpread: 0.85,
       // 年齡：只有各年齡層「平均」÷ 全體平均（20 代 0.72、30 代 1.06、40 代 1.25、50 代 1.19、60 代 0.78）§2.1。
@@ -256,7 +257,8 @@
         fee = intl ? C.intlSchool : s.school === 'private' ? C.esPrivate : C.esPublic;
         var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
         var after = (s.after !== 'none' && !(s.school === 'private' || intl)) ? C.esAfter * c.cramMult * 12 : 0;
-        extra = after + hobbies * C.hobbyClass * 12;
+        // 國小私教育費的平均已含約 1 項藝體才藝，所以「＋1 項」不再另加、「＋3 項」只加 2 項
+        extra = after + Math.max(0, hobbies - (after ? 1 : 0)) * C.hobbyClass * 12;
       } else {
         fee = intl ? C.intlSchool : level === 'jh' ? (priv ? C.jhPrivate : C.jhPublic) : (priv ? C.shPrivate : C.shPublic);
         extra = (C.cram[level][s.cram] || 0) * c.cramMult * 12;
