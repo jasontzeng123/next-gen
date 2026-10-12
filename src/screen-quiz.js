@@ -235,7 +235,7 @@
       ['日本', '韓國', '新加坡', '美國', '德國', '瑞典'].forEach(function (n) { list.appendChild(h('button', { class: 'chip', type: 'button', disabled: true }, n, h('small', {}, '建置中'))); });
       body.appendChild(list);
       var g = Globe.create(cv, {
-        lon: 100, lat: 20, zoom: 1, selected: 'TWN',
+        lon: 100, lat: 20, zoom: 1, midZoom: 1.6, selected: 'TWN',
         onHover: function (c, x, y) {
           if (!c) { tip.classList.remove('on'); return; }
           tip.textContent = c.a3 === 'TWN' ? '台灣・點選進入' : c.n + '・資料建置中';
