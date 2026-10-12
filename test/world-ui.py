@@ -16,7 +16,7 @@ with sync_playwright() as p:
         pg.on('pageerror', lambda e: errs.append((mode, 'pageerror', str(e))))
         pg.route('**/*', lambda route: route.abort() if route.request.url.startswith('http') else route.continue_())
         pg.goto('file://' + ROOT + '/test/page.html'); pg.wait_for_timeout(500)
-        pg.click('text=開始填寫申請書'); pg.wait_for_timeout(300)
+        pg.click('text=開始試算'); pg.wait_for_timeout(300)
         if pg.query_selector('.notice'): pg.click('text=我了解了，開始填寫')
         pg.wait_for_timeout(300)
         n = 0
@@ -39,6 +39,16 @@ with sync_playwright() as p:
         print(mode, 'world section ready in %.2fs' % (time.time() - t0))
         pg.evaluate("document.querySelectorAll('#sec-world details').forEach(d => d.open = true)")
         pg.wait_for_timeout(300)
+        # 報告重畫（調整設定、復原等）後要能直接畫出來，不能卡在「正在試算」
+        pg.evaluate('APP.redrawReport()'); pg.wait_for_timeout(300)
+        ok1 = pg.query_selector('#sec-world .wd-row') is not None
+        pg.click('.tbtn[aria-label="實驗室"]'); pg.wait_for_timeout(800)
+        pg.click('.tbtn[aria-label="審查報告書"]'); pg.wait_for_timeout(800)
+        ok2 = pg.query_selector('#sec-world .wd-row') is not None
+        # 改一個設定再重畫：要重新算出新的結果
+        pg.evaluate("APP.set('kids', 1); APP.redrawReport()"); pg.wait_for_selector('#sec-world .wd-row', timeout=30000)
+        print(mode, 'after redraw:', ok1, '| after lab and back:', ok2, '| after change:', pg.inner_text('#sec-world .wd-row .wd-pr'))
+        pg.evaluate("document.querySelectorAll('#sec-world details').forEach(d => d.open = true)")
         el = pg.query_selector('#sec-world')
         el.screenshot(path=f'{SHOTS}/world-{mode}.png')
         ov = pg.evaluate('document.documentElement.scrollWidth > window.innerWidth + 1')
