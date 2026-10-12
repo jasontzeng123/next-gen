@@ -789,7 +789,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-12T06:05', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-12T06:08', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -5230,9 +5230,9 @@ APP.screens.notice = function (main) {
   'use strict';
   var h = U.h, A = APP, D = DATA, E = ENGINE;
   var L = A.lab = A.lab || { exp: 'current', inc: 'current', tab: U.store.get('labTab', 'map'), metric: 'th', level: 'tw', sel: null, era: 'current' };
-  // 門檻 PR 分六級：綠（容易）→ 黃（中間收入附近）→ 橘紅（困難）→ 黑（PR 95 以上或再高也不夠）
-  // 色盲友善模式改用藍 → 黃 → 橘 → 黑（兩組都以相鄰色的色盲模擬差異檢查過）
-  var PAL = { normal: ['#0f8a73', '#6db36a', '#edc948', '#e86a2c', '#bf2c34', '#17181a'], cvd: ['#2a6fb8', '#82b8e3', '#ecd060', '#e9792e', '#a8342a', '#17181a'] };
+  // 門檻 PR 分六級：綠（容易）→ 黃（中間收入附近）→ 橘紅（困難）→ 偏黑的深紅（PR 95 以上或再高也不夠）
+  // 色盲友善模式改用藍 → 黃 → 橘 → 深咖啡紅（相鄰兩級的明暗差距夠大，深色模式下也看得到）
+  var PAL = { normal: ['#0f8a73', '#6db36a', '#edc948', '#e86a2c', '#bf2c34', '#7a1424'], cvd: ['#2a6fb8', '#82b8e3', '#ecd060', '#e9792e', '#a8342a', '#5e1c12'] };
   var BINS = [{ max: 25, t: 'PR 25 以下' }, { max: 40, t: 'PR 25–40' }, { max: 60, t: 'PR 40–60' }, { max: 80, t: 'PR 60–80' }, { max: 95, t: 'PR 80–95' }, { max: Infinity, t: 'PR 95 以上' }];
   function pal() { return U.cvd() ? PAL.cvd : PAL.normal; }
   function heatIdx(pr) { if (pr == null) return 5; for (var i = 0; i < BINS.length; i++) if (pr <= BINS[i].max) return i; return 5; }
@@ -5414,8 +5414,7 @@ APP.screens.notice = function (main) {
         });
         var paint = function () {
           if (dotsOn) {
-            var dark = U.isDark(), black = pal()[5];
-            map.dots(colorOf, { bg: U.cssVar('--sheet') || '#fbfcfa', ring: function (c) { return dark && c === black ? '#d9d4ca' : null; } });
+            map.dots(colorOf, { bg: U.cssVar('--sheet') || '#fbfcfa' });
             map.paint(null, L.sel || s.county); return;
           }
           map.paint(colorOf, L.sel || s.county);
@@ -5813,8 +5812,8 @@ APP.screens.method = function (main) {
   ]));
 
   inn.appendChild(h('h2', {}, '五之一、點陣台灣地圖'));
-  inn.appendChild(p('實驗室的地圖用規則排列的點陣畫出台灣（含澎湖、金門、連江），底下墊一層淡淡的陸地輪廓。每個點代表地圖上約 5 公里見方的一小格：點的顏色是所在縣市的門檻 PR，分為 25 以下、25–40、40–60、60–80、80–95、95 以上（黑色）六級；點的大小是這一格陸地的平均人口密度（內政部戶政司 2026 年 9 月各鄉鎮市區人口 ÷ 鄉鎮面積），人越密點越大，每平方公里 1.2 萬人以上就不再放大。地廣人稀的山區只剩小點，都市的大點會疊在一起，比較不會被「面積大但人少」的縣市誤導。'));
-  inn.appendChild(p('封面可以切換「色盲友善配色」：門檻分級改成藍、淺藍、黃、橘、紅褐、黑，報告裡的「好／壞」也從綠／紅改成藍／紅。兩組配色都用色覺異常模擬檢查過相鄰兩級的差異。'));
+  inn.appendChild(p('實驗室的地圖用規則排列的點陣畫出台灣（含澎湖、金門、連江），底下墊一層淡淡的陸地輪廓。每個點代表地圖上約 5 公里見方的一小格：點的顏色是所在縣市的門檻 PR，分為 25 以下、25–40、40–60、60–80、80–95、95 以上（偏黑的深紅色）六級；點的大小是這一格陸地的平均人口密度（內政部戶政司 2026 年 9 月各鄉鎮市區人口 ÷ 鄉鎮面積），人越密點越大，每平方公里 1.2 萬人以上就不再放大。地廣人稀的山區只剩小點，都市的大點會疊在一起，比較不會被「面積大但人少」的縣市誤導。'));
+  inn.appendChild(p('封面可以切換「色盲友善配色」：門檻分級改成藍、淺藍、黃、橘、紅褐、深咖啡紅，報告裡的「好／壞」也從綠／紅改成藍／紅。兩組配色都用色覺異常模擬檢查過相鄰兩級的差異。'));
 
   inn.appendChild(h('h2', {}, '六、各縣市資料'));
   var tw = h('div', { class: 'table-scroll' });
