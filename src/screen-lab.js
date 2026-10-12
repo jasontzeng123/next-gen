@@ -165,7 +165,7 @@
       var vals = ids.map(function (id) { return result[id]; });
       var med = null;
       if (L.metric === 'th') med = popMedian(vals);
-      status.textContent = (L.metric === 'th' ? '顏色是門檻收入 PR' + (dotsOn ? '，點越大代表那裡住的人越密' : '') + '。一半的台灣人，住在門檻 PR ' + U.pr(med) + ' 以上的縣市。' : '以你們目前的收入，套用到每個縣市的結果' + (dotsOn ? '；點越大代表那裡住的人越密' : '') + '。');
+      status.textContent = (L.metric === 'th' ? '顏色是門檻收入 PR' + (dotsOn ? '，點越大代表那裡住的人越密' : '') + '。' : '以你們目前的收入，套用到每個縣市的結果' + (dotsOn ? '；點越大代表那裡住的人越密' : '') + '。');
       if (L.level === 'world') {
         var twColor = L.metric === 'th' ? heat(med) : vcol(result[s.county] ? result[s.county].v : 'pass');
         L.globe = Globe.create(mapBox.querySelector('canvas'), {

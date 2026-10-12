@@ -814,7 +814,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-12T12:11', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-12T12:51', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -5201,10 +5201,11 @@ APP.screens.notice = function (main) {
   }
   function drawCard(cv, s, res, th) {
     var vi = verdictInfo(s, res, th), mw = midWaitText(), info = peopleInfo(res, th, s);
-    var setting = QS.placeName(s) + '・' + s.kids + ' 個孩子・' + QS.labelOf('housing', s.housing);
+    // 第一行：縣市・地區・幾歲生（第一胎）；第二行：孩子數・住房
+    var setting = [QS.placeName(s) + (s.firstBirthAge ? '・' + s.firstBirthAge + ' 歲生' : ''), s.kids + ' 個孩子・' + QS.labelOf('housing', s.housing)];
     var paint = function () { U.safe(function () { paintCard(cv, s, th, vi, mw, info, setting); }, 'card'); };
     paint();
-    cardFonts([vi.title, vi.line.replace(/<[^>]+>/g, ''), vi.stamp.l.join(''), vi.stamp.sub || '', mw ? mw.label + mw.value : '', setting, info.peer]).then(paint);
+    cardFonts([vi.title, vi.line.replace(/<[^>]+>/g, ''), vi.stamp.l.join(''), vi.stamp.sub || '', mw ? mw.label + mw.value : '', setting.join(''), info.peer]).then(paint);
   }
   function paintCard(cv, s, th, vi, mw, info, setting) {
     var c = cv.getContext('2d'), W = 1080, H = 1350, X = 100, CW = W - 200;
@@ -5218,12 +5219,13 @@ APP.screens.notice = function (main) {
     c.fillStyle = css('--ink-3'); c.font = '500 28px ' + F_SANS; c.fillText('台灣・生育資格審查・模擬試算　No.115-TW', X, 170);
     c.fillStyle = css('--ink'); c.font = '900 92px ' + F_SERIF; c.fillText('你有資格', X, 300); c.fillText('生下一代嗎', X, 410);
     c.fillStyle = css('--seal'); c.fillText('？', X + c.measureText('生下一代嗎').width, 410);
-    // 設定（縣市・地區・孩子數・住房）：標題正下方、紅字；太長就在「・」後換行，右邊留給印章
-    var setW = thMode ? 560 : 500;
+    // 設定：標題正下方、紅字兩行（縣市・地區・幾歲生／孩子數・住房）；放不下就兩行一起縮小，右邊留給印章
+    var setW = thMode ? 560 : 500, setF = 40;
     c.fillStyle = css('--seal'); c.font = '500 40px ' + F_SANS;
-    var setL = splitLines(c, setting, setW), setLH = 54;
-    if (setL.length > 2) { c.font = '500 34px ' + F_SANS; setLH = 46; setL = splitLines(c, setting, setW); }
-    setL.slice(0, 2).forEach(function (l, i) { fitText(c, l, X, 484 + i * setLH, setW); });
+    var setMax = Math.max.apply(null, setting.map(function (l) { return c.measureText(l).width; }));
+    if (setMax > setW) { setF = Math.max(32, Math.floor(40 * setW / setMax)); c.font = '500 ' + setF + 'px ' + F_SANS; }
+    var setLH = Math.round(setF * 1.35);
+    setting.forEach(function (l, i) { fitText(c, l, X, 484 + i * setLH, setW); });
     var y;
     if (thMode) {
       // 10 人一列（每人代表 10%，不滿一人由下往上填色）
@@ -5263,7 +5265,7 @@ APP.screens.notice = function (main) {
     c.fillText('依 2026 年台灣真實資料試算', X, fy + 46);
     // 網址：圖卡被轉傳時，看到的人知道去哪裡玩
     var host = String((window.TWKIDS && window.TWKIDS.siteUrl) || shareUrl()).replace(/^https?:\/\//, '').replace(/\/$/, '');
-    c.fillStyle = css('--ink'); c.font = '500 26px ' + F_SANS; c.textAlign = 'right';
+    c.fillStyle = css('--ink-3'); c.font = '500 26px ' + F_SANS; c.textAlign = 'right'; // 和左邊「依 2026 年…」同色
     c.fillText(host, W - X, fy + 46); c.textAlign = 'left';
     // 印章最後蓋上去（兩種印章一樣大）；門檻模式往上移，騰出中間放 100 人，壓到一點也沒關係
     if (thMode) stamp(c, vi, 852, 432, 172, css);
@@ -5591,7 +5593,7 @@ APP.screens.notice = function (main) {
       var vals = ids.map(function (id) { return result[id]; });
       var med = null;
       if (L.metric === 'th') med = popMedian(vals);
-      status.textContent = (L.metric === 'th' ? '顏色是門檻收入 PR' + (dotsOn ? '，點越大代表那裡住的人越密' : '') + '。一半的台灣人，住在門檻 PR ' + U.pr(med) + ' 以上的縣市。' : '以你們目前的收入，套用到每個縣市的結果' + (dotsOn ? '；點越大代表那裡住的人越密' : '') + '。');
+      status.textContent = (L.metric === 'th' ? '顏色是門檻收入 PR' + (dotsOn ? '，點越大代表那裡住的人越密' : '') + '。' : '以你們目前的收入，套用到每個縣市的結果' + (dotsOn ? '；點越大代表那裡住的人越密' : '') + '。');
       if (L.level === 'world') {
         var twColor = L.metric === 'th' ? heat(med) : vcol(result[s.county] ? result[s.county].v : 'pass');
         L.globe = Globe.create(mapBox.querySelector('canvas'), {
