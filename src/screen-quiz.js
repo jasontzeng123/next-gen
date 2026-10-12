@@ -102,8 +102,11 @@
     var p1 = vis.filter(function (x) { return x.part === 1; });
     var hIdx = vis.findIndex(function (x) { return x.id === 'housing'; });
     if (q === p1[p1.length - 1] && hIdx > A.qi) {
+      // 主要動作是繼續填寫（高亮）；快速看結果放在「或是」下面，免得看起來像在鼓勵跳過
       inn.insertBefore(h('div', { class: 'quick-row' },
-        h('button', { class: 'btn ghost quick-btn', type: 'button', onclick: quickStart }, '只選是否購屋，直接看結果', U.icon('next')),
+        h('button', { class: 'btn', type: 'button', onclick: function () { next(); } }, '繼續填寫', U.icon('next')),
+        h('span', { class: 'quick-or', 'aria-hidden': 'true' }, '或是'),
+        h('button', { class: 'btn ghost quick-btn', type: 'button', onclick: quickStart }, '只選是否購屋，直接看結果'),
         h('p', { class: 'xs muted' }, '其他題目用一般家庭的標準計算。')), foot);
     }
 

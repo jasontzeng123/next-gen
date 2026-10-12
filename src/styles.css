@@ -803,6 +803,8 @@ button.wd-li:hover { background: var(--sheet-2); }
 @media (prefers-reduced-motion: reduce) { .rv-share { visibility: visible; opacity: 1; animation: none; } }
 
 /* 第一部分最後一題下方：「只選是否購屋，直接看結果」 */
-.quick-row { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--rule-soft); display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.quick-row { margin-top: 22px; padding-top: 20px; border-top: 1px dashed var(--rule-soft); display: flex; flex-direction: column; align-items: stretch; gap: 8px; max-width: 360px; }
 .quick-row .quick-btn { border-color: var(--rule); }
+.quick-or { align-self: center; font-size: 13px; color: var(--ink-3); opacity: .8; }
+.quick-row p { text-align: center; }
 .quick-note { margin: -4px 0 16px; }
