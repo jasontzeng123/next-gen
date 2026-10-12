@@ -254,7 +254,7 @@
   }
 
   // ---------- 世界：各國主要城市（地球＋地球下方的城市列表；右邊是點選城市的詳細資料） ----------
-  var A3INV = { JPN: 'JP', KOR: 'KR', FRA: 'FR', CHN: 'CN', USA: 'US', GBR: 'UK', DEU: 'DE', SWE: 'SE', CAN: 'CA', AUS: 'AU', SGP: 'SG', HKG: 'HK', ITA: 'IT', ESP: 'ES', ISR: 'IL', NLD: 'NL', NZL: 'NZ' };
+  var A3INV = { JPN: 'JP', KOR: 'KR', FRA: 'FR', CHN: 'CN', USA: 'US', GBR: 'UK', DEU: 'DE', SWE: 'SE', CAN: 'CA', AUS: 'AU', SGP: 'SG', HKG: 'HK', ITA: 'IT', ESP: 'ES', ISR: 'IL', NLD: 'NL', NZL: 'NZ', CHE: 'CH' };
   function worldView(left, right, s) {
     var status = h('p', { class: 'sm muted', 'aria-live': 'polite' }, '正在試算各國城市…');
     var mapBox = h('div', { class: 'twmap-wrap' });
