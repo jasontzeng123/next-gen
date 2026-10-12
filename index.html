@@ -814,7 +814,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-12T12:07', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-12T12:11', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -4355,7 +4355,7 @@ APP.screens.notice = function (main) {
       if (th.pr <= 1) return { stamp: { k: 'square', l: ['核准'] }, title: '幾乎任何收入都養得起。', line: '這組標準在' + D.COUNTY[s.county].name + '的花費，絕大多數受僱者都負擔得了。', tone: 'good' };
       return {
         stamp: { k: 'round', l: ['門檻'], sub: 'PR ' + U.pr(th.pr) },
-        title: th.pr < 35 ? '收入只要贏過 ' + U.pr(th.pr) + '% 的人，就養得起。' : th.pr < 50 ? '收入贏過 ' + U.pr(th.pr) + '% 的人，可以養得起。' : '收入要在前 ' + U.topPct(th.pr) + '%，才養得起。',
+        title: th.pr < 35 ? '收入贏過 ' + U.pr(th.pr) + '% 的人，就養得起。' : th.pr < 50 ? '收入贏過 ' + U.pr(th.pr) + '% 的人，可以養得起。' : '收入要在前 ' + U.topPct(th.pr) + '%，才養得起。',
         line: (s.partner ? '夫妻雙方的收入，都要贏過 <b>' : '你的收入要贏過 <b>') + U.pr(th.pr) + '%</b> 的同齡、同產業受僱者。生第一胎那年，' + (s.partner ? '夫妻合計' : '') + '稅前年收入約 <b>' + U.wan(th.grossBirth) + '</b>。' + (hbLine ? '<br>' + hbLine : ''),
         tone: th.pr >= 80 ? 'bad' : th.pr >= 55 ? 'warn' : 'good', hb: hb
       };
