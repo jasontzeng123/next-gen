@@ -4,7 +4,7 @@
 // 用法：node build/build.js
 const fs = require('fs'), path = require('path');
 const R = p => fs.readFileSync(path.join(__dirname, '..', 'src', p), 'utf8');
-const js = ['data.js', 'geo.js', 'popgrid.js', 'engine.js', 'world.js', 'country-jp.js', 'country-kr.js', 'country-fr.js', 'country-cn.js', 'util.js', 'people.js', 'community.js', 'globe.js', 'twmap.js', 'charts.js', 'questions.js', 'app.js', 'screen-cover.js', 'screen-notice.js', 'screen-quiz.js', 'screen-result.js', 'screen-world.js', 'screen-lab.js', 'screen-method.js']
+const js = ['data.js', 'geo.js', 'popgrid.js', 'engine.js', 'world.js', 'country-jp.js', 'country-kr.js', 'country-fr.js', 'country-cn.js', 'country-us.js', 'util.js', 'people.js', 'community.js', 'globe.js', 'twmap.js', 'charts.js', 'questions.js', 'app.js', 'screen-cover.js', 'screen-notice.js', 'screen-quiz.js', 'screen-result.js', 'screen-world.js', 'screen-lab.js', 'screen-method.js']
   .map(f => '/* ---- ' + f + ' ---- */\n' + R(f).replace(/\nif \(typeof module !== ['"]undefined['"]\) module\.exports = [A-Z]+;\s*$/m, '\n')).join('\n');
 // CSS 大括號必須成對（避免一處錯誤讓後面的樣式全部失效）
 (function () { const css = R('styles.css'); let d = 0; for (const ch of css) { if (ch === '{') d++; else if (ch === '}') { d--; if (d < 0) throw new Error('styles.css: 多了一個 }'); } } if (d !== 0) throw new Error('styles.css: 有 ' + d + ' 個 { 沒有關閉'); })();
