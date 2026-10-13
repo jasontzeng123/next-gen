@@ -814,7 +814,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-13T02:45', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-13T02:59', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -4308,10 +4308,10 @@ APP.screens.notice = function (main) {
     var t = document.createElement('template');
     var col = 'var(--seal)';
     var txt = '';
-    if (lines.length === 1) txt = '<text x="100" y="' + (sub ? 112 : 124) + '" text-anchor="middle" font-family="var(--f-serif)" font-weight="900" font-size="' + (lines[0].length > 2 ? 46 : 70) + '" fill="' + col + '" letter-spacing="4">' + lines[0] + '</text>';
+    if (lines.length === 1) txt = '<text x="100" y="' + (sub ? 106 : 124) + '" text-anchor="middle" font-family="var(--f-serif)" font-weight="900" font-size="' + (lines[0].length > 2 ? 46 : 70) + '" fill="' + col + '" letter-spacing="4">' + lines[0] + '</text>';
     else txt = lines.map(function (l, i) { return '<text x="100" y="' + (88 + i * 52) + '" text-anchor="middle" font-family="var(--f-serif)" font-weight="900" font-size="44" fill="' + col + '" letter-spacing="3">' + l + '</text>'; }).join('');
-    // 副標（PR 值）放大約 1.6 倍（17 → 27）；字多（如 PR 99.9）就縮小一點，放得進內圈。門檻字與外框維持原樣
-    if (sub) txt += '<text x="100" y="' + (lines.length === 1 ? 155 : 168) + '" text-anchor="middle" font-family="var(--f-sans)" font-weight="700" font-size="' + (lines.length === 1 ? (sub.length > 5 ? 23 : 27) : 17) + '" fill="' + col + '">' + sub + '</text>';
+    // 副標（PR 值）：和分享圖卡的印章同比例（門檻 0.8R、PR 0.427R）；字多（如 PR 99.9）就縮小一點，放得進內圈
+    if (sub) txt += '<text x="100" y="' + (lines.length === 1 ? 149 : 168) + '" text-anchor="middle" font-family="var(--f-sans)" font-weight="700" font-size="' + (lines.length === 1 ? (sub.length > 5 ? 31 : 37) : 17) + '" fill="' + col + '">' + sub + '</text>';
     var shape = kind === 'round'
       ? '<circle cx="100" cy="100" r="88" fill="none" stroke="' + col + '" stroke-width="7"/><circle cx="100" cy="100" r="77" fill="none" stroke="' + col + '" stroke-width="2"/>'
       : '<rect x="14" y="14" width="172" height="172" rx="10" fill="none" stroke="' + col + '" stroke-width="8"/><rect x="26" y="26" width="148" height="148" rx="4" fill="none" stroke="' + col + '" stroke-width="2"/>';
