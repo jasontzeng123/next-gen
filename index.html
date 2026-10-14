@@ -814,7 +814,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-14T03:34', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-14T16:18', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -1199,6 +1199,21 @@ var ENGINE = (function (D) {
   }
   // 全體受僱者（不分年齡）中的 PR
   function overallPR(salary) { return salary > 0 ? wageRatioInv(salary / W.median) : 0; }
+
+  // 把「同齡同業」的門檻 PR 換算成「同齡、不分產業」的 PR，不同產業的人才能放在一起比較。
+  // 有工作的人在門檻 PR 下的平均薪資，換成不分產業時是第幾 PR（假設夫妻同齡，年齡因素互相抵銷）。
+  // 只看門檻的人（threshold／full）兩人都算；只填伴侶門檻（thresholdB）只算伴侶。資料庫的 tw_th_all() 與這裡一致。
+  function thAllPR(th, indA, indB, partner, incomeMode, county) {
+    if (th == null || !isFinite(th)) return null;
+    if (th >= 100) return 100;
+    if (county && !D.COUNTY[county]) return th;
+    var r = wageRatio(th), all = D.INDUSTRY.all, sum = 0, n = 0, other = false;
+    var add = function (id) { var ind = D.INDUSTRY[id]; if (!ind || !ind.median) return; sum += ind.median * Math.pow(r, ind.k * AGE_SPREAD); n++; if (id !== 'all') other = true; };
+    if (incomeMode !== 'thresholdB') add(indA);
+    if (partner) add(indB);
+    if (!n || !other) return th;   // 全部都是「不分產業」就不用換算
+    return wageRatioInv(Math.pow(sum / n / all.median, 1 / (all.k * AGE_SPREAD)));
+  }
 
   function pctFromPoints(pts, v) {
     // pts: [[percentile, value]] 由小到大；以對數內插，兩端外推
@@ -1942,7 +1957,7 @@ var ENGINE = (function (D) {
   return {
     DEFAULTS: DEFAULTS, normalize: normalize, simulate: simulate, full: full, atPR: atPR, threshold: threshold, curve: curve,
     compromises: compromises, maxKids: maxKids, waitAge: waitAge, timeMachine: timeMachine, eraRel: eraRel, withEra: withEra,
-    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor,
+    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR,
     householdIncomePR: householdIncomePR, householdExpensePR: householdExpensePR, supportEndAge: supportEndAge,
     districtMult: districtMult, rentFor: rentFor, houseSize: houseSize, incomeTax: incomeTax, clone: clone, MOVE_TO: MOVE_TO
   };
@@ -2315,7 +2330,9 @@ var COMM = (function () {
         if (!r || typeof r !== 'object' || r.n == null) throw { code: 'bad_stats' };
         st.server = true; st.rows = []; st.mineFlag = !!r.mine;
         st.realN = r.realN || 0; st.demoN = r.demoN || 0; st.demoOn = !!r.demoOn;
-        st.stats = { n: r.n, by: r.by || {}, thHist: r.thHist || [], thMedian: r.thMedian, perChildMedian: r.perChildMedian, byCounty: r.byCounty || {} };
+        // 資料庫升級後（upgrade-3）會多回傳換算成「同齡、不分產業」的門檻統計，優先使用；還沒升級就沿用原本的
+        var hasAll = Array.isArray(r.thAllHist) && r.thAllHist.length > 0;
+        st.stats = { n: r.n, by: r.by || {}, thHist: (hasAll ? r.thAllHist : r.thHist) || [], thMedian: hasAll ? r.thAllMedian : r.thMedian, perChildMedian: r.perChildMedian, byCounty: (hasAll ? r.byCountyAll : r.byCounty) || {}, thAll: hasAll };
         st.loaded = true; st.loadErr = null; emit();
       }).catch(function (e) {
         // 資料庫還沒升級（沒有 crowd_stats）或暫時失敗：改讀原始資料
@@ -2385,6 +2402,8 @@ var COMM = (function () {
     if (s.incomeMode === 'full') { d.prA = Math.round(s.jobA.pr / 5) * 5; d.prB = s.partner ? Math.round(s.jobB.pr / 5) * 5 : null; }
     d.verdict = s.incomeMode === 'full' ? res.verdict : null;
     d.th = th && th.pr != null ? Math.round(th.pr * 10) / 10 : (th ? 100 : null);
+    // 換算成同齡、不分產業的門檻 PR（統計用；不同產業的 PR 才能放在一起比）
+    if (d.th != null) { var ta = ENGINE.thAllPR(d.th, d.indA, d.indB, s.partner, s.incomeMode, s.county); d.thAll = ta == null ? null : Math.round(ta * 10) / 10; }
     d.perChild = Math.round(res.perChild / 1e5) * 1e5;
     d.expPR = Math.round(res.hhExpensePR);
     d.childSubs = Math.round((res.childSubs || 0) / 1e5) * 1e5;
@@ -2411,14 +2430,26 @@ var COMM = (function () {
         by[k] = by[k] || {}; by[k][v] = (by[k][v] || 0) + 1;
       });
     });
-    var ths = rows.map(function (r) { return r.th; }).filter(function (x) { return typeof x === 'number'; });
+    var ths = rows.map(thAllOfDoc).filter(function (x) { return typeof x === 'number'; });
     var pcs = rows.map(function (r) { return r.perChild; }).filter(function (x) { return typeof x === 'number' && x > 0; });
     var hist = []; for (var i = 0; i <= 100; i++) hist.push(0);
     ths.forEach(function (v) { hist[Math.max(0, Math.min(100, Math.floor(v)))]++; });
     var byC = {}, byCounty = {};
-    rows.forEach(function (r) { if (typeof r.th === 'number' && r.county) (byC[r.county] = byC[r.county] || []).push(r.th); });
+    rows.forEach(function (r) { var v = thAllOfDoc(r); if (typeof v === 'number' && r.county) (byC[r.county] = byC[r.county] || []).push(v); });
     Object.keys(byC).forEach(function (k) { byCounty[k] = { n: byC[k].length, med: median(byC[k]) }; });
-    return { n: rows.length, by: by, thHist: hist, thMedian: median(ths), perChildMedian: median(pcs), byCounty: byCounty };
+    return { n: rows.length, by: by, thHist: hist, thMedian: median(ths), perChildMedian: median(pcs), byCounty: byCounty, thAll: true };
+  }
+  // 分享資料的門檻換算成「同齡、不分產業」的 PR（新資料送出時已算好 thAll；舊資料在這裡補算）
+  function thAllOfDoc(r) {
+    if (typeof r.thAll === 'number') return r.thAll;
+    if (typeof r.th !== 'number') return null;
+    return ENGINE.thAllPR(r.th, r.indA, r.indB, r.partner, r.incomeMode, r.county);
+  }
+  // 自己的門檻，換成和統計同一把尺（統計還是舊的同業 PR 時就不換算）
+  function mineTh(s, thPr) {
+    if (thPr == null) return null;
+    if (!st.stats || !st.stats.thAll) return thPr;
+    return ENGINE.thAllPR(thPr, s.jobA && s.jobA.industry, s.partner && s.jobB ? s.jobB.industry : null, s.partner, s.incomeMode, s.county);
   }
   function share(key, value) {
     var S = st.stats; if (!S || S.n < MIN_N) return null;
@@ -2529,7 +2560,7 @@ var COMM = (function () {
     }
   }
 
-  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, thRank: thRank, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote, canFeedback: canFeedback, sendFeedback: sendFeedback, sig: sig, shared: shared, hasShared: hasShared };
+  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, thRank: thRank, mineTh: mineTh, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote, canFeedback: canFeedback, sendFeedback: sendFeedback, sig: sig, shared: shared, hasShared: hasShared };
 })();
 
 /* ---- globe.js ---- */
@@ -5129,13 +5160,17 @@ APP.screens.notice = function (main) {
       return sec;
     }
     var tiles = h('div', { class: 'tiles' });
-    var thRank = A.th.pr != null ? (COMM.thRank(A.th.pr) || 0) : 100;
+    // 門檻統計換算成「同齡、不分產業」的 PR：自己的門檻也換成同一把尺再排名
+    var myTh = A.th.pr != null ? COMM.mineTh(s, A.th.pr) : null;
+    var thRank = myTh != null ? (COMM.thRank(myTh) || 0) : 100;
+    var thConv = S.thAll && myTh != null && Math.abs(myTh - A.th.pr) >= 0.5;
     tiles.appendChild(tile('分享人數', U.sep(n), st.demoOn ? '含 ' + st.demoN + ' 筆示範資料' : n >= (st.backend === 'web' ? 3000 : 1000) ? '最近 ' + U.sep(n) + ' 筆' : '所有匿名分享的人', false));
-    tiles.appendChild(tile('門檻 PR 中位數', U.pr(S.thMedian), '你的門檻比 ' + Math.round(thRank) + '% 的人高', false));
+    tiles.appendChild(tile('門檻 PR 中位數', U.pr(S.thMedian), (thConv ? '你的換算後是 PR ' + U.pr(myTh) + '，' : '你的門檻') + '比 ' + Math.round(thRank) + '% 的人高', false));
     if (S.perChildMedian) tiles.appendChild(tile('每個孩子的淨成本（中位數）', U.wan(S.perChildMedian), '你的是 ' + U.wan(res.perChild), false));
     var vb = S.by.verdict || {}, vtot = 0; for (var k in vb) vtot += vb[k];
     if (vtot >= COMM.MIN_N) tiles.appendChild(tile('填了收入的人被核准', Math.round(((vb.pass || 0) + (vb.tight || 0)) / vtot * 100) + '%', '含「附條件核准」', false));
     sec.appendChild(tiles);
+    if (S.thAll) sec.appendChild(h('p', { class: 'xs muted', style: { marginTop: '8px' } }, '門檻 PR 原本是跟同齡、同產業的人比。這裡把每個人的門檻都換算成「同齡、不分產業」的 PR 再放在一起比，例如半導體業的 PR 28，收入大約等於不分產業的 PR 70。'));
     // 每題分布
     var keys = [['housing', '住房'], ['room', '孩子房間'], ['care', '0–2 歲照顧'], ['preschool', '幼兒園'], ['school', '國小到高中'], ['cram', '補習'], ['support', '供養到'], ['transport', '交通'], ['lifestyle', '生活水準']];
     var g = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px 26px', marginTop: '20px' } });
@@ -5977,7 +6012,7 @@ APP.screens.notice = function (main) {
     if (!st.db || (st.backend === 'web' && st.loadErr)) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, st.backend === 'web' ? '暫時連不上資料庫' : '這個檢視無法讀取共享資料'), st.backend === 'web' ? '請稍後再試；你的試算不受影響。' : '在 claude.ai 登入後開啟，就能看到大家分享的資料。')); return; }
     if (st.demoOn) sec.appendChild(h('p', { class: 'xs muted demo-note', style: { marginBottom: '10px' } }, COMM.demoNote()));
     if (!S || S.n < COMM.MIN_N) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + (S ? S.n : 0) + ' 人分享'), '累積到 ' + COMM.MIN_N + ' 人以上就會顯示。完成試算時選擇「匿名分享」，就能加入統計。')); return; }
-    var th = A.th && A.th.pr;
+    var th = A.th && A.th.pr != null ? COMM.mineTh(A.s, A.th.pr) : null;
     var bins = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     (S.thHist || []).forEach(function (c, v) { bins[Math.min(10, Math.floor(v / 10))] += c; });
     var mx = Math.max.apply(null, bins.concat([1]));
@@ -5989,7 +6024,7 @@ APP.screens.notice = function (main) {
       svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh + 18, 'text-anchor': 'middle', text: i === 10 ? '100' : (i * 10) + '–', style: 'font-size:11px;fill:var(--ink-3)' }));
       if (n) svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh - hh - 6, 'text-anchor': 'middle', text: String(n), style: 'font-size:11px;fill:var(--ink-2)' }));
     });
-    sec.appendChild(h('p', { class: 'rsec-lede' }, S.n + ' 位分享者，各自心中的養育標準需要的收入 PR。藍色是你所在的區間。'));
+    sec.appendChild(h('p', { class: 'rsec-lede' }, S.n + ' 位分享者，各自心中的養育標準需要的收入 PR' + (S.thAll ? '（已換算成同齡、不分產業的 PR，不同產業的人才能放在一起比）' : '') + '。藍色是你所在的區間。'));
     sec.appendChild(h('div', { class: 'chart-box' }, svg));
     // 各縣市
     var byC = S.byCounty || {};
@@ -6049,7 +6084,7 @@ APP.screens.method = function (main) {
     '存款有餘時以每年 1% 實質報酬計算；不夠時視為借款，以每年 3% 的實質成本計算利息。65 歲以後，有工作過的人每月另有約 2.5 萬元的勞保年金與勞退（估計）。',
     '報告裡的「年齡」都是「那一年你幾歲」，和存摺明細一致。',
     '<b>核准</b>：第一胎出生後，存款最低時仍有半年以上的家庭開銷。<b>附條件核准</b>：存款從未跌破零，但最低時不到半年開銷。<b>駁回</b>：孩子獨立前存款跌破零（中途得借錢）；若到孩子獨立時仍是負的，就是「入不敷出」。',
-    '<b>門檻 PR</b>：把雙方收入 PR 從 1 調到 99.9（同產業、同年齡），找出存款剛好不會跌破零的最低 PR。若 99.9 仍不夠，就顯示「再高也不夠」。',
+    '<b>門檻 PR</b>：把雙方收入 PR 從 1 調到 99.9（同產業、同年齡），找出存款剛好不會跌破零的最低 PR。若 99.9 仍不夠，就顯示「再高也不夠」。報告與實驗室裡「其他人」的門檻統計，會把每個人的門檻換算成<b>同齡、不分產業</b>的 PR 再放在一起比（不同產業的薪資差很多，例如半導體業的 PR 28，收入大約等於不分產業的 PR 70）。',
     '<b>平行世界</b>：同樣的人、同樣的收入與生活水準，只是不生小孩。存款圖上的平行世界是<b>兩人一起租屋</b>（一房一廳；設定住長輩家的人，平行世界也住長輩家），用來比較「如果不生，錢會怎麼走」。',
     '<b>養一個孩子要多少</b>：拿「有孩子」和「同樣住法、但沒孩子」的世界相減。租屋的人比較的是租大房子與一房一廳的租金差；<b>買房的人</b>比較的是同樣買房、但只買兩個大人住的 2 房——多出來的頭期款、房貸本息與房屋稅費，就是「為孩子多買的房間」。房子本身仍是你的資產，這筆價值沒有扣回來；報告的存款圖會另外寫出房子扣掉房貸後約值多少。',
     '<b>不填收入時</b>：報告先算出門檻 PR；存摺動畫、逐年明細與「養一個孩子要花多少」則以雙方收入都在中間（PR 50）的家庭演示，可在報告裡切換成「剛好達到門檻」的版本。',

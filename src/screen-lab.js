@@ -532,7 +532,7 @@
     if (!st.db || (st.backend === 'web' && st.loadErr)) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, st.backend === 'web' ? '暫時連不上資料庫' : '這個檢視無法讀取共享資料'), st.backend === 'web' ? '請稍後再試；你的試算不受影響。' : '在 claude.ai 登入後開啟，就能看到大家分享的資料。')); return; }
     if (st.demoOn) sec.appendChild(h('p', { class: 'xs muted demo-note', style: { marginBottom: '10px' } }, COMM.demoNote()));
     if (!S || S.n < COMM.MIN_N) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + (S ? S.n : 0) + ' 人分享'), '累積到 ' + COMM.MIN_N + ' 人以上就會顯示。完成試算時選擇「匿名分享」，就能加入統計。')); return; }
-    var th = A.th && A.th.pr;
+    var th = A.th && A.th.pr != null ? COMM.mineTh(A.s, A.th.pr) : null;
     var bins = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     (S.thHist || []).forEach(function (c, v) { bins[Math.min(10, Math.floor(v / 10))] += c; });
     var mx = Math.max.apply(null, bins.concat([1]));
@@ -544,7 +544,7 @@
       svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh + 18, 'text-anchor': 'middle', text: i === 10 ? '100' : (i * 10) + '–', style: 'font-size:11px;fill:var(--ink-3)' }));
       if (n) svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh - hh - 6, 'text-anchor': 'middle', text: String(n), style: 'font-size:11px;fill:var(--ink-2)' }));
     });
-    sec.appendChild(h('p', { class: 'rsec-lede' }, S.n + ' 位分享者，各自心中的養育標準需要的收入 PR。藍色是你所在的區間。'));
+    sec.appendChild(h('p', { class: 'rsec-lede' }, S.n + ' 位分享者，各自心中的養育標準需要的收入 PR' + (S.thAll ? '（已換算成同齡、不分產業的 PR，不同產業的人才能放在一起比）' : '') + '。藍色是你所在的區間。'));
     sec.appendChild(h('div', { class: 'chart-box' }, svg));
     // 各縣市
     var byC = S.byCounty || {};
