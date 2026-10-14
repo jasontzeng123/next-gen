@@ -1053,3 +1053,22 @@ Waiting lists for public facilities: Taipei 2–5 years; New Taipei and Taichung
   }
 }
 ```
+
+## Savings assumption (surplus saved)
+
+- Each simulated year, after-tax income plus transfers minus all modelled spending is the surplus. By default the whole surplus is saved (`adv.saveRate = 1`).
+- This is optimistic. Weddings, gadgets, emergencies and student-loan repayment are not modelled.
+- Benchmarks:
+  - DGBAS 2024 Family Income and Expenditure Survey: the average household saves about 23.7% of disposable income (27.7萬/yr; storm.mg summary).
+  - yes123 2026 survey: workers aged 39 or under self-report average savings of only 14.9萬; 22.4% have none and 40.2% run a monthly deficit (money.udn.com). This is a self-selected online sample and probably excludes investments.
+- Players can set `adv.saveRate` to 0.8 or 0.6 under 進階假設. The unsaved part of a positive surplus is booked as `exp.extra`; deficit years are unaffected.
+- `exp.extra` is excluded from `childCost`, so the per-child cost does not depend on this setting.
+- Sensitivity, from the same base case: dual earners aged 25 with zero savings, first child at 31, 2 kids, used flat bought the year before the first birth. Saving 2萬/month less for the 5 years before buying raises the threshold PR as follows:
+
+  | Case | Threshold PR change |
+  |---|---|
+  | Taipei, buy | +3 |
+  | Taichung, buy | +10 |
+  | Kaohsiung, buy | +12 |
+  | Taipei, rent | +12.6 |
+  | Kaohsiung, rent | +14 |

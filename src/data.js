@@ -30,6 +30,8 @@ var DATA = (function () {
     occupation: { t: '勞動部｜職類別薪資調查', u: 'https://www.mol.gov.tw/1607/1632/1633/90814/', d: '2025' },
     household:  { t: '主計總處｜114年家庭收支調查', u: 'https://www.stat.gov.tw/News_Content.aspx?n=3703&s=236591', d: '2026-08' },
     quintile:   { t: '臺中市主計處｜114年家庭收支（含全國五等分位）', u: 'https://www.dbas.taichung.gov.tw/media/1457179/第115-03號-經濟統計通報-臺中市114-年家庭收支狀況.pdf', d: '2026' },
+    savingRate: { t: '風傳媒｜113年家庭收支調查：每戶儲蓄與儲蓄率', u: 'https://www.storm.mg/lifestyle/11061012', d: '2025-08' },
+    youthSave:  { t: '經濟日報｜yes123 青年勞工調查：39歲以下平均存款', u: 'https://money.udn.com/money/story/5612/9415770', d: '2026-04' },
     countyCons: { t: '主計總處家庭收支各縣市每人消費（彙整表）', u: 'https://csr.mcut.edu.tw/var/file/31/1031/img/2105/528706794.pdf', d: '2023' },
     minLiving:  { t: '臺北市｜115年度最低生活費', u: 'https://service.docms.gov.taipei/attachments/115-income-limit.pdf', d: '2026' },
     women:      { t: '主計總處｜婦女婚育與就業調查', u: 'https://ws.dgbas.gov.tw/public/attachment/7911117100zt9y70g.pdf', d: '2016' },

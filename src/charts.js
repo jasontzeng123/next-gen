@@ -148,6 +148,7 @@ var Charts = (function () {
       tip.appendChild(U.h('div', { class: 'tt-h' }, (y.ageA) + ' 歲（' + y.year + ' 年）'));
       var rows = [['var(--s-save)', '年底存款', U.wan(y.S)], ['var(--s-income)', '收入（稅後＋補助）', U.wan(income(y))], ['var(--s-expense)', '支出', U.wan(expense(y))]];
       if (par && par[i]) rows.splice(1, 0, ['var(--s-alt)', '不生小孩的存款', U.wan(par[i].S)]);
+      if (y.exp.extra > 0) rows.push(['var(--s-expense)', '其中沒存下的結餘', U.wan(y.exp.extra)]);
       if (y.exp.debtInterest > 0) rows.push(['var(--seal)', '借款利息', U.wan(y.exp.debtInterest)]);
       rows.forEach(function (r) { var ii = U.h('i'); ii.style.background = r[0]; tip.appendChild(U.h('div', { class: 'tt-r' }, ii, U.h('span', {}, r[1]), U.h('b', {}, r[2]))); });
       var ev = y.events.map(evtText).filter(Boolean);
