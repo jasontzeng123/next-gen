@@ -814,7 +814,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-14T16:18', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-14T17:11', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -4274,7 +4274,23 @@ APP.screens.notice = function (main) {
         values.forEach(function (v) { chips.appendChild(chipEl({ label: fmt(v) }, A.s[key] === v, function () { A.set(key, v); refresh(); }, A.s, key + ':' + v)); });
         var custom = values.indexOf(A.s[key]) < 0;
         var inp = h('input', { type: 'number', class: 'input', min: 0, step: 1, inputmode: 'numeric', style: { width: '9em', padding: '6px 10px' }, 'aria-label': title + '（萬元）', value: custom ? Math.round(A.s[key] / 10000) : '', placeholder: '其他（萬）' });
-        inp.addEventListener('change', function () { A.set(key, Math.max(0, +inp.value || 0) * 10000); A.persist(); softRefresh(); });
+        inp.addEventListener('change', function () {
+          var wan = Math.max(0, Math.round(+inp.value || 0)), prev = A.s[key];
+          var apply = function () { A.set(key, wan * 10000); A.persist(); softRefresh(); };
+          // 1,000 萬以上先確認：這一格的單位是「萬」，最常見的錯誤是把元填進來（例如 3000000 → 300 億）
+          if (wan < 1000) return apply();
+          if (inp.__asking === wan) return;   // 同一個數字已經在確認中（避免重複跳出）
+          inp.__asking = wan;
+          var yi = Math.floor(wan / 10000), rest = wan % 10000;
+          var spoken = (yi ? yi + ' 億' : '') + (rest ? U.sep(rest) + ' 萬' : '') + '元';
+          U.modal(function (box, close) {
+            box.appendChild(h('h3', {}, '確定是 ' + spoken + '嗎？'));
+            box.appendChild(h('p', {}, '這一格的單位是「萬」：填 100 代表 100 萬元。你填的是 ' + U.sep(wan) + '，也就是新台幣 ' + U.sep(wan * 10000) + ' 元。'));
+            box.appendChild(h('div', { class: 'actions' },
+              h('button', { class: 'btn ghost', onclick: function () { inp.__asking = null; close(); inp.value = values.indexOf(prev) < 0 && prev ? Math.round(prev / 10000) : ''; inp.focus(); } }, '重新填寫'),
+              h('button', { class: 'btn', onclick: function () { inp.__asking = null; close(); apply(); } }, '沒錯，是 ' + spoken)));
+          });
+        });
         chips.appendChild(inp);
         grp.appendChild(chips); body.appendChild(grp);
       }
