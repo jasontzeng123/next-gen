@@ -70,6 +70,21 @@ var ENGINE = (function (D) {
   // 全體受僱者（不分年齡）中的 PR
   function overallPR(salary) { return salary > 0 ? wageRatioInv(salary / W.median) : 0; }
 
+  // 把「同齡同業」的門檻 PR 換算成「同齡、不分產業」的 PR，不同產業的人才能放在一起比較。
+  // 有工作的人在門檻 PR 下的平均薪資，換成不分產業時是第幾 PR（假設夫妻同齡，年齡因素互相抵銷）。
+  // 只看門檻的人（threshold／full）兩人都算；只填伴侶門檻（thresholdB）只算伴侶。資料庫的 tw_th_all() 與這裡一致。
+  function thAllPR(th, indA, indB, partner, incomeMode, county) {
+    if (th == null || !isFinite(th)) return null;
+    if (th >= 100) return 100;
+    if (county && !D.COUNTY[county]) return th;
+    var r = wageRatio(th), all = D.INDUSTRY.all, sum = 0, n = 0, other = false;
+    var add = function (id) { var ind = D.INDUSTRY[id]; if (!ind || !ind.median) return; sum += ind.median * Math.pow(r, ind.k * AGE_SPREAD); n++; if (id !== 'all') other = true; };
+    if (incomeMode !== 'thresholdB') add(indA);
+    if (partner) add(indB);
+    if (!n || !other) return th;   // 全部都是「不分產業」就不用換算
+    return wageRatioInv(Math.pow(sum / n / all.median, 1 / (all.k * AGE_SPREAD)));
+  }
+
   function pctFromPoints(pts, v) {
     // pts: [[percentile, value]] 由小到大；以對數內插，兩端外推
     if (v <= 0) return 0;
@@ -812,7 +827,7 @@ var ENGINE = (function (D) {
   return {
     DEFAULTS: DEFAULTS, normalize: normalize, simulate: simulate, full: full, atPR: atPR, threshold: threshold, curve: curve,
     compromises: compromises, maxKids: maxKids, waitAge: waitAge, timeMachine: timeMachine, eraRel: eraRel, withEra: withEra,
-    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor,
+    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR,
     householdIncomePR: householdIncomePR, householdExpensePR: householdExpensePR, supportEndAge: supportEndAge,
     districtMult: districtMult, rentFor: rentFor, houseSize: houseSize, incomeTax: incomeTax, clone: clone, MOVE_TO: MOVE_TO
   };

@@ -113,7 +113,9 @@ var COMM = (function () {
         if (!r || typeof r !== 'object' || r.n == null) throw { code: 'bad_stats' };
         st.server = true; st.rows = []; st.mineFlag = !!r.mine;
         st.realN = r.realN || 0; st.demoN = r.demoN || 0; st.demoOn = !!r.demoOn;
-        st.stats = { n: r.n, by: r.by || {}, thHist: r.thHist || [], thMedian: r.thMedian, perChildMedian: r.perChildMedian, byCounty: r.byCounty || {} };
+        // 資料庫升級後（upgrade-3）會多回傳換算成「同齡、不分產業」的門檻統計，優先使用；還沒升級就沿用原本的
+        var hasAll = Array.isArray(r.thAllHist) && r.thAllHist.length > 0;
+        st.stats = { n: r.n, by: r.by || {}, thHist: (hasAll ? r.thAllHist : r.thHist) || [], thMedian: hasAll ? r.thAllMedian : r.thMedian, perChildMedian: r.perChildMedian, byCounty: (hasAll ? r.byCountyAll : r.byCounty) || {}, thAll: hasAll };
         st.loaded = true; st.loadErr = null; emit();
       }).catch(function (e) {
         // 資料庫還沒升級（沒有 crowd_stats）或暫時失敗：改讀原始資料
@@ -183,6 +185,8 @@ var COMM = (function () {
     if (s.incomeMode === 'full') { d.prA = Math.round(s.jobA.pr / 5) * 5; d.prB = s.partner ? Math.round(s.jobB.pr / 5) * 5 : null; }
     d.verdict = s.incomeMode === 'full' ? res.verdict : null;
     d.th = th && th.pr != null ? Math.round(th.pr * 10) / 10 : (th ? 100 : null);
+    // 換算成同齡、不分產業的門檻 PR（統計用；不同產業的 PR 才能放在一起比）
+    if (d.th != null) { var ta = ENGINE.thAllPR(d.th, d.indA, d.indB, s.partner, s.incomeMode, s.county); d.thAll = ta == null ? null : Math.round(ta * 10) / 10; }
     d.perChild = Math.round(res.perChild / 1e5) * 1e5;
     d.expPR = Math.round(res.hhExpensePR);
     d.childSubs = Math.round((res.childSubs || 0) / 1e5) * 1e5;
@@ -209,14 +213,26 @@ var COMM = (function () {
         by[k] = by[k] || {}; by[k][v] = (by[k][v] || 0) + 1;
       });
     });
-    var ths = rows.map(function (r) { return r.th; }).filter(function (x) { return typeof x === 'number'; });
+    var ths = rows.map(thAllOfDoc).filter(function (x) { return typeof x === 'number'; });
     var pcs = rows.map(function (r) { return r.perChild; }).filter(function (x) { return typeof x === 'number' && x > 0; });
     var hist = []; for (var i = 0; i <= 100; i++) hist.push(0);
     ths.forEach(function (v) { hist[Math.max(0, Math.min(100, Math.floor(v)))]++; });
     var byC = {}, byCounty = {};
-    rows.forEach(function (r) { if (typeof r.th === 'number' && r.county) (byC[r.county] = byC[r.county] || []).push(r.th); });
+    rows.forEach(function (r) { var v = thAllOfDoc(r); if (typeof v === 'number' && r.county) (byC[r.county] = byC[r.county] || []).push(v); });
     Object.keys(byC).forEach(function (k) { byCounty[k] = { n: byC[k].length, med: median(byC[k]) }; });
-    return { n: rows.length, by: by, thHist: hist, thMedian: median(ths), perChildMedian: median(pcs), byCounty: byCounty };
+    return { n: rows.length, by: by, thHist: hist, thMedian: median(ths), perChildMedian: median(pcs), byCounty: byCounty, thAll: true };
+  }
+  // 分享資料的門檻換算成「同齡、不分產業」的 PR（新資料送出時已算好 thAll；舊資料在這裡補算）
+  function thAllOfDoc(r) {
+    if (typeof r.thAll === 'number') return r.thAll;
+    if (typeof r.th !== 'number') return null;
+    return ENGINE.thAllPR(r.th, r.indA, r.indB, r.partner, r.incomeMode, r.county);
+  }
+  // 自己的門檻，換成和統計同一把尺（統計還是舊的同業 PR 時就不換算）
+  function mineTh(s, thPr) {
+    if (thPr == null) return null;
+    if (!st.stats || !st.stats.thAll) return thPr;
+    return ENGINE.thAllPR(thPr, s.jobA && s.jobA.industry, s.partner && s.jobB ? s.jobB.industry : null, s.partner, s.incomeMode, s.county);
   }
   function share(key, value) {
     var S = st.stats; if (!S || S.n < MIN_N) return null;
@@ -327,5 +343,5 @@ var COMM = (function () {
     }
   }
 
-  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, thRank: thRank, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote, canFeedback: canFeedback, sendFeedback: sendFeedback, sig: sig, shared: shared, hasShared: hasShared };
+  return { diag: diag, st: st, on: on, init: init, load: load, submit: submit, withdraw: withdraw, mine: mine, buildDoc: buildDoc, share: share, thRank: thRank, mineTh: mineTh, median: median, loadSaves: loadSaves, writeSaves: writeSaves, downloads: downloads, MIN_N: MIN_N, DEMO_OFF: DEMO_OFF, demoNote: demoNote, canFeedback: canFeedback, sendFeedback: sendFeedback, sig: sig, shared: shared, hasShared: hasShared };
 })();
