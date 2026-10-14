@@ -141,7 +141,7 @@ var ENGINE = (function (D) {
     jobA: { industry: 'all', pr: 50 },
     jobB: { industry: 'all', pr: 50 },
     savings: 500000, giftOnce: 0, giftMonthly: 0, giftYears: 10,
-    adv: { wageGrowth: 0.01, returnRate: 0.01, borrowRate: 0.03, inflation: 0.02, bankRate: 0.025, pending: false, rentSubsidy: true, qinganExtend: true, homeGrowth: 0 }
+    adv: { wageGrowth: 0.01, returnRate: 0.01, borrowRate: 0.03, inflation: 0.02, bankRate: 0.025, pending: false, rentSubsidy: true, qinganExtend: true, homeGrowth: 0, saveRate: 1 }
   };
   function normalize(raw) {
     var s = clone(DEFAULTS);
@@ -494,7 +494,7 @@ var ENGINE = (function (D) {
       var ageA = s.ageA + t, ageB = s.ageB + t;
       var kAges = kidAgesAt(t);
       var events = [];
-      var e = { housing: 0, housingOnce: 0, living: 0, kidsBirth: 0, kidsCare: 0, kidsEdu: 0, kidsLife: 0, transport: 0, elder: 0, travel: 0, debtInterest: 0 };
+      var e = { housing: 0, housingOnce: 0, living: 0, kidsBirth: 0, kidsCare: 0, kidsEdu: 0, kidsLife: 0, transport: 0, elder: 0, travel: 0, debtInterest: 0, extra: 0 };
       var tr = { birth: 0, cityBirth: 0, allowance: 0, care: 0, leave: 0, rent: 0, uni: 0, growth: 0, kg: 0, pension: 0 };
       x.t = t; x.e = e; x.tr = tr; x.events = events; x.kAges = kAges; x.helperMonths = 0; x.y = {}; // x.y：國家模組每年用的暫存
       x.S = S; x.depHeld = depHeld; // 年初的存款與已付的押金（韓國全稅：決定自己拿得出多少押金）
@@ -615,6 +615,9 @@ var ENGINE = (function (D) {
       var interest = S >= 0 ? S * A.returnRate : S * A.borrowRate;
       if (S < 0) e.debtInterest = -interest;
       if (S < 0) expTotal += -interest; else netIncome += interest;
+      // 結餘只存下一部分（進階設定）：沒存下來的算作「其他花費」（婚禮、3C、意外等）；入不敷出的年份不受影響
+      var saveRate = A.saveRate == null ? 1 : Math.max(0, Math.min(1, +A.saveRate));
+      if (saveRate < 1 && netIncome > expTotal) { e.extra = (netIncome - expTotal) * (1 - saveRate); expTotal += e.extra; }
       var Sstart = S;
       S = S + netIncome - expTotal;
       if (t <= Tv) {
@@ -680,7 +683,9 @@ var ENGINE = (function (D) {
     var sumW = function (sim, f) { var v = 0; for (var i = 0; i <= r.Tv && i < sim.years.length; i++) v += f(sim.years[i]); return v; };
     var yT = r.years[r.Tv] || r.years[r.years.length - 1], pT = p.years[r.Tv] || p.years[p.years.length - 1];
     r.houseEquity = r.house && r.Tv >= r.house.tb ? Math.max(0, yT.homeValue - yT.loanBal) : 0;
-    r.childCost = sumW(r, function (y) { return y.expTotal - y.exp.debtInterest; }) - sumW(q, function (y) { return y.expTotal - y.exp.debtInterest; });
+    // 「沒存下來的結餘」不算養孩子的成本（它取決於當年剩多少錢，不是孩子本身的花費）
+    var ownExp = function (y) { return y.expTotal - y.exp.debtInterest - (y.exp.extra || 0); };
+    r.childCost = sumW(r, ownExp) - sumW(q, ownExp);
     r.incomeLoss = sumW(q, function (y) { return y.gross; }) - sumW(r, function (y) { return y.gross; });
     r.savingsGap = pT.S - r.endS;                       // 現金存款的差距（對照不生小孩、租屋）
     r.netWorthGap = pT.netWorth - yT.netWorth;          // 把房屋淨值也算進去的差距

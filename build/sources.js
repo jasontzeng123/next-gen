@@ -1,7 +1,7 @@
 // 由 src/data.js 的 SOURCES 產生 docs/資料來源.md（每次組裝時更新，確保清單和程式裡用的一致）
 const fs = require('fs'), path = require('path');
 const D = require('../src/data.js');
-const GOV = /(\.gov\.tw|gov\.taipei)$/, MEDIA = /(cna\.com\.tw|ltn\.com\.tw|udn\.com|pts\.org\.tw|ctee\.com\.tw|businesstoday\.com\.tw|businessweekly\.com\.tw|parenting\.com\.tw|epochtimes\.com\.tw|taipeitimes\.com|gvm\.com\.tw|peoplenews\.tw|sinyinews\.com\.tw)$/;
+const GOV = /(\.gov\.tw|gov\.taipei)$/, MEDIA = /(cna\.com\.tw|ltn\.com\.tw|udn\.com|pts\.org\.tw|ctee\.com\.tw|businesstoday\.com\.tw|businessweekly\.com\.tw|parenting\.com\.tw|epochtimes\.com\.tw|taipeitimes\.com|gvm\.com\.tw|peoplenews\.tw|sinyinews\.com\.tw|storm\.mg)$/;
 function kind(u) {
   let host = ''; try { host = new URL(u).hostname; } catch (e) { return '其他'; }
   if (GOV.test(host)) return '政府機關';

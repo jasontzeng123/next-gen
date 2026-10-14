@@ -11,6 +11,7 @@ SC={
  'B-full-couple-khh-rent': {'county':'KHH','housing':'rent','partner':True,'incomeMode':'full','jobA':{'industry':'all','pr':60,'mode':'pr'},'jobB':{'industry':'all','pr':50,'mode':'pr'},'kids':2,'ageA':29,'ageB':29,'firstBirthAge':31},
  'C-th-single-tpe-new': {'county':'TPE','housing':'buy','build':'new','partner':False,'incomeMode':'threshold','kids':2,'ageA':28,'firstBirthAge':31,'school':'private'},
  'D-th-couple-hua-rent': {'county':'HUA','housing':'rent','partner':True,'incomeMode':'threshold','kids':1,'ageA':27,'ageB':27,'firstBirthAge':30,'transport':'transit','care':'quasi','preschool':'quasi','school':'public','after':'none','cram':'none'},
+ 'F-save80-khh-buy': {'county':'KHH','housing':'buy','partner':True,'incomeMode':'threshold','kids':2,'ageA':25,'ageB':25,'firstBirthAge':31,'savings':0,'adv':{'saveRate':0.8}},
  'E-full-wait': {'county':'NTPC','housing':'buy','partner':True,'incomeMode':'full','jobA':{'industry':'all','pr':70,'mode':'pr'},'jobB':{'industry':'all','pr':65,'mode':'pr'},'kids':2,'ageA':27,'ageB':28,'firstBirthAge':29},
 }
 only=sys.argv[1] if len(sys.argv)>1 else None

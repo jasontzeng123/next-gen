@@ -170,6 +170,13 @@ var COMM = (function () {
   function buildDoc(s, res, th) {
     var d = { v: 2, ts: Date.now() };
     KEYS.forEach(function (k) { d[k] = s[k]; });
+    // 沒用到的題目不上傳（只是程式的預設值，不是玩家選的），例如沒買房的人的買房細節
+    if (s.housing !== 'buy') { delete d.buyWhen; delete d.build; delete d.loan; delete d.reno; }
+    if (s.care !== 'quit') delete d.quitUntil;
+    var DL = typeof DATA !== 'undefined' && DATA.DISTRICTS;
+    if (!DL || !DL[s.county]) delete d.district;
+    if (s.kids < 2) delete d.spacing;
+    if (s.support === '18') { delete d.uni; delete d.uniAway; }
     d.ageBand = Math.floor(s.ageA / 5) * 5;
     d.birthAge = s.firstBirthAge;
     d.indA = s.jobA.industry; d.indB = s.partner ? s.jobB.industry : null;

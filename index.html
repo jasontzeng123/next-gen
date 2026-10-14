@@ -814,7 +814,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-13T02:59', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-14T03:34', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -852,6 +852,8 @@ var DATA = (function () {
     occupation: { t: '勞動部｜職類別薪資調查', u: 'https://www.mol.gov.tw/1607/1632/1633/90814/', d: '2025' },
     household:  { t: '主計總處｜114年家庭收支調查', u: 'https://www.stat.gov.tw/News_Content.aspx?n=3703&s=236591', d: '2026-08' },
     quintile:   { t: '臺中市主計處｜114年家庭收支（含全國五等分位）', u: 'https://www.dbas.taichung.gov.tw/media/1457179/第115-03號-經濟統計通報-臺中市114-年家庭收支狀況.pdf', d: '2026' },
+    savingRate: { t: '風傳媒｜113年家庭收支調查：每戶儲蓄與儲蓄率', u: 'https://www.storm.mg/lifestyle/11061012', d: '2025-08' },
+    youthSave:  { t: '經濟日報｜yes123 青年勞工調查：39歲以下平均存款', u: 'https://money.udn.com/money/story/5612/9415770', d: '2026-04' },
     countyCons: { t: '主計總處家庭收支各縣市每人消費（彙整表）', u: 'https://csr.mcut.edu.tw/var/file/31/1031/img/2105/528706794.pdf', d: '2023' },
     minLiving:  { t: '臺北市｜115年度最低生活費', u: 'https://service.docms.gov.taipei/attachments/115-income-limit.pdf', d: '2026' },
     women:      { t: '主計總處｜婦女婚育與就業調查', u: 'https://ws.dgbas.gov.tw/public/attachment/7911117100zt9y70g.pdf', d: '2016' },
@@ -1237,7 +1239,7 @@ var ENGINE = (function (D) {
     jobA: { industry: 'all', pr: 50 },
     jobB: { industry: 'all', pr: 50 },
     savings: 500000, giftOnce: 0, giftMonthly: 0, giftYears: 10,
-    adv: { wageGrowth: 0.01, returnRate: 0.01, borrowRate: 0.03, inflation: 0.02, bankRate: 0.025, pending: false, rentSubsidy: true, qinganExtend: true, homeGrowth: 0 }
+    adv: { wageGrowth: 0.01, returnRate: 0.01, borrowRate: 0.03, inflation: 0.02, bankRate: 0.025, pending: false, rentSubsidy: true, qinganExtend: true, homeGrowth: 0, saveRate: 1 }
   };
   function normalize(raw) {
     var s = clone(DEFAULTS);
@@ -1458,7 +1460,7 @@ var ENGINE = (function (D) {
       var ageA = s.ageA + t, ageB = s.ageB + t;
       var kAges = kidAgesAt(t);
       var events = [];
-      var e = { housing: 0, housingOnce: 0, living: 0, kidsBirth: 0, kidsCare: 0, kidsEdu: 0, kidsLife: 0, transport: 0, elder: 0, travel: 0, debtInterest: 0 };
+      var e = { housing: 0, housingOnce: 0, living: 0, kidsBirth: 0, kidsCare: 0, kidsEdu: 0, kidsLife: 0, transport: 0, elder: 0, travel: 0, debtInterest: 0, extra: 0 };
       var tr = { birth: 0, cityBirth: 0, allowance: 0, care: 0, leave: 0, rent: 0, uni: 0, growth: 0, kg: 0, pension: 0 };
       // ---- 收入 ----
       var gA = personGross('A', t), gB = personGross('B', t);
@@ -1664,6 +1666,9 @@ var ENGINE = (function (D) {
       var interest = S >= 0 ? S * A.returnRate : S * A.borrowRate;
       if (S < 0) e.debtInterest = -interest;
       if (S < 0) expTotal += -interest; else netIncome += interest;
+      // 結餘只存下一部分（進階設定）：沒存下來的算作「其他花費」（婚禮、3C、意外等）；入不敷出的年份不受影響
+      var saveRate = A.saveRate == null ? 1 : Math.max(0, Math.min(1, +A.saveRate));
+      if (saveRate < 1 && netIncome > expTotal) { e.extra = (netIncome - expTotal) * (1 - saveRate); expTotal += e.extra; }
       var Sstart = S;
       S = S + netIncome - expTotal;
       if (t <= Tv) {
@@ -1727,7 +1732,9 @@ var ENGINE = (function (D) {
     var sumW = function (sim, f) { var v = 0; for (var i = 0; i <= r.Tv && i < sim.years.length; i++) v += f(sim.years[i]); return v; };
     var yT = r.years[r.Tv] || r.years[r.years.length - 1], pT = p.years[r.Tv] || p.years[p.years.length - 1];
     r.houseEquity = r.house && r.Tv >= r.house.tb ? Math.max(0, yT.homeValue - yT.loanBal) : 0;
-    r.childCost = sumW(r, function (y) { return y.expTotal - y.exp.debtInterest; }) - sumW(q, function (y) { return y.expTotal - y.exp.debtInterest; });
+    // 「沒存下來的結餘」不算養孩子的成本（它取決於當年剩多少錢，不是孩子本身的花費）
+    var ownExp = function (y) { return y.expTotal - y.exp.debtInterest - (y.exp.extra || 0); };
+    r.childCost = sumW(r, ownExp) - sumW(q, ownExp);
     r.incomeLoss = sumW(q, function (y) { return y.gross; }) - sumW(r, function (y) { return y.gross; });
     r.savingsGap = pT.S - r.endS;                       // 現金存款的差距（對照不生小孩、租屋）
     r.netWorthGap = pT.netWorth - yT.netWorth;          // 把房屋淨值也算進去的差距
@@ -2365,6 +2372,13 @@ var COMM = (function () {
   function buildDoc(s, res, th) {
     var d = { v: 2, ts: Date.now() };
     KEYS.forEach(function (k) { d[k] = s[k]; });
+    // 沒用到的題目不上傳（只是程式的預設值，不是玩家選的），例如沒買房的人的買房細節
+    if (s.housing !== 'buy') { delete d.buyWhen; delete d.build; delete d.loan; delete d.reno; }
+    if (s.care !== 'quit') delete d.quitUntil;
+    var DL = typeof DATA !== 'undefined' && DATA.DISTRICTS;
+    if (!DL || !DL[s.county]) delete d.district;
+    if (s.kids < 2) delete d.spacing;
+    if (s.support === '18') { delete d.uni; delete d.uniAway; }
     d.ageBand = Math.floor(s.ageA / 5) * 5;
     d.birthAge = s.firstBirthAge;
     d.indA = s.jobA.industry; d.indB = s.partner ? s.jobB.industry : null;
@@ -3098,6 +3112,7 @@ var Charts = (function () {
       tip.appendChild(U.h('div', { class: 'tt-h' }, (y.ageA) + ' 歲（' + y.year + ' 年）'));
       var rows = [['var(--s-save)', '年底存款', U.wan(y.S)], ['var(--s-income)', '收入（稅後＋補助）', U.wan(income(y))], ['var(--s-expense)', '支出', U.wan(expense(y))]];
       if (par && par[i]) rows.splice(1, 0, ['var(--s-alt)', '不生小孩的存款', U.wan(par[i].S)]);
+      if (y.exp.extra > 0) rows.push(['var(--s-expense)', '其中沒存下的結餘', U.wan(y.exp.extra)]);
       if (y.exp.debtInterest > 0) rows.push(['var(--seal)', '借款利息', U.wan(y.exp.debtInterest)]);
       rows.forEach(function (r) { var ii = U.h('i'); ii.style.background = r[0]; tip.appendChild(U.h('div', { class: 'tt-r' }, ii, U.h('span', {}, r[1]), U.h('b', {}, r[2]))); });
       var ev = y.events.map(evtText).filter(Boolean);
@@ -4732,12 +4747,21 @@ APP.screens.notice = function (main) {
   }
   // 圖卡底部的灰色附註：紅字以外、最會影響門檻的條件，依影響大小排序（放不下就只留前面的）。
   // 單親、存款、長輩資助、買房細節、托育、學校一定列出；其他只有和預設不同時才列。
+  // 結餘存下來的比例（進階設定）
+  function saveRateOf(s) { var r = s.adv && s.adv.saveRate; return r == null ? 1 : +r; }
+  function saveName(r) { return { 0.9: '九成', 0.8: '八成', 0.7: '七成', 0.6: '六成', 0.5: '五成' }[r] || Math.round(r * 100) + '%'; }
+  function saveNote(s) {
+    var r = saveRateOf(s);
+    return r >= 1 ? '試算假設每年的結餘<b>全部存下來</b>，沒算婚禮、3C 或意外支出；可在「調整設定」的進階假設改成只存八成或六成。'
+      : '每年的結餘只存下<b>' + saveName(r) + '</b>，其餘算作其他花費（婚禮、3C、意外等）。';
+  }
   function cardNote(s) {
     var D0 = ENGINE.DEFAULTS, out = [];
     var add = function (rank, txt, always, key) { if (txt && (always || s[key] !== D0[key])) out.push({ r: rank, t: txt }); };
     var M = function (k, m) { return m[s[k]] || ''; }, buy = s.housing === 'buy';
     add(1, s.partner ? '雙親' : '單親', true);
     add(2, s.savings > 0 ? '存款 ' + U.wan(s.savings) : '沒有存款', true);
+    if (saveRateOf(s) < 1) add(2, '結餘只存' + saveName(saveRateOf(s)), true);
     if (s.giftOnce > 0) add(3, '長輩資助' + (buy ? '頭期 ' : ' ') + U.wan(s.giftOnce), true);
     if (s.giftMonthly > 0) add(3, '長輩每月資助 ' + U.sep(s.giftMonthly) + ' 元', true);
     if (buy) {
@@ -4805,7 +4829,7 @@ APP.screens.notice = function (main) {
         h('button', { type: 'button', 'aria-pressed': atTh ? 'false' : 'true', onclick: function () { setView('mid'); } }, '中間收入（PR 50）'),
         h('button', { type: 'button', 'aria-pressed': atTh ? 'true' : 'false', onclick: function () { setView('threshold'); } }, thLabel)));
     }
-    sec.appendChild(h('p', { class: 'rsec-lede', html: thLede + (thMode ? '<br>' : '') + '上圖是每年年底的存款；下圖是每年稅後收入（含補助）與支出。全部換算成 2026 年的幣值。' + (res.house ? '房貸以每年 2% 通膨換算，越往後實質負擔越輕。' : '') + (thMode ? '下方「養一個孩子」與「錢花到哪」也會跟著切換。' : '') }));
+    sec.appendChild(h('p', { class: 'rsec-lede', html: thLede + (thMode ? '<br>' : '') + '上圖是每年年底的存款；下圖是每年稅後收入（含補助）與支出。全部換算成 2026 年的幣值。' + saveNote(s) +(res.house ? '房貸以每年 2% 通膨換算，越往後實質負擔越輕。' : '') + (thMode ? '下方「養一個孩子」與「錢花到哪」也會跟著切換。' : '') }));
     var showPar = A.showParallel !== false;
     var ctrl = h('div', { class: 'chart-ctrl' });
     var leg = h('div', { class: 'chart-legend' },
@@ -4875,6 +4899,7 @@ APP.screens.notice = function (main) {
       ['交通', function (y) { return y.exp.transport; }],
       ['孝親費', function (y) { return y.exp.elder; }],
       ['旅遊', function (y) { return y.exp.travel; }],
+      ['沒存下來的結餘（其他花費）', function (y) { return y.exp.extra || 0; }],
       ['借款利息', function (y) { return y.exp.debtInterest; }],
       ['支出合計', function (y) { return y.expTotal; }],
       ['年底存款', function (y) { return y.S; }]
@@ -4961,7 +4986,7 @@ APP.screens.notice = function (main) {
     sec.appendChild(h('h2', {}, '錢都花到哪裡去了'));
     sec.appendChild(h('p', { class: 'rsec-lede' }, '從現在到最小的孩子獨立（' + (res.Tv + 1) + ' 年），整個家庭的支出總額。'));
     var T = res.totals;
-    var rows = [['住房', T.housing + T.housingOnce], ['大人日常開銷', T.living], ['孩子教育', T.kidsEdu], ['孩子生活費', T.kidsLife], ['交通', T.transport], ['孝親', T.elder], ['生產與托育', T.kidsBirth + T.kidsCare], ['旅遊', T.travel], ['借款利息', T.debtInterest]].filter(function (r) { return r[1] > 0; }).sort(function (a, b) { return b[1] - a[1]; });
+    var rows = [['住房', T.housing + T.housingOnce], ['大人日常開銷', T.living], ['孩子教育', T.kidsEdu], ['孩子生活費', T.kidsLife], ['交通', T.transport], ['孝親', T.elder], ['生產與托育', T.kidsBirth + T.kidsCare], ['旅遊', T.travel], ['沒存下來的結餘', T.extra || 0], ['借款利息', T.debtInterest]].filter(function (r) { return r[1] > 0; }).sort(function (a, b) { return b[1] - a[1]; });
     var mx = rows[0] ? rows[0][1] : 1, sum = rows.reduce(function (a, r) { return a + r[1]; }, 0);
     var bars = h('div', { class: 'bars' });
     rows.forEach(function (r, i) { bars.appendChild(h('div', { class: 'bar-row' }, h('span', { class: 'bl' }, r[0]), h('span', { class: 'bt' }, h('i', { style: { width: (r[1] / mx * 100).toFixed(1) + '%', background: r[0] === '借款利息' ? 'var(--seal)' : i === 0 ? 'var(--ink-2)' : 'var(--rule)' } })), h('span', { class: 'bv' }, U.wan(r[1])))); });
@@ -5464,6 +5489,7 @@ APP.screens.notice = function (main) {
       sel('每月資助', 'giftMonthly', [0, 5000, 10000, 20000].map(function (v) { return { v: v, label: v ? U.sep(v) + ' 元' : '沒有' }; }))
     ], false));
     panel.appendChild(group('進階假設', '', [
+      sel('結餘存下來', 'adv.saveRate', [{ v: 1, label: '全部存下' }, { v: 0.8, label: '八成（其餘花掉）' }, { v: 0.6, label: '六成（其餘花掉）' }]),
       sel('實質薪資成長', 'adv.wageGrowth', [{ v: 0, label: '0%（停滯）' }, { v: 0.01, label: '1%（近 10 年平均）' }, { v: 0.02, label: '2%（樂觀）' }]),
       sel('存款實質報酬', 'adv.returnRate', [{ v: 0, label: '0%（定存打平通膨）' }, { v: 0.01, label: '1%' }, { v: 0.03, label: '3%（長期投資）' }]),
       sel('借款實質成本', 'adv.borrowRate', [{ v: 0.02, label: '2%' }, { v: 0.03, label: '3%' }, { v: 0.05, label: '5%' }]),
@@ -6019,6 +6045,7 @@ APP.screens.method = function (main) {
   inn.appendChild(ul([
     '從今年（2026）開始，<b>一年一年</b>模擬家庭的收入、支出與存款，直到最小的孩子獨立，再延伸到你 65 歲。',
     '所有金額都換算成 <b>2026 年的幣值</b>（實質金額），所以不用猜未來的物價。唯一例外是房貸：貸款金額固定，我們以每年 2% 通膨把每年的還款換算回今天的幣值。',
+    '每年的稅後收入（含補助）扣掉各項支出後，<b>結餘預設全部存下來</b>。這是偏樂觀的假設：試算沒有另外計算婚禮、3C 產品、意外支出或還學貸。主計總處 2024 年家庭收支調查：平均每戶一年存下可支配所得的約 24%；但 yes123 求職網 2026 年的青年勞工調查中，39 歲以下上班族自述的平均存款只有約 15 萬元，兩者差距很大。想保守一點，可以在報告的「調整設定 → 進階假設」改成結餘只存八成或六成，沒存下來的部分會算作其他花費。',
     '存款有餘時以每年 1% 實質報酬計算；不夠時視為借款，以每年 3% 的實質成本計算利息。65 歲以後，有工作過的人每月另有約 2.5 萬元的勞保年金與勞退（估計）。',
     '報告裡的「年齡」都是「那一年你幾歲」，和存摺明細一致。',
     '<b>核准</b>：第一胎出生後，存款最低時仍有半年以上的家庭開銷。<b>附條件核准</b>：存款從未跌破零，但最低時不到半年開銷。<b>駁回</b>：孩子獨立前存款跌破零（中途得借錢）；若到孩子獨立時仍是負的，就是「入不敷出」。',
