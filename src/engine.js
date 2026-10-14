@@ -109,12 +109,13 @@ var ENGINE = (function (D) {
     if (th == null || !isFinite(th)) return null;
     if (th >= 100) return 100;
     if (county && !D.COUNTY[county]) return th;
-    var r = wageRatio(th), all = D.INDUSTRY.all, sum = 0, n = 0, other = false;
+    var AGE_SPREAD = TWK.W.ageSpread || 0.85;   // 分享統計只收台灣的資料，固定用台灣的薪資分布
+    var r = wageRatio(th, TWK), all = D.INDUSTRY.all, sum = 0, n = 0, other = false;
     var add = function (id) { var ind = D.INDUSTRY[id]; if (!ind || !ind.median) return; sum += ind.median * Math.pow(r, ind.k * AGE_SPREAD); n++; if (id !== 'all') other = true; };
     if (incomeMode !== 'thresholdB') add(indA);
     if (partner) add(indB);
     if (!n || !other) return th;   // 全部都是「不分產業」就不用換算
-    return wageRatioInv(Math.pow(sum / n / all.median, 1 / (all.k * AGE_SPREAD)));
+    return wageRatioInv(Math.pow(sum / n / all.median, 1 / (all.k * AGE_SPREAD)), TWK);
   }
 
   function pctFromPoints(pts, v) {
