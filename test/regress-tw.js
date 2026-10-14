@@ -40,7 +40,8 @@ function randomSettings() {
   return s;
 }
 
-const strip = (r) => JSON.stringify(r, (k, v) => (typeof v === 'number' && !isFinite(v)) ? String(v) : v);
+// v1 之後新增、預設值不影響結果的欄位：adv.saveRate＝1（結餘全部存下）、exp.extra＝0（沒存下的結餘）；預設值時略過，其餘逐位元比對
+const strip = (r) => JSON.stringify(r, (k, v) => ((k === 'saveRate' && v === 1) || (k === 'extra' && v === 0)) ? undefined : (typeof v === 'number' && !isFinite(v)) ? String(v) : v);
 let n = +(process.argv[2] || 300), bad = 0, checks = 0;
 function same(label, a, b, s) {
   checks++;
