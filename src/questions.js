@@ -58,12 +58,14 @@ var QS = (function () {
       options: [
         { v: 'rent', label: '租房子', sub: '房間不夠時換租大一點的', ref: function (s) { var r = maxRooms(s); return roomName(r) + ' 月租約 <b>' + U.wan1(rentRef(s, r)) + '</b>'; } },
         { v: 'buy', label: '買自己的房子', sub: '頭期款、房貸、裝潢、管理費', ref: function (s) { var r = maxRooms(s), p = priceRef(s, r, s.build); return roomName(r) + ' ' + p.size + ' 坪 約 <b>' + U.wan(p.price) + '</b>'; } },
-        { v: 'family', label: '住長輩的房子', sub: '不用付房租或房貸', ref: function () { return '<b>0 元</b>'; } }
+        { v: 'family', label: '住長輩的房子', sub: '不用付房租或房貸', ref: function () { return '<b>0 元</b>'; } },
+        { v: 'own', label: '已經有自己的房子', sub: '已經買好了，還在繳房貸或已經繳完', ref: function () { return '不用再付頭期款'; } }
       ],
       note: function (s) {
         var c = county(s);
         if (s.housing === 'buy') return placeName(s) + '近一年大樓與華廈成交均價每坪約 <b>' + (c.price * E.districtMult(s)).toFixed(1) + ' 萬</b>，房價所得比 ' + c.pir + ' 倍（' + (c.pir > 9 ? '負擔能力過低' : c.pir > 7 ? '負擔能力略低' : '負擔能力尚可') + '）。';
         if (s.housing === 'rent') return '租金以 591 刊登中位數的九成估算。租屋家庭多半可申請中央租金補貼，有 6 歲以下孩子時補貼加倍，最多補到房租全額。';
+        if (s.housing === 'own') return '已經有房子：只算每月房貸、管理費與房屋稅，不再算頭期款和裝潢。假設現在的房子夠住，孩子長大也不用換房。下一題填你們的房貸。';
         return '住長輩的房子省下最大一筆開銷。很多家庭會另外貼補家用，可以在最後的孝親費一起算。';
       }
     },
@@ -72,6 +74,7 @@ var QS = (function () {
       fields: [
         { key: 'buyWhen', title: '什麼時候買？', options: [{ v: 'now', label: '現在就買' }, { v: 'beforeKid', label: '第一胎出生前一年' }, { v: 'beforeSchool', label: '老大上小學前' }] },
         { key: 'build', title: '買新的還是中古的？', options: [{ v: 'used', label: '中古屋', sub: function (s) { return '每坪約 ' + priceRef(s, 2, 'used').ppp.toFixed(1) + ' 萬'; } }, { v: 'new', label: '新成屋或預售屋', sub: function (s) { return '每坪約 ' + priceRef(s, 2, 'new').ppp.toFixed(1) + ' 萬'; } }] },
+        { key: 'adv.bankRate', title: '一般房貸利率？', when: function (s) { return s.loan === 'bank'; }, options: [{ v: 0.02, label: '2.0%' }, { v: 0.022, label: '2.2%' }, { v: 0.025, label: '2.5%', sub: '五大銀行約 2.2–2.5%' }, { v: 0.028, label: '2.8%' }, { v: 0.03, label: '3.0%' }] },
         { key: 'loan', title: '房貸怎麼貸？', options: [{ v: 'qingan', label: '新青安', sub: '40 年，前 5 年只繳利息' }, { v: 'qinganNoGrace', label: '新青安，不用寬限期', sub: '40 年，第一年就還本金' }, { v: 'bank', label: '一般房貸', sub: '30 年，利率約 2.5%' }] },
         { key: 'reno', title: '裝潢預算？', options: [{ v: 'basic', label: '簡單整理', sub: '每坪約 2 萬' }, { v: 'light', label: '輕裝修', sub: '每坪約 5 萬' }, { v: 'full', label: '完整裝潢', sub: '每坪約 8 萬' }] }
       ],
@@ -81,6 +84,14 @@ var QS = (function () {
         if (h.wantQ) t += h.qOK ? '可用新青安貸 <b>' + U.wan(h.qLoan) + '</b>' + (h.bLoan > 1 ? '，其餘 ' + U.wan(h.bLoan) + ' 用一般房貸' : '') + '。' : '<br>不符合新青安：' + h.qReason + '，改用一般房貸。';
         if (h.wantQ) t += '<br><span class="xs">新青安的所得與年齡資格，會在填完收入後重新判斷。</span>';
         return t;
+      }
+    },
+    {
+      id: 'own', part: 2, type: 'own', when: function (s) { return s.housing === 'own'; }, title: '你們的房貸',
+      hint: '照你們現在的房貸填。不知道確切數字也沒關係，填個大概，下面會算出每月要繳多少，可以對照你的繳款單調整。',
+      note: function (s) {
+        var c = county(s), size = E.houseSize(c, Math.max(2, Math.min(4, maxRooms(s))));
+        return '另計管理費與房屋稅：每月約 <b>' + U.sep(Math.round((c.mgmt * size + (D.byCounty(D.COST.houseTax, s.county) + D.COST.homeInsurance) / 12) / 100) * 100) + ' 元</b>（依' + county(s).name + '行情、約 ' + Math.round(size) + ' 坪估算）。';
       }
     },
     {
@@ -186,12 +197,19 @@ var QS = (function () {
         { v: 'scooter', label: '騎機車', ref: function () { return '每台約 <b>1.7 萬/年</b>'; } },
         { v: 'used', label: '二手車', sub: '約 35 萬，每 8 年換一次', ref: function (s) { return '另加每年約 <b>' + U.wan(78000 + county(s).park * 12) + '</b>'; } },
         { v: 'new', label: '國產新車', sub: '約 85 萬，每 10 年換一次', ref: function (s) { return '另加每年約 <b>' + U.wan(80000 + county(s).park * 12) + '</b>'; } },
-        { v: 'import', label: '進口休旅車', sub: '約 150 萬，每 10 年換一次', ref: function (s) { return '另加每年約 <b>' + U.wan(100000 + county(s).park * 12) + '</b>'; } }
+        { v: 'import', label: '進口休旅車', sub: '約 150 萬，每 10 年換一次', ref: function (s) { return '另加每年約 <b>' + U.wan(100000 + county(s).park * 12) + '</b>'; } },
+        { v: 'custom', label: '自己填車價', sub: function (s) { return s.transport === 'custom' ? '約 ' + U.wan(s.carPrice) + '，每 ' + s.carLife + ' 年換一次' : '填車價與幾年換一次'; }, ref: function (s) { return '另加每年約 <b>' + U.wan(E.carSpec(Object.assign({}, s, { transport: 'custom' })).run + county(s).park * 12) + '</b>'; } }
       ],
       subs: [
-        { key: 'parking', when: function (s) { return s.housing === 'buy' && ['used', 'new', 'import'].indexOf(s.transport) >= 0; }, title: '買房時要一起買車位嗎？', options: [{ v: 'buy', label: '一起買車位', sub: function (s) { return '平面車位約 ' + U.wan(county(s).parkBuy * 10000); } }, { v: 'rent', label: '不買，每月租車位', sub: function (s) { return '約 ' + U.sep(county(s).park) + ' 元/月'; } }] }
+        { key: 'carPrice', when: function (s) { return s.transport === 'custom'; }, title: '車價大約多少？', input: { unit: '萬', factor: 10000, confirmAt: 1000 },
+          options: [{ v: 500000, label: '50 萬' }, { v: 850000, label: '85 萬' }, { v: 1200000, label: '120 萬' }, { v: 2000000, label: '200 萬' }, { v: 3000000, label: '300 萬' }] },
+        { key: 'carLife', when: function (s) { return s.transport === 'custom'; }, title: '幾年換一次車？', options: [{ v: 5, label: '5 年' }, { v: 8, label: '8 年' }, { v: 10, label: '10 年' }, { v: 15, label: '15 年' }] },
+        { key: 'carHave', when: function (s) { return ['used', 'new', 'import', 'custom'].indexOf(s.transport) >= 0; }, title: '現在已經有車了嗎？',
+          options: [{ v: 0, label: '還沒有', sub: '生第一胎那年買' }, { v: 3, label: '有，還能開 3 年' }, { v: 5, label: '有，還能開 5 年' }, { v: 8, label: '有，還能開 8 年' }] },
+        { key: 'parking', when: function (s) { return s.housing === 'buy' && ['used', 'new', 'import', 'custom'].indexOf(s.transport) >= 0; }, title: '買房時要一起買車位嗎？', options: [{ v: 'buy', label: '一起買車位', sub: function (s) { return '平面車位約 ' + U.wan(county(s).parkBuy * 10000); } }, { v: 'rent', label: '不買，每月租車位', sub: function (s) { return '約 ' + U.sep(county(s).park) + ' 元/月'; } }] },
+        { key: 'parking', when: function (s) { return s.housing === 'own' && ['used', 'new', 'import', 'custom'].indexOf(s.transport) >= 0; }, title: '家裡有車位嗎？', options: [{ v: 'buy', label: '有車位' }, { v: 'rent', label: '沒有，每月租車位', sub: function (s) { return '約 ' + U.sep(county(s).park) + ' 元/月'; } }] },
       ],
-      note: function (s) { return ['used', 'new', 'import'].indexOf(s.transport) >= 0 ? '第一胎出生那年買車，車款以 5 年分期攤付。每年另計保險、油錢、牌照稅、燃料費、保養，以及租車位每月約 ' + U.sep(county(s).park) + ' 元' + (s.housing === 'buy' ? '（若買房時一起買車位就不用租）' : '') + '。' : ''; }
+      note: function (s) { return ['used', 'new', 'import', 'custom'].indexOf(s.transport) >= 0 ? (s.carHave ? '現在的車還能開 ' + s.carHave + ' 年，到時候再換車（扣掉舊車殘值）。' : '第一胎出生那年買車，') + '車款以 5 年分期攤付。每年另計保險、油錢、牌照稅、燃料費、保養，以及租車位每月約 ' + U.sep(county(s).park) + ' 元' + (s.housing === 'buy' ? '（若買房時一起買車位就不用租）' : s.housing === 'own' ? '（家裡有車位就不用租）' : '') + '。' : ''; }
     },
     {
       id: 'lifestyle', part: 2, key: 'lifestyle', title: '日常生活想過到什麼程度？', hint: '大人的日常開銷含飲食、通訊、衣物、保險醫療、娛樂；不含房子、交通與孝親費。',

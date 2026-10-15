@@ -8,6 +8,7 @@ cases={
  'buy-full': {'county':'NTPC','housing':'buy','partner':True,'incomeMode':'full','kids':2,'ageA':28,'ageB':30,'firstBirthAge':31,'jobA':{'industry':'all','pr':60},'jobB':{'industry':'all','pr':55},'giftOnce':500000,'savings':300000},
  'rent-th-single': {'county':'KHH','housing':'rent','partner':False,'incomeMode':'threshold','kids':1,'ageA':30,'firstBirthAge':33},
  'save80': {'county':'KHH','housing':'buy','partner':True,'incomeMode':'full','kids':2,'ageA':25,'ageB':25,'firstBirthAge':31,'jobA':{'industry':'all','pr':60},'jobB':{'industry':'all','pr':60},'savings':0,'adv':{'saveRate':0.8}},
+ 'own-car': {'county':'NTPC','housing':'own','ownBal':8000000,'ownRate':0.0215,'ownYears':30,'ownGrace':2,'partner':True,'incomeMode':'full','kids':2,'ageA':30,'ageB':30,'firstBirthAge':32,'jobA':{'industry':'all','pr':60},'jobB':{'industry':'all','pr':60},'transport':'custom','carPrice':1500000,'carLife':8,'carHave':5,'parking':'rent'},
  'broke': {'county':'TPE','housing':'buy','partner':True,'incomeMode':'full','kids':3,'ageA':26,'ageB':26,'firstBirthAge':27,'jobA':{'industry':'all','pr':20},'jobB':{'industry':'all','pr':20},'savings':0}
 }
 seen={k:True for k in ['country','county','family','ages','plan','room','housing','buy','postpartum','care','leave','preschool','school','after','cram','uni','support','transport','lifestyle','travel','elder','mode','jobA','jobB','money']}

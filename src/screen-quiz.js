@@ -95,6 +95,7 @@
     else if (q.type === 'elder') renderElder();
     else if (q.type === 'job') renderJob();
     else if (q.type === 'money') renderMoney();
+    else if (q.type === 'own') renderOwn();
     else renderChoice();
     setNote();
 
@@ -182,6 +183,7 @@
       if (q.subs) q.subs.forEach(function (sq) {
         if (sq.when && !sq.when(s)) return;
         if (!isSeen(q)) return;
+        if (sq.input) { pickGroup(body, sq.title, sq.key, sq.options, { input: sq.input }); return; }
         var grp = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, sq.title));
         var chips = h('div', { class: 'chips', role: 'radiogroup' });
         sq.options.forEach(function (o) {
@@ -194,9 +196,11 @@
     function renderMulti() {
       A.seen[q.id] = true;
       q.fields.forEach(function (f) {
+        if (f.when && !f.when(s)) return;
         var grp = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, f.title));
         var chips = h('div', { class: 'chips', role: 'radiogroup' });
-        f.options.forEach(function (o) { chips.appendChild(chipEl(o, s[f.key] === o.v, function () { A.set(f.key, o.v); refresh(); }, s, f.key + ':' + String(o.v))); });
+        var cur = getv(s, f.key);
+        f.options.forEach(function (o) { chips.appendChild(chipEl(o, cur === o.v, function () { A.set(f.key, o.v); refresh(); }, s, f.key + ':' + String(o.v))); });
         grp.appendChild(chips); body.appendChild(grp);
       });
     }
@@ -403,6 +407,57 @@
       side.appendChild(c2);
     }
 
+    // 讀設定值（可以是 'adv.bankRate' 這種路徑）
+    function getv(o, key) { var p = key.split('.'); return p.length > 1 ? (o[p[0]] || {})[p[1]] : o[key]; }
+    function wanSpoken(wan) { var yi = Math.floor(wan / 10000), rest = wan % 10000; return (yi ? yi + ' 億' : '') + (rest ? U.sep(rest) + ' 萬' : '') + '元'; }
+    // 一組選項，加上「自己填」的輸入框：input = { unit: '萬'｜'%'｜'年', factor: 換算成設定值的倍數, decimals, max, confirmAt（以輸入單位計，超過就先確認）}
+    function pickGroup(parent, title, key, options, opts) {
+      opts = opts || {};
+      var cur = getv(A.s, key), inp = opts.input;
+      var grp = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, title, opts.sub ? h('span', { class: 'xs muted' }, opts.sub) : null));
+      var chips = h('div', { class: 'chips', role: 'radiogroup' });
+      options.forEach(function (o) { chips.appendChild(chipEl(o, cur === o.v, function () { A.set(key, o.v); refresh(); }, A.s, key + ':' + o.v)); });
+      if (inp) {
+        var custom = cur != null && options.every(function (o) { return o.v !== cur; });
+        var el = h('input', { type: 'number', class: 'input', min: 0, step: inp.decimals ? 'any' : 1, inputmode: inp.decimals ? 'decimal' : 'numeric', style: { width: '8em', padding: '6px 10px' }, 'aria-label': title + '（' + inp.unit + '）', value: custom ? +(cur / inp.factor).toFixed(inp.decimals || 0) : '', placeholder: '其他（' + inp.unit + '）' });
+        el.addEventListener('change', function () {
+          var n = Math.max(0, +el.value || 0);
+          if (inp.max != null) n = Math.min(n, inp.max);
+          if (!inp.decimals) n = Math.round(n);
+          var apply = function () { A.set(key, +(n * inp.factor).toFixed(8)); A.persist(); softRefresh(); };
+          if (inp.confirmAt == null || n < inp.confirmAt) return apply();
+          if (el.__asking === n) return;
+          el.__asking = n;
+          var spoken = inp.unit === '萬' ? wanSpoken(n) : U.sep(n) + ' ' + inp.unit;
+          U.modal(function (box, close) {
+            box.appendChild(h('h3', {}, '確定是 ' + spoken + '嗎？'));
+            box.appendChild(h('p', {}, inp.unit === '萬' ? '這一格的單位是「萬」：填 100 代表 100 萬元。你填的是 ' + U.sep(n) + '，也就是新台幣 ' + U.sep(n * 10000) + ' 元。' : '你填的是 ' + spoken + '。'));
+            box.appendChild(h('div', { class: 'actions' },
+              h('button', { class: 'btn ghost', onclick: function () { el.__asking = null; close(); el.value = custom ? +(cur / inp.factor).toFixed(inp.decimals || 0) : ''; el.focus(); } }, '重新填寫'),
+              h('button', { class: 'btn', onclick: function () { el.__asking = null; close(); apply(); } }, '沒錯，是 ' + spoken)));
+          });
+        });
+        chips.appendChild(el);
+      }
+      grp.appendChild(chips); parent.appendChild(grp);
+    }
+    // 已經有房：既有房貸
+    function renderOwn() {
+      A.seen[q.id] = true;
+      var s0 = A.s;
+      pickGroup(body, '房貸還剩多少？', 'ownBal', [{ v: 0, label: '已經繳完' }, { v: 3000000, label: '300 萬' }, { v: 5000000, label: '500 萬' }, { v: 8000000, label: '800 萬' }, { v: 10000000, label: '1,000 萬' }, { v: 15000000, label: '1,500 萬' }],
+        { input: { unit: '萬', factor: 10000, confirmAt: 5000 } });
+      if (!(s0.ownBal > 0)) { body.appendChild(h('p', { class: 'sm muted', style: { marginTop: '10px' } }, '房貸已經繳完：只算管理費與房屋稅。')); return; }
+      var qr = DATA.QINGAN.rates[0];
+      pickGroup(body, '房貸利率？', 'ownRate', [{ v: qr, label: '新青安 ' + +(qr * 100).toFixed(3) + '%' }, { v: 0.022, label: '2.2%' }, { v: 0.025, label: '2.5%' }, { v: 0.028, label: '2.8%' }],
+        { input: { unit: '%', factor: 0.01, decimals: 3, max: 10 } });
+      pickGroup(body, '還要繳幾年？', 'ownYears', [10, 15, 20, 25, 30, 35].map(function (y) { return { v: y, label: y + ' 年' }; }), { input: { unit: '年', factor: 1, max: 40 } });
+      pickGroup(body, '寬限期還剩幾年？', 'ownGrace', [{ v: 0, label: '沒有或已結束' }].concat([1, 2, 3, 4, 5].map(function (y) { return { v: y, label: y + ' 年' }; })));
+      var pay = ENGINE.ownPayments(s0), r100 = function (v) { return U.sep(Math.round(v / 100) * 100); };
+      body.appendChild(h('div', { class: 'card', style: { marginTop: '14px' } },
+        h('p', { class: 'sm', html: '你們現在每月約繳 <b>' + r100(pay.now) + ' 元</b>' + (s0.ownGrace > 0 ? '（寬限期只繳利息），寬限期結束後約 <b>' + r100(pay.after) + ' 元</b>' : '') + '。' }),
+        h('p', { class: 'xs muted', style: { marginTop: '6px' } }, '和繳款單差很多的話，調整上面的房貸餘額或利率。新青安第 4 年起利率會逐年調升，這裡以固定利率估算。')));
+    }
     function renderMoney() {
       A.seen[q.id] = true;
       function group(title, key, values, fmt, sub) {

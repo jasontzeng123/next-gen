@@ -124,6 +124,10 @@ var ENGINE = (function (D) {
     jobA: { industry: 'all', pr: 50 },
     jobB: { industry: 'all', pr: 50 },
     savings: 500000, giftOnce: 0, giftMonthly: 0, giftYears: 10,
+    // 已經有自己的房子（housing: 'own'）：房貸餘額、年利率、還要繳幾年、寬限期還剩幾年
+    ownBal: 6000000, ownRate: 0.022, ownYears: 25, ownGrace: 0,
+    // 自己填車價（transport: 'custom'）與現在的車還能開幾年（0＝還沒有車，生第一胎那年買）
+    carPrice: 850000, carLife: 10, carHave: 0,
     adv: { wageGrowth: 0.01, returnRate: 0.01, borrowRate: 0.03, inflation: 0.02, bankRate: 0.025, pending: false, rentSubsidy: true, qinganExtend: true, homeGrowth: 0, saveRate: 1 }
   };
   function normalize(raw) {
@@ -156,6 +160,16 @@ var ENGINE = (function (D) {
     }
     if (s.preschool === 'home' && !(s.care === 'quit' && s.quitUntil !== 'preschool')) s.preschool = 'quasi';
     if (s.parking !== 'rent') s.parking = 'buy';
+    // 不認得的選項（例如舊版存檔或新版存檔被舊版讀到）改回預設，避免算錯
+    if (['rent', 'buy', 'family', 'own'].indexOf(s.housing) < 0) s.housing = DEFAULTS.housing;
+    if (['transit', 'scooter', 'used', 'new', 'import', 'custom'].indexOf(s.transport) < 0) s.transport = DEFAULTS.transport;
+    s.ownBal = Math.max(0, +s.ownBal || 0);
+    s.ownRate = clamp(+s.ownRate || 0, 0, 0.1);
+    s.ownYears = clamp(Math.round(+s.ownYears || 0), 0, 40);
+    s.ownGrace = clamp(Math.round(+s.ownGrace || 0), 0, Math.min(5, s.ownYears));
+    s.carPrice = clamp(Math.round(+s.carPrice || 0), 100000, 20000000);
+    s.carLife = clamp(Math.round(+s.carLife || 10), 3, 20);
+    s.carHave = clamp(Math.round(+s.carHave || 0), 0, 15);
     ['jobA', 'jobB'].forEach(function (k) {
       var jb = s[k];
       if (!D.INDUSTRY[jb.industry]) jb.industry = 'all';
@@ -181,6 +195,22 @@ var ENGINE = (function (D) {
     return v * rentMult * D.COST.rentListingFactor;
   }
   function houseSize(c, rooms) { return rooms <= 1 ? D.COST.houseSize[1] : rooms === 2 ? c.small : rooms === 3 ? D.COST.houseSize[3] : D.COST.houseSize[4]; }
+  // 車子規格：自己填車價時，年度養車費依車價內插（35 萬 7.8 萬、85 萬 8 萬、150 萬 10 萬，更貴的車照比例往上）
+  function carSpec(s) {
+    var C = D.COST;
+    if (s.transport !== 'custom') return C.car[s.transport];
+    var p = s.carPrice, run = p <= 850000 ? 78000 + (p - 350000) / 500000 * 2000 : 80000 + (p - 850000) / 650000 * 20000;
+    return { buy: p, resale: p < 500000 ? 0.2 : 0.3, life: s.carLife, run: Math.max(60000, Math.round(run)) };
+  }
+  // 既有房貸的月付：現在（寬限期內只繳利息）與寬限期結束後（名目金額）
+  // 銀行房貸按月計息、按月攤還：月付＝餘額 × 月利率 ÷ (1 − (1＋月利率)^−月數)
+  function monthlyPay(bal, r, months) { if (months <= 0) return bal; var m = r / 12; return m === 0 ? bal / months : bal * m / (1 - Math.pow(1 + m, -months)); }
+  function ownPayments(s) {
+    var bal = Math.max(0, +s.ownBal || 0), r = +s.ownRate || 0, n = Math.max(0, Math.round(+s.ownYears || 0)), g = Math.min(Math.round(+s.ownGrace || 0), n);
+    if (bal <= 0 || n <= 0) return { now: 0, after: 0 };
+    var after = monthlyPay(bal, r, (n - g) * 12);
+    return { now: g > 0 ? bal * r / 12 : after, after: after };
+  }
   function annuity(bal, r, n) { if (n <= 0) return bal; if (r === 0) return bal / n; return bal * r / (1 - Math.pow(1 + r, -n)); }
 
   // 綜所稅
@@ -252,13 +282,18 @@ var ENGINE = (function (D) {
     // 住房計畫（不生小孩的平行世界：兩人租屋；住長輩家的仍住長輩家）
     // sameTenure：計算「孩子的成本」用的對照組——同樣買房，只是房子只要給兩個大人住（2 房）
     var buy = s.housing === 'buy' && (!noKids || !!opt.sameTenure), family = s.housing === 'family';
+    // 已經有房：沒有頭期款與裝潢，從現在開始繳既有的房貸（不生小孩的平行世界也住同一間）
+    var own = s.housing === 'own';
     var tb = -1;
     if (buy) {
       tb = s.buyWhen === 'now' ? 0 : s.buyWhen === 'beforeKid' ? Math.max(0, refT0 - 1) : refT0 + 5;
       tb = clamp(tb, 0, T - 1);
     }
-    var hasCar = s.transport === 'used' || s.transport === 'new' || s.transport === 'import';
-    var tc = hasCar ? refT0 : -1; // 有孩子時買車
+    var hasCar = s.transport === 'used' || s.transport === 'new' || s.transport === 'import' || s.transport === 'custom';
+    var cr = hasCar ? carSpec(s) : null;
+    // 現在已經有車（還能開 carHave 年）：從現在起就有養車開銷，到時候再換車；還沒有車就在生第一胎那年買
+    var carHave = hasCar ? s.carHave : 0;
+    var tc = hasCar ? (carHave > 0 ? 0 : refT0) : -1;
     var kidAgesAt = function (t) { var a = []; for (var k = 0; k < births.length; k++) if (t >= births[k]) a.push(t - births[k]); return a; };
     function roomsAt(t) {
       var ages = kidAgesAt(t).filter(function (x) { return x < endAge; });
@@ -304,6 +339,18 @@ var ENGINE = (function (D) {
       };
     }
 
+    var ownH = null;
+    if (own) {
+      // 假設現在的房子夠住：以這組標準最多需要的房間數估算坪數（管理費、房屋稅、房屋價值用）
+      var oRooms = clamp(s.room === 'own' ? 1 + s.kids : s.room === 'share' ? 1 + Math.ceil(s.kids / 2) : 1 + Math.ceil(s.kids / 2), 2, 4);
+      var oSize = houseSize(c, oRooms);
+      ownH = { rooms: oRooms, size: oSize, value: c.price * C.usedFactor * dm * 10000 * oSize,
+        bal: s.ownBal, rate: s.ownRate, years: s.ownYears, grace: s.ownGrace,
+        mgmt: c.mgmt * oSize * 12, tax: D.byCounty(C.houseTax, s.county), ins: C.homeInsurance };
+      var pay = ownPayments(s);
+      ownH.payNow = pay.now; ownH.payAfter = pay.after;
+    }
+
     // 離職照顧
     var quit = !noKids && nK > 0 && s.care === 'quit';
     var quitWho = s.partner ? s.quitWho : 'A';
@@ -337,7 +384,8 @@ var ENGINE = (function (D) {
     var years = [];
     var S = s.savings;
     var qBal = house ? house.qBalNom : 0, bBal = house ? house.bBalNom : 0;
-    var carOwnedSince = -1, carPays = [];
+    var carOwnedSince = carHave > 0 ? carHave - cr.life : -1, carPays = [];
+    var oBal = ownH ? ownH.bal : 0;
     var totals = {}, subs = { birth: 0, cityBirth: 0, allowance: 0, care: 0, leave: 0, rent: 0, uni: 0, growth: 0, kg: 0, pension: 0 };
     var minS = Infinity, minT = 0, firstNeg = -1;
 
@@ -474,13 +522,12 @@ var ENGINE = (function (D) {
       if (s.transport === 'transit') e.transport = c.tpass * 12 * adults;
       else if (s.transport === 'scooter') { var sc = C.scooter; e.transport = (sc.buy * (1 - sc.resale) / sc.life + sc.run) * adults; }
       else if (hasCar && t >= tc) {
-        var cr = C.car[s.transport];
-        // 購車以 5 年分期（0 利率）攤付
-        if (carOwnedSince < 0) { carPays.push({ amt: cr.buy / C.carInstallYears, left: C.carInstallYears }); carOwnedSince = t; events.push({ k: 'car' }); }
+        // 購車以 5 年分期（0 利率）攤付；已經有車的人等到要換車時才付（扣掉舊車殘值）
+        if (carOwnedSince < 0 && !carHave) { carPays.push({ amt: cr.buy / C.carInstallYears, left: C.carInstallYears }); carOwnedSince = t; events.push({ k: 'car' }); }
         else if ((t - carOwnedSince) % cr.life === 0) { carPays.push({ amt: cr.buy * (1 - cr.resale) / C.carInstallYears, left: C.carInstallYears }); events.push({ k: 'car2' }); }
         carPays.forEach(function (cp) { if (cp.left > 0) { e.transport += cp.amt; cp.left--; } });
         e.transport += cr.run;
-        if (!(buy && t >= tb && s.parking === 'buy')) e.transport += c.park * 12;
+        if (!(buy && t >= tb && s.parking === 'buy') && !(own && s.parking === 'buy')) e.transport += c.park * 12;
       } else if (hasCar) {
         e.transport = c.tpass * 12 * adults; // 買車前搭大眾運輸
       }
@@ -488,6 +535,26 @@ var ENGINE = (function (D) {
       // ---- 住房 ----
       var renting = false, mortInt = 0, homeValue = 0, loanBalReal = 0, rooms = roomsAt(t), principal = 0;
       if (family) { e.housing = 0; }
+      else if (own) {
+        // 既有房貸：寬限期內只繳利息，之後本息平均攤還到期（名目金額，換算成 2026 年幣值）
+        var oPay = 0, oInt = 0;
+        if (oBal > 1 && t < ownH.years) {
+          if (t < ownH.grace) { oInt = oBal * ownH.rate; oPay = oInt; }
+          else {
+            // 按月攤還：一年 12 期，累計當年的本息與利息
+            var mp = monthlyPay(oBal, ownH.rate, (ownH.years - t) * 12), mr = ownH.rate / 12;
+            for (var mo = 0; mo < 12 && oBal > 1; mo++) { var mi = oBal * mr; oInt += mi; oPay += Math.min(mp, oBal + mi); oBal -= Math.min(mp, oBal + mi) - mi; }
+          }
+          if (t === ownH.grace && ownH.grace > 0) events.push({ k: 'grace' });
+        }
+        var oDefl = Math.pow(1 + infl, t);
+        e.housing = oPay / oDefl + ownH.mgmt + ownH.tax + ownH.ins;
+        mortInt = oInt / oDefl;
+        principal = (oPay - oInt) / oDefl;
+        homeValue = ownH.value * Math.pow(1 + A.homeGrowth, t);
+        loanBalReal = Math.max(0, oBal) / oDefl;
+        rooms = ownH.rooms;
+      }
       else if (buy && t >= tb) {
         var h = house;
         if (t === tb) { e.housingOnce = h.down + h.closing + h.reno; events.push({ k: 'buy' }); }
@@ -588,7 +655,7 @@ var ENGINE = (function (D) {
     var subTotal = subs.birth + subs.cityBirth + subs.allowance + subs.care + subs.leave + subs.rent + subs.uni + subs.growth;
 
     return {
-      s: s, years: years, Tv: Tv, T: T, t0: t0, births: births, endAge: endAge, house: house, tc: tc,
+      s: s, years: years, Tv: Tv, T: T, t0: t0, births: births, endAge: endAge, house: house, own: ownH, tc: tc,
       minS: minS, minT: minT, minRaise: minRaise, minRaiseT: minRaiseT, repayT: repayT, firstNeg: firstNeg,
       low: minS < 0 ? { v: minS, t: minT } : { v: minRaise, t: minRaiseT },
       netWorthTv: (years[Tv] || years[years.length - 1]).netWorth, endS: endS, verdict: verdict, buffer: buffer, avgExp: avgExp,
@@ -616,7 +683,7 @@ var ENGINE = (function (D) {
     r.parallelSame = q;
     var sumW = function (sim, f) { var v = 0; for (var i = 0; i <= r.Tv && i < sim.years.length; i++) v += f(sim.years[i]); return v; };
     var yT = r.years[r.Tv] || r.years[r.years.length - 1], pT = p.years[r.Tv] || p.years[p.years.length - 1];
-    r.houseEquity = r.house && r.Tv >= r.house.tb ? Math.max(0, yT.homeValue - yT.loanBal) : 0;
+    r.houseEquity = (r.house && r.Tv >= r.house.tb) || r.own ? Math.max(0, yT.homeValue - yT.loanBal) : 0;
     // 「沒存下來的結餘」不算養孩子的成本（它取決於當年剩多少錢，不是孩子本身的花費）
     var ownExp = function (y) { return y.expTotal - y.exp.debtInterest - (y.exp.extra || 0); };
     r.childCost = sumW(r, ownExp) - sumW(q, ownExp);
@@ -660,6 +727,8 @@ var ENGINE = (function (D) {
     // zero：存款當成 0（最「乾淨」的版本，留作研究用）；否則以同齡平均存款計（夫妻合計），統計顯示用這個
     s.savings = zero ? 0 : Math.round(typicalSavings(s.ageA) + (s.partner ? typicalSavings(s.ageB) : 0));
     s.giftOnce = 0; s.giftMonthly = 0;
+    if (s.housing === 'own') { s.housing = 'buy'; s.buyWhen = 'now'; s.build = 'used'; s.loan = DEFAULTS.loan; s.reno = DEFAULTS.reno; }
+    s.carHave = 0;
     s.jobA = { industry: 'all', pr: 50 }; s.jobB = { industry: 'all', pr: 50 };
     s.incomeMode = 'threshold';
     s.adv = clone(DEFAULTS.adv);
@@ -849,7 +918,7 @@ var ENGINE = (function (D) {
   return {
     DEFAULTS: DEFAULTS, normalize: normalize, simulate: simulate, full: full, atPR: atPR, threshold: threshold, curve: curve,
     compromises: compromises, maxKids: maxKids, waitAge: waitAge, timeMachine: timeMachine, eraRel: eraRel, withEra: withEra,
-    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR, standardOf: standardOf, thStd: thStd, thTyp: thTyp, typicalSavings: typicalSavings,
+    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR, standardOf: standardOf, thStd: thStd, ownPayments: ownPayments, carSpec: carSpec, thTyp: thTyp, typicalSavings: typicalSavings,
     householdIncomePR: householdIncomePR, householdExpensePR: householdExpensePR, supportEndAge: supportEndAge,
     districtMult: districtMult, rentFor: rentFor, houseSize: houseSize, incomeTax: incomeTax, clone: clone, MOVE_TO: MOVE_TO
   };
