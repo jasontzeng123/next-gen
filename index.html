@@ -814,7 +814,7 @@ p { margin: 0; }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-15T01:56', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-15T02:27', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -854,6 +854,7 @@ var DATA = (function () {
     quintile:   { t: '臺中市主計處｜114年家庭收支（含全國五等分位）', u: 'https://www.dbas.taichung.gov.tw/media/1457179/第115-03號-經濟統計通報-臺中市114-年家庭收支狀況.pdf', d: '2026' },
     savingRate: { t: '風傳媒｜113年家庭收支調查：每戶儲蓄與儲蓄率', u: 'https://www.storm.mg/lifestyle/11061012', d: '2025-08' },
     youthSave:  { t: '經濟日報｜yes123 青年勞工調查：39歲以下平均存款', u: 'https://money.udn.com/money/story/5612/9415770', d: '2026-04' },
+    savingAge:  { t: '老喬報｜依主計總處家庭收支調查推估各年齡累積存款', u: 'https://joelin.cc/?p=3571', d: '2026-08' },
     countyCons: { t: '主計總處家庭收支各縣市每人消費（彙整表）', u: 'https://csr.mcut.edu.tw/var/file/31/1031/img/2105/528706794.pdf', d: '2023' },
     minLiving:  { t: '臺北市｜115年度最低生活費', u: 'https://service.docms.gov.taipei/attachments/115-income-limit.pdf', d: '2026' },
     women:      { t: '主計總處｜婦女婚育與就業調查', u: 'https://ws.dgbas.gov.tw/public/attachment/7911117100zt9y70g.pdf', d: '2016' },
@@ -992,6 +993,10 @@ var DATA = (function () {
   WAGE.median2024 = WAGE.median; WAGE.median = Math.round(WAGE.median * WAGE.toBase / 1000) * 1000;
 
   // 家庭可支配所得與消費支出（114年，五等分位平均數，視為第10/30/50/70/90百分位）
+  // 同齡平均存款（每人，元）：主計總處家庭收支調查各年齡的平均儲蓄，從 22 歲開始累積、不計投資報酬的推估（老喬報整理）。
+  // 官方沒有各年齡的存款餘額統計；這是平均數、且官方的「儲蓄」含還貸款與投資，偏樂觀。只用於「標準門檻」。
+  var SAVINGS_TYPICAL = [[22, 0], [25, 280000], [30, 750000], [35, 1380000], [40, 1930000], [45, 2600000], [50, 3230000], [55, 3860000], [60, 4640000], [65, 5420000]];
+
   var HOUSEHOLD = {
     // 114 年（2025）資料；載入時換算成 2026 年水準（可支配所得 ×1.04、消費 ×1.03）
     disposable: [[10, 397191], [30, 726390], [50, 1043274], [70, 1435638], [90, 2449344]],
@@ -1115,7 +1120,7 @@ var DATA = (function () {
   return {
     SOURCES: SOURCES, COUNTIES: COUNTIES, COUNTY: COUNTY, DISTRICTS: DISTRICTS,
     CARE: CARE, KG: KG, ANQIN: ANQIN, POSTPARTUM_CENTER: POSTPARTUM_CENTER,
-    byCounty: byCounty, WAGE: WAGE, INDUSTRIES: INDUSTRIES, INDUSTRY: INDUSTRY, HOUSEHOLD: HOUSEHOLD,
+    byCounty: byCounty, WAGE: WAGE, INDUSTRIES: INDUSTRIES, INDUSTRY: INDUSTRY, HOUSEHOLD: HOUSEHOLD, SAVINGS_TYPICAL: SAVINGS_TYPICAL,
     TAX: TAX, SI: SI, BENEFIT: BENEFIT, RENT_SUB: RENT_SUB, QINGAN: QINGAN, BANK: BANK, COST: COST, HISTORY: HISTORY,
     BASE_YEAR: 2026
   };
@@ -1783,9 +1788,13 @@ var ENGINE = (function (D) {
   // 「標準門檻」：只看養育標準本身要多少收入。把個人的家底與處境統一：存款 0、沒有家人資助、
   // 兩人都以「不分產業」計、只看門檻（不填收入）、進階假設用預設值；其餘（縣市、幾歲生、生幾個、住法、學校……）照填。
   // 分享統計用它來比較大家的標準，不受各自存款、資助與產業影響。
-  function standardOf(raw) {
+  // 同齡平均存款（每人）：見 data.js 的 SAVINGS_TYPICAL
+  function typicalSavings(age) { return D.SAVINGS_TYPICAL ? interp(D.SAVINGS_TYPICAL, age) : 0; }
+  function standardOf(raw, zero) {
     var s = normalize(raw.__norm ? strip0(raw) : raw);
-    s.savings = 0; s.giftOnce = 0; s.giftMonthly = 0;
+    // zero：存款當成 0（最「乾淨」的版本，留作研究用）；否則以同齡平均存款計（夫妻合計），統計顯示用這個
+    s.savings = zero ? 0 : Math.round(typicalSavings(s.ageA) + (s.partner ? typicalSavings(s.ageB) : 0));
+    s.giftOnce = 0; s.giftMonthly = 0;
     s.jobA = { industry: 'all', pr: 50 }; s.jobB = { industry: 'all', pr: 50 };
     s.incomeMode = 'threshold';
     s.adv = clone(DEFAULTS.adv);
@@ -1794,7 +1803,9 @@ var ENGINE = (function (D) {
     return n;
   }
   function strip0(s) { var x = clone(s); delete x.__norm; return x; }
-  function thStd(raw) { var t = threshold(standardOf(raw), { quick: true }); return t.pr == null ? 100 : t.pr; }
+  // thStd：存款 0 的標準門檻；thTyp：存款以同齡平均計的標準門檻（統計主要用這個）
+  function thStd(raw) { var t = threshold(standardOf(raw, true), { quick: true }); return t.pr == null ? 100 : t.pr; }
+  function thTyp(raw) { var t = threshold(standardOf(raw, false), { quick: true }); return t.pr == null ? 100 : t.pr; }
 
   function thresholdSettings(s, p, who) {
     var x = clone(s); x.__norm = true;
@@ -1973,7 +1984,7 @@ var ENGINE = (function (D) {
   return {
     DEFAULTS: DEFAULTS, normalize: normalize, simulate: simulate, full: full, atPR: atPR, threshold: threshold, curve: curve,
     compromises: compromises, maxKids: maxKids, waitAge: waitAge, timeMachine: timeMachine, eraRel: eraRel, withEra: withEra,
-    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR, standardOf: standardOf, thStd: thStd,
+    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR, standardOf: standardOf, thStd: thStd, thTyp: thTyp, typicalSavings: typicalSavings,
     householdIncomePR: householdIncomePR, householdExpensePR: householdExpensePR, supportEndAge: supportEndAge,
     districtMult: districtMult, rentFor: rentFor, houseSize: houseSize, incomeTax: incomeTax, clone: clone, MOVE_TO: MOVE_TO
   };
@@ -2349,12 +2360,15 @@ var COMM = (function () {
         // 資料庫升級後（upgrade-3）會多回傳換算成「同齡、不分產業」的門檻統計，優先使用；還沒升級就沿用原本的
         var hasAll = Array.isArray(r.thAllHist) && r.thAllHist.length > 0;
         // 標準門檻（upgrade-4）：大部分分享都有了才改用，避免只用少數新資料做統計
-        var hasStd = Array.isArray(r.stdHist) && r.stdHist.length > 0 && (r.stdN || 0) >= Math.max(MIN_N, 0.8 * (r.n || 0));
-        var mode = hasStd ? 'std' : hasAll ? 'all' : 'raw';
+        var enough = function (n) { return (n || 0) >= Math.max(MIN_N, 0.8 * (r.n || 0)); };
+        var hasTyp = Array.isArray(r.typHist) && r.typHist.length > 0 && enough(r.typN);    // upgrade-5：存款以同齡平均計
+        var hasStd = Array.isArray(r.stdHist) && r.stdHist.length > 0 && enough(r.stdN);    // upgrade-4：存款 0
+        var mode = hasTyp ? 'typ' : hasStd ? 'std' : hasAll ? 'all' : 'raw';
+        var pick3 = function (t, sd, a, raw) { return mode === 'typ' ? t : mode === 'std' ? sd : mode === 'all' ? a : raw; };
         st.stats = { n: r.n, by: r.by || {}, perChildMedian: r.perChildMedian, thAll: mode !== 'raw', thMode: mode,
-          thHist: (mode === 'std' ? r.stdHist : mode === 'all' ? r.thAllHist : r.thHist) || [],
-          thMedian: mode === 'std' ? r.stdMedian : mode === 'all' ? r.thAllMedian : r.thMedian,
-          byCounty: (mode === 'std' ? r.byCountyStd : mode === 'all' ? r.byCountyAll : r.byCounty) || {} };
+          thHist: pick3(r.typHist, r.stdHist, r.thAllHist, r.thHist) || [],
+          thMedian: pick3(r.typMedian, r.stdMedian, r.thAllMedian, r.thMedian),
+          byCounty: pick3(r.byCountyTyp, r.byCountyStd, r.byCountyAll, r.byCounty) || {} };
         st.loaded = true; st.loadErr = null; emit();
       }).catch(function (e) {
         // 資料庫還沒升級（沒有 crowd_stats）或暫時失敗：改讀原始資料
@@ -2427,7 +2441,8 @@ var COMM = (function () {
     // 換算成同齡、不分產業的門檻 PR（統計用；不同產業的 PR 才能放在一起比）
     if (d.th != null) { var ta = ENGINE.thAllPR(d.th, d.indA, d.indB, s.partner, s.incomeMode, s.county); d.thAll = ta == null ? null : Math.round(ta * 10) / 10; }
     // 標準門檻：只看養育標準本身（存款 0、沒有家人資助、不分產業），統計主要用這個比較大家的標準
-    try { d.thStd = Math.round(ENGINE.thStd(s) * 10) / 10; } catch (e) { /* 算不出來就不附 */ }
+    // thTyp：存款以同齡平均計（統計顯示用）；thStd：存款 0（留作研究用）
+    try { d.thTyp = Math.round(ENGINE.thTyp(s) * 10) / 10; d.thStd = Math.round(ENGINE.thStd(s) * 10) / 10; } catch (e) { /* 算不出來就不附 */ }
     d.perChild = Math.round(res.perChild / 1e5) * 1e5;
     d.expPR = Math.round(res.hhExpensePR);
     d.childSubs = Math.round((res.childSubs || 0) / 1e5) * 1e5;
@@ -2455,9 +2470,9 @@ var COMM = (function () {
       });
     });
     // 大部分分享都有標準門檻時用它；否則用換算成不分產業的個人門檻
-    var nStd = rows.filter(function (r) { return typeof r.thStd === 'number'; }).length;
-    var useStd = nStd >= Math.max(MIN_N, 0.8 * rows.length);
-    var valOf = useStd ? function (r) { return typeof r.thStd === 'number' ? r.thStd : null; } : thAllOfDoc;
+    var cover = function (k) { return rows.filter(function (r) { return typeof r[k] === 'number'; }).length >= Math.max(MIN_N, 0.8 * rows.length); };
+    var useKey = cover('thTyp') ? 'thTyp' : cover('thStd') ? 'thStd' : null;
+    var valOf = useKey ? function (r) { return typeof r[useKey] === 'number' ? r[useKey] : null; } : thAllOfDoc;
     var ths = rows.map(valOf).filter(function (x) { return typeof x === 'number'; });
     var pcs = rows.map(function (r) { return r.perChild; }).filter(function (x) { return typeof x === 'number' && x > 0; });
     var hist = []; for (var i = 0; i <= 100; i++) hist.push(0);
@@ -2465,7 +2480,7 @@ var COMM = (function () {
     var byC = {}, byCounty = {};
     rows.forEach(function (r) { var v = valOf(r); if (typeof v === 'number' && r.county) (byC[r.county] = byC[r.county] || []).push(v); });
     Object.keys(byC).forEach(function (k) { byCounty[k] = { n: byC[k].length, med: median(byC[k]) }; });
-    return { n: rows.length, by: by, thHist: hist, thMedian: median(ths), perChildMedian: median(pcs), byCounty: byCounty, thAll: true, thMode: useStd ? 'std' : 'all' };
+    return { n: rows.length, by: by, thHist: hist, thMedian: median(ths), perChildMedian: median(pcs), byCounty: byCounty, thAll: true, thMode: useKey === 'thTyp' ? 'typ' : useKey === 'thStd' ? 'std' : 'all' };
   }
   // 分享資料的門檻換算成「同齡、不分產業」的 PR（新資料送出時已算好 thAll；舊資料在這裡補算）
   function thAllOfDoc(r) {
@@ -2478,9 +2493,9 @@ var COMM = (function () {
   var stdCache = { key: null, v: null };
   function mineTh(s, thPr) {
     var S = st.stats;
-    if (S && S.thMode === 'std') {
-      var key = sig(s);
-      if (stdCache.key !== key) { stdCache.key = key; try { stdCache.v = ENGINE.thStd(s); } catch (e) { stdCache.v = null; } }
+    if (S && (S.thMode === 'std' || S.thMode === 'typ')) {
+      var key = S.thMode + sig(s);
+      if (stdCache.key !== key) { stdCache.key = key; try { stdCache.v = S.thMode === 'typ' ? ENGINE.thTyp(s) : ENGINE.thStd(s); } catch (e) { stdCache.v = null; } }
       return stdCache.v;
     }
     if (thPr == null) return 100;
@@ -5214,7 +5229,7 @@ APP.screens.notice = function (main) {
     var tiles = h('div', { class: 'tiles' });
     // 門檻統計換算成「同齡、不分產業」的 PR：自己的門檻也換成同一把尺再排名
     // 統計用標準門檻（std）時，自己也用標準門檻來比；否則用換算成不分產業的個人門檻
-    var std = S.thMode === 'std';
+    var std = S.thMode === 'std' || S.thMode === 'typ', typ = S.thMode === 'typ';
     var myTh = COMM.mineTh(s, A.th.pr);
     var thRank = myTh != null ? (COMM.thRank(myTh) || 0) : 100;
     var thConv = !std && S.thAll && myTh != null && A.th.pr != null && Math.abs(myTh - A.th.pr) >= 0.5;
@@ -5227,7 +5242,7 @@ APP.screens.notice = function (main) {
     var vb = S.by.verdict || {}, vtot = 0; for (var k in vb) vtot += vb[k];
     if (vtot >= COMM.MIN_N) tiles.appendChild(tile('填了收入的人被核准', Math.round(((vb.pass || 0) + (vb.tight || 0)) / vtot * 100) + '%', '含「附條件核准」', false));
     sec.appendChild(tiles);
-    if (std) sec.appendChild(h('p', { class: 'xs muted', style: { marginTop: '8px' } }, '「標準門檻」只看養育標準本身：把每個人的存款和家人資助都當成 0、收入不分產業，再算一次門檻。比的是大家心中的標準，不受各自的家底影響。' + (A.th.pr != null ? '你自己的門檻（含你的存款與資助）是 PR ' + U.pr(A.th.pr) + '。' : '')));
+    if (std) sec.appendChild(h('p', { class: 'xs muted', style: { marginTop: '8px' } }, '「標準門檻」只看養育標準本身：' + (typ ? '把每個人的存款換成同齡的平均存款（依主計總處各年齡的平均儲蓄推估；你們約 ' + U.wan(ENGINE.standardOf(s).savings) + '）' : '把每個人的存款當成 0') + '、家人資助當成 0、收入不分產業，再算一次門檻。比的是大家心中的標準，不受各自的家底影響。' + (A.th.pr != null ? '你自己的門檻（含你的存款與資助）是 PR ' + U.pr(A.th.pr) + '。' : '')));
     else if (S.thAll) sec.appendChild(h('p', { class: 'xs muted', style: { marginTop: '8px' } }, '門檻 PR 原本是跟同齡、同產業的人比。這裡把每個人的門檻都換算成「同齡、不分產業」的 PR 再放在一起比，例如半導體業的 PR 28，收入大約等於不分產業的 PR 70。'));
     // 每題分布
     var keys = [['housing', '住房'], ['room', '孩子房間'], ['care', '0–2 歲照顧'], ['preschool', '幼兒園'], ['school', '國小到高中'], ['cram', '補習'], ['support', '供養到'], ['transport', '交通'], ['lifestyle', '生活水準']];
@@ -6072,7 +6087,7 @@ APP.screens.notice = function (main) {
     if (!S || S.n < COMM.MIN_N) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + (S ? S.n : 0) + ' 人分享'), '累積到 ' + COMM.MIN_N + ' 人以上就會顯示。完成試算時選擇「匿名分享」，就能加入統計。')); return; }
     // 「你」＝自己報告的門檻：還沒算過就先算；「再高也不夠」放在 100 那一格（分享資料也是記成 100）
     if (!A.th && A.compute) { try { A.compute(); } catch (e) { /* 算不出來就不標示 */ } }
-    var std = S.thMode === 'std';
+    var std = S.thMode === 'std' || S.thMode === 'typ';
     var th = !A.th ? null : COMM.mineTh(A.s, A.th.pr);
     var bins = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     (S.thHist || []).forEach(function (c, v) { bins[Math.min(10, Math.floor(v / 10))] += c; });
@@ -6086,7 +6101,7 @@ APP.screens.notice = function (main) {
       if (n) svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh - hh - 6, 'text-anchor': 'middle', text: String(n), style: 'font-size:11px;fill:var(--ink-2)' }));
     });
     sec.appendChild(h('p', { class: 'rsec-lede' }, (std
-      ? S.n + ' 位分享者心中的養育標準，各自需要多少收入（標準門檻：存款與家人資助都當成 0、收入不分產業，只比標準本身）'
+      ? S.n + ' 位分享者心中的養育標準，各自需要多少收入（標準門檻：' + (S.thMode === 'typ' ? '存款以同齡平均計、不含家人資助' : '存款與家人資助都當成 0') + '、收入不分產業，只比標準本身）'
       : S.n + ' 位分享者，各自心中的養育標準需要的收入 PR' + (S.thAll ? '（已換算成同齡、不分產業的 PR，不同產業的人才能放在一起比）' : '')) + '。' + (th != null ? '藍色是你所在的區間。' : '')));
     sec.appendChild(h('div', { class: 'chart-box' }, svg));
     // 各縣市
@@ -6147,7 +6162,7 @@ APP.screens.method = function (main) {
     '存款有餘時以每年 1% 實質報酬計算；不夠時視為借款，以每年 3% 的實質成本計算利息。65 歲以後，有工作過的人每月另有約 2.5 萬元的勞保年金與勞退（估計）。',
     '報告裡的「年齡」都是「那一年你幾歲」，和存摺明細一致。',
     '<b>核准</b>：第一胎出生後，存款最低時仍有半年以上的家庭開銷。<b>附條件核准</b>：存款從未跌破零，但最低時不到半年開銷。<b>駁回</b>：孩子獨立前存款跌破零（中途得借錢）；若到孩子獨立時仍是負的，就是「入不敷出」。',
-    '<b>門檻 PR</b>：把雙方收入 PR 從 1 調到 99.9（同產業、同年齡），找出存款剛好不會跌破零的最低 PR。若 99.9 仍不夠，就顯示「再高也不夠」。報告與實驗室裡「其他人」的統計用的是<b>標準門檻</b>：把每個人的存款和家人資助都當成 0、收入不分產業，只看他選的養育標準要多少收入。比的是大家心中的標準，不受各自的家底與產業影響（不同產業的薪資差很多，例如半導體業的 PR 28，收入大約等於不分產業的 PR 70）。',
+    '<b>門檻 PR</b>：把雙方收入 PR 從 1 調到 99.9（同產業、同年齡），找出存款剛好不會跌破零的最低 PR。若 99.9 仍不夠，就顯示「再高也不夠」。報告與實驗室裡「其他人」的統計用的是<b>標準門檻</b>：把每個人的存款換成同齡的平均存款、家人資助當成 0、收入不分產業，只看他選的養育標準要多少收入。同齡平均存款是依主計總處家庭收支調查各年齡的平均儲蓄，從 22 歲開始累積的推估（每人 25 歲約 28 萬、30 歲約 75 萬、35 歲約 138 萬，夫妻合計；官方沒有各年齡的存款餘額統計，這是平均數，偏樂觀）。比的是大家心中的標準，不受各自的家底與產業影響（不同產業的薪資差很多，例如半導體業的 PR 28，收入大約等於不分產業的 PR 70）。',
     '<b>平行世界</b>：同樣的人、同樣的收入與生活水準，只是不生小孩。存款圖上的平行世界是<b>兩人一起租屋</b>（一房一廳；設定住長輩家的人，平行世界也住長輩家），用來比較「如果不生，錢會怎麼走」。',
     '<b>養一個孩子要多少</b>：拿「有孩子」和「同樣住法、但沒孩子」的世界相減。租屋的人比較的是租大房子與一房一廳的租金差；<b>買房的人</b>比較的是同樣買房、但只買兩個大人住的 2 房——多出來的頭期款、房貸本息與房屋稅費，就是「為孩子多買的房間」。房子本身仍是你的資產，這筆價值沒有扣回來；報告的存款圖會另外寫出房子扣掉房貸後約值多少。',
     '<b>不填收入時</b>：報告先算出門檻 PR；存摺動畫、逐年明細與「養一個孩子要花多少」則以雙方收入都在中間（PR 50）的家庭演示，可在報告裡切換成「剛好達到門檻」的版本。',

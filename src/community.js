@@ -116,12 +116,15 @@ var COMM = (function () {
         // 資料庫升級後（upgrade-3）會多回傳換算成「同齡、不分產業」的門檻統計，優先使用；還沒升級就沿用原本的
         var hasAll = Array.isArray(r.thAllHist) && r.thAllHist.length > 0;
         // 標準門檻（upgrade-4）：大部分分享都有了才改用，避免只用少數新資料做統計
-        var hasStd = Array.isArray(r.stdHist) && r.stdHist.length > 0 && (r.stdN || 0) >= Math.max(MIN_N, 0.8 * (r.n || 0));
-        var mode = hasStd ? 'std' : hasAll ? 'all' : 'raw';
+        var enough = function (n) { return (n || 0) >= Math.max(MIN_N, 0.8 * (r.n || 0)); };
+        var hasTyp = Array.isArray(r.typHist) && r.typHist.length > 0 && enough(r.typN);    // upgrade-5：存款以同齡平均計
+        var hasStd = Array.isArray(r.stdHist) && r.stdHist.length > 0 && enough(r.stdN);    // upgrade-4：存款 0
+        var mode = hasTyp ? 'typ' : hasStd ? 'std' : hasAll ? 'all' : 'raw';
+        var pick3 = function (t, sd, a, raw) { return mode === 'typ' ? t : mode === 'std' ? sd : mode === 'all' ? a : raw; };
         st.stats = { n: r.n, by: r.by || {}, perChildMedian: r.perChildMedian, thAll: mode !== 'raw', thMode: mode,
-          thHist: (mode === 'std' ? r.stdHist : mode === 'all' ? r.thAllHist : r.thHist) || [],
-          thMedian: mode === 'std' ? r.stdMedian : mode === 'all' ? r.thAllMedian : r.thMedian,
-          byCounty: (mode === 'std' ? r.byCountyStd : mode === 'all' ? r.byCountyAll : r.byCounty) || {} };
+          thHist: pick3(r.typHist, r.stdHist, r.thAllHist, r.thHist) || [],
+          thMedian: pick3(r.typMedian, r.stdMedian, r.thAllMedian, r.thMedian),
+          byCounty: pick3(r.byCountyTyp, r.byCountyStd, r.byCountyAll, r.byCounty) || {} };
         st.loaded = true; st.loadErr = null; emit();
       }).catch(function (e) {
         // 資料庫還沒升級（沒有 crowd_stats）或暫時失敗：改讀原始資料
@@ -194,7 +197,8 @@ var COMM = (function () {
     // 換算成同齡、不分產業的門檻 PR（統計用；不同產業的 PR 才能放在一起比）
     if (d.th != null) { var ta = ENGINE.thAllPR(d.th, d.indA, d.indB, s.partner, s.incomeMode, s.county); d.thAll = ta == null ? null : Math.round(ta * 10) / 10; }
     // 標準門檻：只看養育標準本身（存款 0、沒有家人資助、不分產業），統計主要用這個比較大家的標準
-    try { d.thStd = Math.round(ENGINE.thStd(s) * 10) / 10; } catch (e) { /* 算不出來就不附 */ }
+    // thTyp：存款以同齡平均計（統計顯示用）；thStd：存款 0（留作研究用）
+    try { d.thTyp = Math.round(ENGINE.thTyp(s) * 10) / 10; d.thStd = Math.round(ENGINE.thStd(s) * 10) / 10; } catch (e) { /* 算不出來就不附 */ }
     d.perChild = Math.round(res.perChild / 1e5) * 1e5;
     d.expPR = Math.round(res.hhExpensePR);
     d.childSubs = Math.round((res.childSubs || 0) / 1e5) * 1e5;
@@ -222,9 +226,9 @@ var COMM = (function () {
       });
     });
     // 大部分分享都有標準門檻時用它；否則用換算成不分產業的個人門檻
-    var nStd = rows.filter(function (r) { return typeof r.thStd === 'number'; }).length;
-    var useStd = nStd >= Math.max(MIN_N, 0.8 * rows.length);
-    var valOf = useStd ? function (r) { return typeof r.thStd === 'number' ? r.thStd : null; } : thAllOfDoc;
+    var cover = function (k) { return rows.filter(function (r) { return typeof r[k] === 'number'; }).length >= Math.max(MIN_N, 0.8 * rows.length); };
+    var useKey = cover('thTyp') ? 'thTyp' : cover('thStd') ? 'thStd' : null;
+    var valOf = useKey ? function (r) { return typeof r[useKey] === 'number' ? r[useKey] : null; } : thAllOfDoc;
     var ths = rows.map(valOf).filter(function (x) { return typeof x === 'number'; });
     var pcs = rows.map(function (r) { return r.perChild; }).filter(function (x) { return typeof x === 'number' && x > 0; });
     var hist = []; for (var i = 0; i <= 100; i++) hist.push(0);
@@ -232,7 +236,7 @@ var COMM = (function () {
     var byC = {}, byCounty = {};
     rows.forEach(function (r) { var v = valOf(r); if (typeof v === 'number' && r.county) (byC[r.county] = byC[r.county] || []).push(v); });
     Object.keys(byC).forEach(function (k) { byCounty[k] = { n: byC[k].length, med: median(byC[k]) }; });
-    return { n: rows.length, by: by, thHist: hist, thMedian: median(ths), perChildMedian: median(pcs), byCounty: byCounty, thAll: true, thMode: useStd ? 'std' : 'all' };
+    return { n: rows.length, by: by, thHist: hist, thMedian: median(ths), perChildMedian: median(pcs), byCounty: byCounty, thAll: true, thMode: useKey === 'thTyp' ? 'typ' : useKey === 'thStd' ? 'std' : 'all' };
   }
   // 分享資料的門檻換算成「同齡、不分產業」的 PR（新資料送出時已算好 thAll；舊資料在這裡補算）
   function thAllOfDoc(r) {
@@ -245,9 +249,9 @@ var COMM = (function () {
   var stdCache = { key: null, v: null };
   function mineTh(s, thPr) {
     var S = st.stats;
-    if (S && S.thMode === 'std') {
-      var key = sig(s);
-      if (stdCache.key !== key) { stdCache.key = key; try { stdCache.v = ENGINE.thStd(s); } catch (e) { stdCache.v = null; } }
+    if (S && (S.thMode === 'std' || S.thMode === 'typ')) {
+      var key = S.thMode + sig(s);
+      if (stdCache.key !== key) { stdCache.key = key; try { stdCache.v = S.thMode === 'typ' ? ENGINE.thTyp(s) : ENGINE.thStd(s); } catch (e) { stdCache.v = null; } }
       return stdCache.v;
     }
     if (thPr == null) return 100;

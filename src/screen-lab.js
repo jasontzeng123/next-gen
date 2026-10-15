@@ -534,7 +534,7 @@
     if (!S || S.n < COMM.MIN_N) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + (S ? S.n : 0) + ' 人分享'), '累積到 ' + COMM.MIN_N + ' 人以上就會顯示。完成試算時選擇「匿名分享」，就能加入統計。')); return; }
     // 「你」＝自己報告的門檻：還沒算過就先算；「再高也不夠」放在 100 那一格（分享資料也是記成 100）
     if (!A.th && A.compute) { try { A.compute(); } catch (e) { /* 算不出來就不標示 */ } }
-    var std = S.thMode === 'std';
+    var std = S.thMode === 'std' || S.thMode === 'typ';
     var th = !A.th ? null : COMM.mineTh(A.s, A.th.pr);
     var bins = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     (S.thHist || []).forEach(function (c, v) { bins[Math.min(10, Math.floor(v / 10))] += c; });
@@ -548,7 +548,7 @@
       if (n) svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh - hh - 6, 'text-anchor': 'middle', text: String(n), style: 'font-size:11px;fill:var(--ink-2)' }));
     });
     sec.appendChild(h('p', { class: 'rsec-lede' }, (std
-      ? S.n + ' 位分享者心中的養育標準，各自需要多少收入（標準門檻：存款與家人資助都當成 0、收入不分產業，只比標準本身）'
+      ? S.n + ' 位分享者心中的養育標準，各自需要多少收入（標準門檻：' + (S.thMode === 'typ' ? '存款以同齡平均計、不含家人資助' : '存款與家人資助都當成 0') + '、收入不分產業，只比標準本身）'
       : S.n + ' 位分享者，各自心中的養育標準需要的收入 PR' + (S.thAll ? '（已換算成同齡、不分產業的 PR，不同產業的人才能放在一起比）' : '')) + '。' + (th != null ? '藍色是你所在的區間。' : '')));
     sec.appendChild(h('div', { class: 'chart-box' }, svg));
     // 各縣市

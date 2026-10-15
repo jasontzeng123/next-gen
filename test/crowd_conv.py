@@ -15,6 +15,7 @@ hist = lambda vals: [sum(1 for v in vals if min(100, int(v)) == i) for i in rang
 OLD = {'n': 30, 'realN': 30, 'demoN': 0, 'demoOn': False, 'by': {'housing': {'buy': 20, 'rent': 10}}, 'thHist': hist([28] * 30), 'thMedian': 28, 'perChildMedian': 5000000, 'byCounty': {'HSZ': {'n': 30, 'med': 28}}}
 NEW = dict(OLD, thAllHist=hist([70.6] * 30), thAllMedian=70.6, byCountyAll={'HSZ': {'n': 30, 'med': 70.6}})
 STD = dict(NEW, stdHist=hist([78] * 30), stdMedian=78, byCountyStd={'HSZ': {'n': 30, 'med': 78}}, stdN=30)
+TYP = dict(NEW, stdHist=hist([78] * 30), stdMedian=78, stdN=30, typHist=hist([64] * 30), typMedian=64, byCountyTyp={'HSZ': {'n': 30, 'med': 64}}, typN=30)
 STDFEW = dict(NEW, stdHist=hist([78] * 3), stdMedian=78, byCountyStd={'HSZ': {'n': 3, 'med': 78}}, stdN=3)
 ROWS = [{'v': 2, '_id': 'r%02d' % i, 'th': 28, 'indA': 'semi', 'indB': 'semi', 'partner': True, 'incomeMode': 'threshold', 'county': 'HSZ', 'housing': 'buy'} for i in range(30)]
 me = {'county': 'HSZ', 'housing': 'buy', 'partner': True, 'incomeMode': 'threshold', 'kids': 2, 'ageA': 28, 'ageB': 28, 'firstBirthAge': 31,
@@ -27,7 +28,7 @@ def run(mode):
         name = route.request.url.rsplit('/', 1)[-1]; body = json.loads(route.request.post_data or '{}')
         if name == 'crowd_stats':
             if mode == 'rows': return route.fulfill(status=404, body='no such function')
-            return route.fulfill(status=200, content_type='application/json', body=json.dumps(dict({'new': NEW, 'std': STD, 'stdfew': STDFEW}.get(mode, OLD), mine=False)))
+            return route.fulfill(status=200, content_type='application/json', body=json.dumps(dict({'new': NEW, 'std': STD, 'typ': TYP, 'stdfew': STDFEW}.get(mode, OLD), mine=False)))
         if name == 'list_choices': return route.fulfill(status=200, content_type='application/json', body=json.dumps(ROWS))
         if name == 'submit_choice': sent.append(body['p_data']); return route.fulfill(status=200, content_type='application/json', body='true')
         return route.fulfill(status=404, body='no')
@@ -42,7 +43,7 @@ def run(mode):
         pg.evaluate("APP.go('reveal')"); pg.wait_for_timeout(1800)
         pg.evaluate("APP.go('report')"); pg.wait_for_timeout(1800)
         tiles = pg.evaluate("(document.querySelector('#sec-crowd .tiles')||{}).innerText||''").replace('\n', ' ')
-        note = pg.evaluate("[...document.querySelectorAll('#sec-crowd p')].map(p=>p.textContent).find(t=>t.includes('換算'))||''")
+        note = pg.evaluate("[...document.querySelectorAll('#sec-crowd p')].map(p=>p.textContent).find(t=>t.includes('換算')||t.includes('只看養育標準'))||''")
         myth = pg.evaluate("APP.th && APP.th.pr")
         pg.evaluate("APP.go('lab')"); pg.wait_for_timeout(1200)
         tab = pg.query_selector('button:has-text("大家的資料")')
@@ -52,8 +53,8 @@ def run(mode):
         print('   tiles:', tiles[:150])
         print('   note :', note[:60])
         print('   lab  :', lede[:90])
-        if sent: print('   sent th / thAll / thStd:', sent[0].get('th'), sent[0].get('thAll'), sent[0].get('thStd'))
+        if sent: print('   sent th / thAll / thStd / thTyp:', sent[0].get('th'), sent[0].get('thAll'), sent[0].get('thStd'), sent[0].get('thTyp'))
         print('   errors', errs)
         b.close()
 
-for m in ['std', 'stdfew', 'new', 'old', 'rows']: run(m)
+for m in ['typ', 'std', 'stdfew', 'new', 'old', 'rows']: run(m)
