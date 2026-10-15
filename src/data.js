@@ -32,6 +32,7 @@ var DATA = (function () {
     quintile:   { t: '臺中市主計處｜114年家庭收支（含全國五等分位）', u: 'https://www.dbas.taichung.gov.tw/media/1457179/第115-03號-經濟統計通報-臺中市114-年家庭收支狀況.pdf', d: '2026' },
     savingRate: { t: '風傳媒｜113年家庭收支調查：每戶儲蓄與儲蓄率', u: 'https://www.storm.mg/lifestyle/11061012', d: '2025-08' },
     youthSave:  { t: '經濟日報｜yes123 青年勞工調查：39歲以下平均存款', u: 'https://money.udn.com/money/story/5612/9415770', d: '2026-04' },
+    savingAge:  { t: '老喬報｜依主計總處家庭收支調查推估各年齡累積存款', u: 'https://joelin.cc/?p=3571', d: '2026-08' },
     countyCons: { t: '主計總處家庭收支各縣市每人消費（彙整表）', u: 'https://csr.mcut.edu.tw/var/file/31/1031/img/2105/528706794.pdf', d: '2023' },
     minLiving:  { t: '臺北市｜115年度最低生活費', u: 'https://service.docms.gov.taipei/attachments/115-income-limit.pdf', d: '2026' },
     women:      { t: '主計總處｜婦女婚育與就業調查', u: 'https://ws.dgbas.gov.tw/public/attachment/7911117100zt9y70g.pdf', d: '2016' },
@@ -170,6 +171,10 @@ var DATA = (function () {
   WAGE.median2024 = WAGE.median; WAGE.median = Math.round(WAGE.median * WAGE.toBase / 1000) * 1000;
 
   // 家庭可支配所得與消費支出（114年，五等分位平均數，視為第10/30/50/70/90百分位）
+  // 同齡平均存款（每人，元）：主計總處家庭收支調查各年齡的平均儲蓄，從 22 歲開始累積、不計投資報酬的推估（老喬報整理）。
+  // 官方沒有各年齡的存款餘額統計；這是平均數、且官方的「儲蓄」含還貸款與投資，偏樂觀。只用於「標準門檻」。
+  var SAVINGS_TYPICAL = [[22, 0], [25, 280000], [30, 750000], [35, 1380000], [40, 1930000], [45, 2600000], [50, 3230000], [55, 3860000], [60, 4640000], [65, 5420000]];
+
   var HOUSEHOLD = {
     // 114 年（2025）資料；載入時換算成 2026 年水準（可支配所得 ×1.04、消費 ×1.03）
     disposable: [[10, 397191], [30, 726390], [50, 1043274], [70, 1435638], [90, 2449344]],
@@ -293,7 +298,7 @@ var DATA = (function () {
   return {
     SOURCES: SOURCES, COUNTIES: COUNTIES, COUNTY: COUNTY, DISTRICTS: DISTRICTS,
     CARE: CARE, KG: KG, ANQIN: ANQIN, POSTPARTUM_CENTER: POSTPARTUM_CENTER,
-    byCounty: byCounty, WAGE: WAGE, INDUSTRIES: INDUSTRIES, INDUSTRY: INDUSTRY, HOUSEHOLD: HOUSEHOLD,
+    byCounty: byCounty, WAGE: WAGE, INDUSTRIES: INDUSTRIES, INDUSTRY: INDUSTRY, HOUSEHOLD: HOUSEHOLD, SAVINGS_TYPICAL: SAVINGS_TYPICAL,
     TAX: TAX, SI: SI, BENEFIT: BENEFIT, RENT_SUB: RENT_SUB, QINGAN: QINGAN, BANK: BANK, COST: COST, HISTORY: HISTORY,
     BASE_YEAR: 2026
   };

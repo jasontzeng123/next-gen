@@ -653,9 +653,13 @@ var ENGINE = (function (D) {
   // 「標準門檻」：只看養育標準本身要多少收入。把個人的家底與處境統一：存款 0、沒有家人資助、
   // 兩人都以「不分產業」計、只看門檻（不填收入）、進階假設用預設值；其餘（縣市、幾歲生、生幾個、住法、學校……）照填。
   // 分享統計用它來比較大家的標準，不受各自存款、資助與產業影響。
-  function standardOf(raw) {
+  // 同齡平均存款（每人）：見 data.js 的 SAVINGS_TYPICAL
+  function typicalSavings(age) { return D.SAVINGS_TYPICAL ? interp(D.SAVINGS_TYPICAL, age) : 0; }
+  function standardOf(raw, zero) {
     var s = normalize(raw.__norm ? strip0(raw) : raw);
-    s.savings = 0; s.giftOnce = 0; s.giftMonthly = 0;
+    // zero：存款當成 0（最「乾淨」的版本，留作研究用）；否則以同齡平均存款計（夫妻合計），統計顯示用這個
+    s.savings = zero ? 0 : Math.round(typicalSavings(s.ageA) + (s.partner ? typicalSavings(s.ageB) : 0));
+    s.giftOnce = 0; s.giftMonthly = 0;
     s.jobA = { industry: 'all', pr: 50 }; s.jobB = { industry: 'all', pr: 50 };
     s.incomeMode = 'threshold';
     s.adv = clone(DEFAULTS.adv);
@@ -664,7 +668,9 @@ var ENGINE = (function (D) {
     return n;
   }
   function strip0(s) { var x = clone(s); delete x.__norm; return x; }
-  function thStd(raw) { var t = threshold(standardOf(raw), { quick: true }); return t.pr == null ? 100 : t.pr; }
+  // thStd：存款 0 的標準門檻；thTyp：存款以同齡平均計的標準門檻（統計主要用這個）
+  function thStd(raw) { var t = threshold(standardOf(raw, true), { quick: true }); return t.pr == null ? 100 : t.pr; }
+  function thTyp(raw) { var t = threshold(standardOf(raw, false), { quick: true }); return t.pr == null ? 100 : t.pr; }
 
   function thresholdSettings(s, p, who) {
     var x = clone(s); x.__norm = true;
@@ -843,7 +849,7 @@ var ENGINE = (function (D) {
   return {
     DEFAULTS: DEFAULTS, normalize: normalize, simulate: simulate, full: full, atPR: atPR, threshold: threshold, curve: curve,
     compromises: compromises, maxKids: maxKids, waitAge: waitAge, timeMachine: timeMachine, eraRel: eraRel, withEra: withEra,
-    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR, standardOf: standardOf, thStd: thStd,
+    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR, standardOf: standardOf, thStd: thStd, thTyp: thTyp, typicalSavings: typicalSavings,
     householdIncomePR: householdIncomePR, householdExpensePR: householdExpensePR, supportEndAge: supportEndAge,
     districtMult: districtMult, rentFor: rentFor, houseSize: houseSize, incomeTax: incomeTax, clone: clone, MOVE_TO: MOVE_TO
   };
