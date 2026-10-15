@@ -1200,7 +1200,7 @@
       sel('存款實質報酬', 'adv.returnRate', [{ v: 0, label: '0%（定存打平通膨）' }, { v: 0.01, label: '1%' }, { v: 0.03, label: '3%（長期投資）' }]),
       sel('借款實質成本', 'adv.borrowRate', [{ v: 0.02, label: '2%' }, { v: 0.03, label: '3%' }, { v: 0.05, label: '5%' }]),
       sel('通膨', 'adv.inflation', [{ v: 0.015, label: '1.5%' }, { v: 0.02, label: '2%' }, { v: 0.03, label: '3%' }]),
-      sel('一般房貸利率', 'adv.bankRate', [{ v: 0.022, label: '2.2%' }, { v: 0.025, label: '2.5%' }, { v: 0.03, label: '3.0%' }]),
+      sel('一般房貸利率', 'adv.bankRate', uniq([0.02, 0.022, 0.025, 0.028, 0.03], s.adv.bankRate).map(function (v) { return { v: v, label: +(v * 100).toFixed(3) + '%' }; })),
       sel('租金補貼', 'adv.rentSubsidy', [{ v: true, label: '會申請' }, { v: false, label: '不申請' }]),
       sel('新青安到期後', 'adv.qinganExtend', [{ v: true, label: '假設政策延續' }, { v: false, label: '2029 年後不再有' }]),
       sel('成長津貼', 'adv.pending', [{ v: false, label: '不計入（未通過）' }, { v: true, label: '計入（每月 5,000）' }])
