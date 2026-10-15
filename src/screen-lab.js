@@ -359,6 +359,7 @@
     var cells = [];
     [1, 2, 3, 4].forEach(function (k) { ages.forEach(function (fa) { cells.push({ t: 1, k: k, fa: fa }); }); });
     var hs = [['rent', null, '租屋'], ['buy', 'used', '買中古屋'], ['buy', 'new', '買新成屋'], ['family', null, '住長輩家']];
+    if (s.housing === 'own') hs.push(['own', null, '現在的房子（照你的房貸）']);
     hs.forEach(function (x) { [1, 2, 3, 4].forEach(function (k) { cells.push({ t: 2, k: k, hs: x }); }); });
     batch(cells, function (c) {
       var x = E.clone(s); x.kids = c.k;

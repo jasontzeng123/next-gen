@@ -451,6 +451,7 @@
     if (saveRateOf(s) < 1) add(2, '結餘只存' + saveName(saveRateOf(s)), true);
     if (s.giftOnce > 0) add(3, '長輩資助' + (buy ? '頭期 ' : ' ') + U.wan(s.giftOnce), true);
     if (s.giftMonthly > 0) add(3, '長輩每月資助 ' + U.sep(s.giftMonthly) + ' 元', true);
+    if (s.housing === 'own') add(4, s.ownBal > 0 ? '已有房子・還在繳房貸' : '已有房子・房貸已繳完', true);
     if (buy) {
       add(4, M('build', { used: '中古屋', new: '新成屋' }), true);
       add(5, M('buyWhen', { now: '現在就買', beforeKid: '生第一胎前一年買', beforeSchool: '老大上小學前買' }), true);
@@ -460,7 +461,7 @@
     add(7, M('school', { public: '公立學校', privateJH: '國中起讀私立', private: '全程私立', intl: '雙語或國際學校' }), true);
     add(8, { '18': '供養到 18 歲', '24': '供養到研究所', JP: '供養到日本碩士', UK: '供養到英國碩士', US: '供養到美國碩士' }[s.support], false, 'support');
     add(9, M('lifestyle', { frugal: '生活精打細算', comfy: '生活寬裕一點' }), false, 'lifestyle');
-    add(10, M('transport', { transit: '大眾運輸', scooter: '機車', used: '二手車', new: '國產新車', import: '進口休旅車' }), true);
+    add(10, (s.transport === 'custom' ? '車價 ' + U.wan(s.carPrice) : M('transport', { transit: '大眾運輸', scooter: '機車', used: '二手車', new: '國產新車', import: '進口休旅車' })) + (s.carHave && s.transport !== 'transit' && s.transport !== 'scooter' ? '（已有車）' : ''), true);
     add(11, M('preschool', { public: '公幼或非營利', private: '私立幼兒園', bilingual: '雙語幼兒園', home: '在家帶到上小學' }), false, 'preschool');
     if (buy) add(12, M('loan', { qinganNoGrace: '新青安不用寬限期', bank: '一般房貸' }), false, 'loan');
     if (buy) add(13, M('reno', { basic: '簡單整理', full: '完整裝潢' }), false, 'reno');
@@ -521,7 +522,7 @@
     var ctrl = h('div', { class: 'chart-ctrl' });
     var leg = h('div', { class: 'chart-legend' },
       h('span', {}, h('i', { style: { background: 'var(--s-save)' } }), '存款'),
-      showPar ? h('span', {}, h('i', { style: { background: 'var(--s-alt)' } }), s.housing === 'family' ? '不生小孩的存款' : '不生小孩（租屋）的存款') : null,
+      showPar ? h('span', {}, h('i', { style: { background: 'var(--s-alt)' } }), s.housing === 'family' || s.housing === 'own' ? '不生小孩的存款' : '不生小孩（租屋）的存款') : null,
       h('span', {}, h('i', { style: { background: 'var(--s-income)' } }), '收入'),
       h('span', {}, h('i', { style: { background: 'var(--s-expense)' } }), '支出'));
     var tg = h('label', { class: 'toggle' }, h('input', { type: 'checkbox', checked: showPar, onchange: function (e) { A.showParallel = e.target.checked; sec.replaceWith(flowSection(A.view || A.res, A.res.s)); } }), '比較不生小孩的平行世界');
@@ -532,8 +533,8 @@
     U.task(function () { Charts.cashflow(box, res, { parallel: showPar }); }, 'cashflow');
     var gap = res.savingsGap;
     var p = h('p', { class: 'sm', style: { marginTop: '12px', color: 'var(--ink-2)' } });
-    var parTxt = s.housing === 'family' ? '不生小孩的平行世界（一樣住長輩家）' : '不生小孩、' + (s.partner ? '兩人' : '一個人') + '租屋的平行世界';
-    var nwTxt = res.house ? '你的房子扣掉房貸後約值 ' + U.wan(res.houseEquity) + '，算進去的話，平行世界' + (res.netWorthGap > 0 ? '仍多 <b>' + U.wan(res.netWorthGap) + '</b>。' : '反而少 ' + U.wan(-res.netWorthGap) + '。') : '';
+    var parTxt = s.housing === 'family' ? '不生小孩的平行世界（一樣住長輩家）' : s.housing === 'own' ? '不生小孩的平行世界（一樣住現在的房子）' : '不生小孩、' + (s.partner ? '兩人' : '一個人') + '租屋的平行世界';
+    var nwTxt = res.house || res.own ? '你的房子扣掉房貸後約值 ' + U.wan(res.houseEquity) + '，算進去的話，平行世界' + (res.netWorthGap > 0 ? '仍多 <b>' + U.wan(res.netWorthGap) + '</b>。' : '反而少 ' + U.wan(-res.netWorthGap) + '。') : '';
     p.innerHTML = '到最小的孩子獨立時（你 ' + (s.ageA + res.Tv) + ' 歲），' + (gap > 0 ? parTxt + '會多存 <b>' + U.wan(gap) + '</b> 現金。' : parTxt + '的存款和你差不多。') + nwTxt + (res.house && res.house.wantQ && !res.house.qOK ? ' 不符合新青安：' + res.house.qReason + '。' : '');
     sec.appendChild(p);
     var det = h('details', { style: { marginTop: '14px' }, open: !!A.ledgerOpen });
@@ -592,7 +593,7 @@
       ['年底存款', function (y) { return y.S; }]
     ]);
     if (par) cols.push(['不生小孩的平行世界：年底存款', function (y, i) { var p = par.years[i]; return p ? p.S : null; }]);
-    if (res.house) { cols.push(['房屋價值', function (y) { return y.homeValue; }]); cols.push(['房貸餘額', function (y) { return y.loanBal; }]); }
+    if (res.house || res.own) { cols.push(['房屋價值', function (y) { return y.homeValue; }]); cols.push(['房貸餘額', function (y) { return y.loanBal; }]); }
     var incTxt = thMode ? (atTh ? '門檻收入（PR ' + U.pr(A.th && A.th.pr != null ? A.th.pr : 99.9) + '）' : '收入在中間（PR 50）') : '你填寫的收入';
     var head = [
       ['你有資格生下一代嗎？逐年明細'],
@@ -935,7 +936,7 @@
     });
   }
   function shareText(s, res, th) {
-    var where = D.COUNTY[s.county].name + (s.housing === 'buy' ? '買房' : s.housing === 'rent' ? '租屋' : '住長輩家') + '、生 ' + s.kids + ' 個孩子';
+    var where = D.COUNTY[s.county].name + (s.housing === 'buy' ? '買房' : s.housing === 'rent' ? '租屋' : s.housing === 'own' ? '（已經有房）' : '住長輩家') + '、生 ' + s.kids + ' 個孩子';
     var n = People.count(th.pr), line;
     var hb = houseBound(s, th);
     if (th.pr == null && hb) line = '光是買房那年要拿出的 ' + U.wan(hb.cash) + ' 頭期款，收入再高也來不及存。';
@@ -1156,7 +1157,11 @@
     panel.appendChild(group('住房', QS.labelOf('housing', s.housing), [
       qsel('房間', 'room'), qsel('住房', 'housing'),
       s.housing === 'buy' ? qsel('何時買', 'buyWhen') : null, s.housing === 'buy' ? qsel('新或中古', 'build') : null, s.housing === 'buy' ? qsel('房貸', 'loan') : null, s.housing === 'buy' ? qsel('裝潢', 'reno') : null,
-      s.housing === 'buy' && ['used', 'new', 'import'].indexOf(s.transport) >= 0 ? qsel('車位', 'parking') : null
+      s.housing === 'own' ? sel('房貸餘額', 'ownBal', uniq([0, 3000000, 5000000, 8000000, 10000000, 15000000], s.ownBal).map(function (v) { return { v: v, label: v ? U.wan(v) : '已經繳完' }; })) : null,
+      s.housing === 'own' && s.ownBal > 0 ? sel('房貸利率', 'ownRate', uniq([D.QINGAN.rates[0], 0.022, 0.025, 0.028], s.ownRate).map(function (v) { return { v: v, label: +(v * 100).toFixed(3) + '%' }; })) : null,
+      s.housing === 'own' && s.ownBal > 0 ? sel('還要繳', 'ownYears', uniq([10, 15, 20, 25, 30, 35], s.ownYears).map(function (v) { return { v: v, label: v + ' 年' }; })) : null,
+      s.housing === 'own' && s.ownBal > 0 ? sel('寬限期還剩', 'ownGrace', [0, 1, 2, 3, 4, 5].map(function (v) { return { v: v, label: v ? v + ' 年' : '沒有或已結束' }; })) : null,
+      (s.housing === 'buy' || s.housing === 'own') && ['used', 'new', 'import', 'custom'].indexOf(s.transport) >= 0 ? sel('車位', 'parking', s.housing === 'own' ? [{ v: 'buy', label: '家裡有車位' }, { v: 'rent', label: '沒有，每月租車位' }] : QS.optionsOf('parking')) : null
     ], false));
     panel.appendChild(group('0–6 歲', QS.labelOf('care', s.care), [
       qsel('坐月子', 'postpartum'), qsel('0–2 歲', 'care'),
@@ -1165,7 +1170,11 @@
     ], false));
     panel.appendChild(group('教育', QS.labelOf('school', s.school), [qsel('學校', 'school'), qsel('課後', 'after'), qsel('補習', 'cram'), qsel('大學', 'uni'), qsel('住宿', 'uniAway'), qsel('供養到', 'support')], false));
     panel.appendChild(group('生活', QS.labelOf('lifestyle', s.lifestyle), [
-      qsel('交通', 'transport'), qsel('生活水準', 'lifestyle'), qsel('旅遊', 'travel'),
+      qsel('交通', 'transport'),
+      s.transport === 'custom' ? sel('車價', 'carPrice', uniq([500000, 850000, 1200000, 2000000, 3000000], s.carPrice).map(function (v) { return { v: v, label: U.wan(v) }; })) : null,
+      s.transport === 'custom' ? sel('幾年換車', 'carLife', uniq([5, 8, 10, 15], s.carLife).map(function (v) { return { v: v, label: v + ' 年' }; })) : null,
+      ['used', 'new', 'import', 'custom'].indexOf(s.transport) >= 0 ? sel('現在有車', 'carHave', uniq([0, 3, 5, 8], s.carHave).map(function (v) { return { v: v, label: v ? '有，還能開 ' + v + ' 年' : '還沒有' }; })) : null,
+      qsel('生活水準', 'lifestyle'), qsel('旅遊', 'travel'),
       sel('孝親費', 'elder', [0, 5000, 10000, 15000, 20000, 30000].map(function (v) { return { v: v, label: v ? U.sep(v) + ' 元/月' : '不用給' }; })),
       sel('長輩照護', 'elderCare', [{ v: false, label: '不另外分擔' }, { v: true, label: '分擔看護費' }])
     ], false));

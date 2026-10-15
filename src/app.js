@@ -58,7 +58,7 @@ var APP = (function () {
   A.EXP_KEYS = EXP_KEYS; A.INC_KEYS = INC_KEYS;
   function pick(s, keys) { var o = {}; keys.forEach(function (k) { if (s && s[k] !== undefined) o[k] = JSON.parse(JSON.stringify(s[k])); }); return o; }
   A.pick = pick;
-  A.expName = function (s) { var c = DATA.COUNTY[s.county].name; return c + '・' + ({ rent: '租屋', buy: '買房', family: '住長輩家' }[s.housing]) + '・' + s.kids + ' 胎'; };
+  A.expName = function (s) { var c = DATA.COUNTY[s.county].name; return c + '・' + ({ rent: '租屋', buy: '買房', family: '住長輩家', own: '已有房' }[s.housing]) + '・' + s.kids + ' 胎'; };
   A.incName = function (s) {
     if (s.incomeMode !== 'full') return '只看門檻（不填收入）';
     var a = DATA.INDUSTRY[s.jobA.industry], t = (a.id === 'all' ? '' : a.name.replace(/（.*）/, '') + ' ') + 'PR' + U.pr(s.jobA.pr);
