@@ -817,16 +817,22 @@
     }
     var tiles = h('div', { class: 'tiles' });
     // 門檻統計換算成「同齡、不分產業」的 PR：自己的門檻也換成同一把尺再排名
-    var myTh = A.th.pr != null ? COMM.mineTh(s, A.th.pr) : null;
+    // 統計用標準門檻（std）時，自己也用標準門檻來比；否則用換算成不分產業的個人門檻
+    var std = S.thMode === 'std';
+    var myTh = COMM.mineTh(s, A.th.pr);
     var thRank = myTh != null ? (COMM.thRank(myTh) || 0) : 100;
-    var thConv = S.thAll && myTh != null && Math.abs(myTh - A.th.pr) >= 0.5;
+    var thConv = !std && S.thAll && myTh != null && A.th.pr != null && Math.abs(myTh - A.th.pr) >= 0.5;
+    var prTxt = function (v) { return v >= 100 ? '99.9 以上' : U.pr(v); };
     tiles.appendChild(tile('分享人數', U.sep(n), st.demoOn ? '含 ' + st.demoN + ' 筆示範資料' : n >= (st.backend === 'web' ? 3000 : 1000) ? '最近 ' + U.sep(n) + ' 筆' : '所有匿名分享的人', false));
-    tiles.appendChild(tile('門檻 PR 中位數', U.pr(S.thMedian), (thConv ? '你的換算後是 PR ' + U.pr(myTh) + '，' : '你的門檻') + '比 ' + Math.round(thRank) + '% 的人高', false));
+    tiles.appendChild(tile(std ? '標準門檻中位數' : '門檻 PR 中位數', U.pr(S.thMedian),
+      std ? (myTh != null ? '你的是 PR ' + prTxt(myTh) + '，比 ' + Math.round(thRank) + '% 的人高' : '')
+        : (thConv ? '你的換算後是 PR ' + U.pr(myTh) + '，' : '你的門檻') + '比 ' + Math.round(thRank) + '% 的人高', false));
     if (S.perChildMedian) tiles.appendChild(tile('每個孩子的淨成本（中位數）', U.wan(S.perChildMedian), '你的是 ' + U.wan(res.perChild), false));
     var vb = S.by.verdict || {}, vtot = 0; for (var k in vb) vtot += vb[k];
     if (vtot >= COMM.MIN_N) tiles.appendChild(tile('填了收入的人被核准', Math.round(((vb.pass || 0) + (vb.tight || 0)) / vtot * 100) + '%', '含「附條件核准」', false));
     sec.appendChild(tiles);
-    if (S.thAll) sec.appendChild(h('p', { class: 'xs muted', style: { marginTop: '8px' } }, '門檻 PR 原本是跟同齡、同產業的人比。這裡把每個人的門檻都換算成「同齡、不分產業」的 PR 再放在一起比，例如半導體業的 PR 28，收入大約等於不分產業的 PR 70。'));
+    if (std) sec.appendChild(h('p', { class: 'xs muted', style: { marginTop: '8px' } }, '「標準門檻」只看養育標準本身：把每個人的存款和家人資助都當成 0、收入不分產業，再算一次門檻。比的是大家心中的標準，不受各自的家底影響。' + (A.th.pr != null ? '你自己的門檻（含你的存款與資助）是 PR ' + U.pr(A.th.pr) + '。' : '')));
+    else if (S.thAll) sec.appendChild(h('p', { class: 'xs muted', style: { marginTop: '8px' } }, '門檻 PR 原本是跟同齡、同產業的人比。這裡把每個人的門檻都換算成「同齡、不分產業」的 PR 再放在一起比，例如半導體業的 PR 28，收入大約等於不分產業的 PR 70。'));
     // 每題分布
     var keys = [['housing', '住房'], ['room', '孩子房間'], ['care', '0–2 歲照顧'], ['preschool', '幼兒園'], ['school', '國小到高中'], ['cram', '補習'], ['support', '供養到'], ['transport', '交通'], ['lifestyle', '生活水準']];
     var g = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px 26px', marginTop: '20px' } });

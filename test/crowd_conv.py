@@ -14,6 +14,8 @@ open(ROOT + '/test/web.html', 'w').write(html)
 hist = lambda vals: [sum(1 for v in vals if min(100, int(v)) == i) for i in range(101)]
 OLD = {'n': 30, 'realN': 30, 'demoN': 0, 'demoOn': False, 'by': {'housing': {'buy': 20, 'rent': 10}}, 'thHist': hist([28] * 30), 'thMedian': 28, 'perChildMedian': 5000000, 'byCounty': {'HSZ': {'n': 30, 'med': 28}}}
 NEW = dict(OLD, thAllHist=hist([70.6] * 30), thAllMedian=70.6, byCountyAll={'HSZ': {'n': 30, 'med': 70.6}})
+STD = dict(NEW, stdHist=hist([78] * 30), stdMedian=78, byCountyStd={'HSZ': {'n': 30, 'med': 78}}, stdN=30)
+STDFEW = dict(NEW, stdHist=hist([78] * 3), stdMedian=78, byCountyStd={'HSZ': {'n': 3, 'med': 78}}, stdN=3)
 ROWS = [{'v': 2, '_id': 'r%02d' % i, 'th': 28, 'indA': 'semi', 'indB': 'semi', 'partner': True, 'incomeMode': 'threshold', 'county': 'HSZ', 'housing': 'buy'} for i in range(30)]
 me = {'county': 'HSZ', 'housing': 'buy', 'partner': True, 'incomeMode': 'threshold', 'kids': 2, 'ageA': 28, 'ageB': 28, 'firstBirthAge': 31,
       'jobA': {'industry': 'semi', 'pr': 50}, 'jobB': {'industry': 'semi', 'pr': 50}}
@@ -25,7 +27,7 @@ def run(mode):
         name = route.request.url.rsplit('/', 1)[-1]; body = json.loads(route.request.post_data or '{}')
         if name == 'crowd_stats':
             if mode == 'rows': return route.fulfill(status=404, body='no such function')
-            return route.fulfill(status=200, content_type='application/json', body=json.dumps(dict(NEW if mode == 'new' else OLD, mine=False)))
+            return route.fulfill(status=200, content_type='application/json', body=json.dumps(dict({'new': NEW, 'std': STD, 'stdfew': STDFEW}.get(mode, OLD), mine=False)))
         if name == 'list_choices': return route.fulfill(status=200, content_type='application/json', body=json.dumps(ROWS))
         if name == 'submit_choice': sent.append(body['p_data']); return route.fulfill(status=200, content_type='application/json', body='true')
         return route.fulfill(status=404, body='no')
@@ -50,8 +52,8 @@ def run(mode):
         print('   tiles:', tiles[:150])
         print('   note :', note[:60])
         print('   lab  :', lede[:90])
-        if sent: print('   sent thAll:', sent[0].get('th'), '→', sent[0].get('thAll'))
+        if sent: print('   sent th / thAll / thStd:', sent[0].get('th'), sent[0].get('thAll'), sent[0].get('thStd'))
         print('   errors', errs)
         b.close()
 
-for m in ['new', 'old', 'rows']: run(m)
+for m in ['std', 'stdfew', 'new', 'old', 'rows']: run(m)

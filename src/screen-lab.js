@@ -534,7 +534,8 @@
     if (!S || S.n < COMM.MIN_N) { sec.appendChild(h('div', { class: 'empty' }, h('b', {}, '目前只有 ' + (S ? S.n : 0) + ' 人分享'), '累積到 ' + COMM.MIN_N + ' 人以上就會顯示。完成試算時選擇「匿名分享」，就能加入統計。')); return; }
     // 「你」＝自己報告的門檻：還沒算過就先算；「再高也不夠」放在 100 那一格（分享資料也是記成 100）
     if (!A.th && A.compute) { try { A.compute(); } catch (e) { /* 算不出來就不標示 */ } }
-    var th = !A.th ? null : A.th.pr != null ? COMM.mineTh(A.s, A.th.pr) : 100;
+    var std = S.thMode === 'std';
+    var th = !A.th ? null : COMM.mineTh(A.s, A.th.pr);
     var bins = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     (S.thHist || []).forEach(function (c, v) { bins[Math.min(10, Math.floor(v / 10))] += c; });
     var mx = Math.max.apply(null, bins.concat([1]));
@@ -546,14 +547,16 @@
       svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh + 18, 'text-anchor': 'middle', text: i === 10 ? '100' : (i * 10) + '–', style: 'font-size:11px;fill:var(--ink-3)' }));
       if (n) svg.appendChild(U.svg('text', { x: i * bw + bw / 2, y: Hh - hh - 6, 'text-anchor': 'middle', text: String(n), style: 'font-size:11px;fill:var(--ink-2)' }));
     });
-    sec.appendChild(h('p', { class: 'rsec-lede' }, S.n + ' 位分享者，各自心中的養育標準需要的收入 PR' + (S.thAll ? '（已換算成同齡、不分產業的 PR，不同產業的人才能放在一起比）' : '') + '。' + (th != null ? '藍色是你所在的區間。' : '')));
+    sec.appendChild(h('p', { class: 'rsec-lede' }, (std
+      ? S.n + ' 位分享者心中的養育標準，各自需要多少收入（標準門檻：存款與家人資助都當成 0、收入不分產業，只比標準本身）'
+      : S.n + ' 位分享者，各自心中的養育標準需要的收入 PR' + (S.thAll ? '（已換算成同齡、不分產業的 PR，不同產業的人才能放在一起比）' : '')) + '。' + (th != null ? '藍色是你所在的區間。' : '')));
     sec.appendChild(h('div', { class: 'chart-box' }, svg));
     // 各縣市
     var byC = S.byCounty || {};
     var rows = Object.keys(byC).filter(function (k) { return D.COUNTY[k] && byC[k].n >= 3; }).map(function (k) { return [k, byC[k].med, byC[k].n]; }).sort(function (a, b) { return a[1] - b[1]; });
     if (rows.length) {
       var sec2 = h('div', { class: 'rsec' });
-      sec2.appendChild(h('h2', {}, '各縣市分享者的門檻中位數'));
+      sec2.appendChild(h('h2', {}, std ? '各縣市分享者的標準門檻中位數' : '各縣市分享者的門檻中位數'));
       var b = h('div', { class: 'bars' });
       rows.forEach(function (r) { b.appendChild(h('div', { class: 'bar-row' }, h('span', { class: 'bl' }, D.COUNTY[r[0]].name + '（' + r[2] + '）'), h('span', { class: 'bt' }, h('i', { style: { width: r[1] + '%', background: heat(r[1]) } })), h('span', { class: 'bv' }, 'PR ' + U.pr(r[1])))); });
       sec2.appendChild(b);
