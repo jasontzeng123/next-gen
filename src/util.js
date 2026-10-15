@@ -144,6 +144,17 @@ var U = (function () {
     var f = box.querySelector('input, select, button'); if (f) f.focus();
     return close;
   }
+  // 大金額先確認（最常見的錯是把「元」填進「萬」的格子）：n 以輸入單位計
+  function confirmAmount(n, unit, onYes, onNo) {
+    var spoken = unit === '萬' ? ((Math.floor(n / 10000) ? Math.floor(n / 10000) + ' 億' : '') + (n % 10000 ? sep(+(n % 10000).toFixed(1)) + ' 萬' : '') + '元') : sep(n) + ' ' + unit;
+    modal(function (box, close) {
+      box.appendChild(h('h3', {}, '確定是 ' + spoken + '嗎？'));
+      box.appendChild(h('p', {}, unit === '萬' ? '這一格的單位是「萬」：填 100 代表 100 萬元。你填的是 ' + sep(n) + '，也就是新台幣 ' + sep(Math.round(n * 10000)) + ' 元。' : '你填的是 ' + spoken + '。'));
+      box.appendChild(h('div', { class: 'actions' },
+        h('button', { class: 'btn ghost', onclick: function () { close(); if (onNo) onNo(); } }, '重新填寫'),
+        h('button', { class: 'btn', onclick: function () { close(); onYes(); } }, '沒錯，是 ' + spoken)));
+    });
+  }
   function modalOpen() { return !!document.querySelector('.modal-scrim'); }
   // 小圖示（線條）
   var ICONS = {
@@ -174,5 +185,5 @@ var U = (function () {
     var s = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + (cls ? ' class="' + cls + '"' : '') + '>' + (ICONS[name] || '') + '</svg>';
     var t = document.createElement('template'); t.innerHTML = s; return t.content.firstChild;
   }
-  return { task: task, safe: safe, report: report, onError: onError, modalOpen: modalOpen, h: h, svg: svg, clear: clear, sep: sep, wan: wan, wan1: wan1, yuan: yuan, monthly: monthly, pr: prFmt, topPct: topPct, thUp: thUp, cn: cn, debounce: debounce, store: store, toast: toast, cssVar: cssVar, reduceMotion: reduceMotion, cvd: cvd, setCvd: setCvd, isDark: isDark, mix: mix, copy: copy, modal: modal, icon: icon };
+  return { task: task, safe: safe, report: report, onError: onError, modalOpen: modalOpen, h: h, svg: svg, clear: clear, sep: sep, wan: wan, wan1: wan1, yuan: yuan, monthly: monthly, pr: prFmt, topPct: topPct, thUp: thUp, cn: cn, debounce: debounce, store: store, toast: toast, cssVar: cssVar, reduceMotion: reduceMotion, cvd: cvd, setCvd: setCvd, isDark: isDark, mix: mix, copy: copy, modal: modal, confirmAmount: confirmAmount, icon: icon };
 })();

@@ -128,6 +128,14 @@ var ENGINE = (function (D) {
     ownBal: 6000000, ownRate: 0.022, ownYears: 25, ownGrace: 0,
     // 自己填車價（transport: 'custom'）與現在的車還能開幾年（0＝還沒有車，生第一胎那年買）
     carPrice: 850000, carLife: 10, carHave: 0,
+    // 買房時間自己選（buyWhen: 'age'）：幾歲買
+    buyAge: 30,
+    // 旅遊自己填（travel: 'custom'）：每人每年旅遊費用
+    travelCost: 60000,
+    // 每月額外的固定支出（寵物、興趣、保險等），整個家庭合計
+    extraMonthly: 0,
+    // 既有的貸款（信貸、學貸、車貸等，不含房貸）：餘額、年利率、還要繳幾年
+    debtBal: 0, debtRate: 0.035, debtYears: 5,
     adv: { wageGrowth: 0.01, returnRate: 0.01, borrowRate: 0.03, inflation: 0.02, bankRate: 0.025, pending: false, rentSubsidy: true, qinganExtend: true, homeGrowth: 0, saveRate: 1 }
   };
   function normalize(raw) {
@@ -163,6 +171,18 @@ var ENGINE = (function (D) {
     // 不認得的選項（例如舊版存檔或新版存檔被舊版讀到）改回預設，避免算錯
     if (['rent', 'buy', 'family', 'own'].indexOf(s.housing) < 0) s.housing = DEFAULTS.housing;
     if (['transit', 'scooter', 'used', 'new', 'import', 'custom'].indexOf(s.transport) < 0) s.transport = DEFAULTS.transport;
+    if (['now', 'beforeKid', 'beforeSchool', 'age'].indexOf(s.buyWhen) < 0) s.buyWhen = DEFAULTS.buyWhen;
+    if (['none', 'domestic', 'abroad', 'custom'].indexOf(s.travel) < 0) s.travel = DEFAULTS.travel;
+    if (['quasi', 'public', 'private', 'grandPaid', 'grandFree', 'helper', 'quit', 'self'].indexOf(s.care) < 0) s.care = DEFAULTS.care;
+    if (['none', 'anqin', 'anqin1', 'anqin3', 'art1', 'art3'].indexOf(s.after) < 0) s.after = DEFAULTS.after;
+    s.buyAge = clamp(Math.round(+s.buyAge || s.ageA), s.ageA, 64);
+    s.travelCost = clamp(Math.round(+s.travelCost || 0), 0, 3000000);
+    s.extraMonthly = clamp(Math.round(+s.extraMonthly || 0), 0, 1000000);
+    s.debtBal = clamp(Math.round(+s.debtBal || 0), 0, 100000000);
+    s.debtRate = clamp(+s.debtRate || 0, 0, 0.2);
+    s.debtYears = clamp(Math.round(+s.debtYears || 1), 1, 30);
+    ['savings', 'giftOnce', 'giftMonthly'].forEach(function (k) { s[k] = Math.max(0, Math.round(+s[k] || 0)); });
+    s.giftYears = clamp(Math.round(+s.giftYears || 0), 0, 45);
     s.ownBal = Math.max(0, +s.ownBal || 0);
     s.ownRate = clamp(+s.ownRate || 0, 0, 0.1);
     s.ownYears = clamp(Math.round(+s.ownYears || 0), 0, 40);
@@ -211,6 +231,8 @@ var ENGINE = (function (D) {
     var after = monthlyPay(bal, r, (n - g) * 12);
     return { now: g > 0 ? bal * r / 12 : after, after: after };
   }
+  // 既有貸款（信貸等）的月付：本息平均攤還
+  function debtPayment(s) { return s.debtBal > 0 ? monthlyPay(s.debtBal, s.debtRate, s.debtYears * 12) : 0; }
   function annuity(bal, r, n) { if (n <= 0) return bal; if (r === 0) return bal / n; return bal * r / (1 - Math.pow(1 + r, -n)); }
 
   // 綜所稅
@@ -286,7 +308,7 @@ var ENGINE = (function (D) {
     var own = s.housing === 'own';
     var tb = -1;
     if (buy) {
-      tb = s.buyWhen === 'now' ? 0 : s.buyWhen === 'beforeKid' ? Math.max(0, refT0 - 1) : refT0 + 5;
+      tb = s.buyWhen === 'now' ? 0 : s.buyWhen === 'beforeKid' ? Math.max(0, refT0 - 1) : s.buyWhen === 'age' ? s.buyAge - s.ageA : refT0 + 5;
       tb = clamp(tb, 0, T - 1);
     }
     var hasCar = s.transport === 'used' || s.transport === 'new' || s.transport === 'import' || s.transport === 'custom';
@@ -386,6 +408,8 @@ var ENGINE = (function (D) {
     var qBal = house ? house.qBalNom : 0, bBal = house ? house.bBalNom : 0;
     var carOwnedSince = carHave > 0 ? carHave - cr.life : -1, carPays = [];
     var oBal = ownH ? ownH.bal : 0;
+    // 既有貸款：從今年起按月攤還（名目金額，換算成 2026 年幣值）
+    var dBal = s.debtBal > 0 ? s.debtBal : 0, dMp = debtPayment(s), dMr = s.debtRate / 12;
     var totals = {}, subs = { birth: 0, cityBirth: 0, allowance: 0, care: 0, leave: 0, rent: 0, uni: 0, growth: 0, kg: 0, pension: 0 };
     var minS = Infinity, minT = 0, firstNeg = -1;
 
@@ -393,7 +417,7 @@ var ENGINE = (function (D) {
       var ageA = s.ageA + t, ageB = s.ageB + t;
       var kAges = kidAgesAt(t);
       var events = [];
-      var e = { housing: 0, housingOnce: 0, living: 0, kidsBirth: 0, kidsCare: 0, kidsEdu: 0, kidsLife: 0, transport: 0, elder: 0, travel: 0, debtInterest: 0, extra: 0 };
+      var e = { housing: 0, housingOnce: 0, living: 0, kidsBirth: 0, kidsCare: 0, kidsEdu: 0, kidsLife: 0, transport: 0, elder: 0, travel: 0, other: 0, debt: 0, debtInterest: 0, extra: 0 };
       var tr = { birth: 0, cityBirth: 0, allowance: 0, care: 0, leave: 0, rent: 0, uni: 0, growth: 0, kg: 0, pension: 0 };
       // ---- 收入 ----
       var gA = personGross('A', t), gB = personGross('B', t);
@@ -462,7 +486,7 @@ var ENGINE = (function (D) {
               fee = qf - sub + 1000;
             } else if (cs === 'private') { fee = D.byCounty(D.CARE.privateFee, s.county) + 1000; allowM += careMonths; }
             else if (cs === 'grandPaid') { fee = C.grandPaid; allowM += careMonths; }
-            else if (cs === 'grandFree') { fee = 0; allowM += careMonths; }
+            else if (cs === 'grandFree' || cs === 'self') { fee = 0; allowM += careMonths; }   // self：自己帶、不辭職（例如在家工作）
             else if (cs === 'helper') {
               // 一位幫傭照顧所有孩子：整個家庭只計一次（取需要照顧最久的月數）
               fee = 0; helperMonths = Math.max(helperMonths, careMonths); allowM += careMonths;
@@ -485,8 +509,8 @@ var ENGINE = (function (D) {
           if (a === 2) events.push({ k: 'kg', n: k + 1 });
         } else if (a < 12) {
           if (a === 6) events.push({ k: 'es', n: k + 1 });
-          var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-          var anq = (s.after !== 'none') ? D.byCounty(D.ANQIN, s.county) * 12 : 0;
+          var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+          var anq = /^anqin/.test(s.after) ? D.byCounty(D.ANQIN, s.county) * 12 : 0;
           var sch = s.school === 'private' ? C.elementaryPrivate : s.school === 'intl' ? C.intlSchool : C.elementaryPublic;
           if (s.school === 'private' || s.school === 'intl') anq = 0;
           e.kidsEdu += sch + anq + hobbies * C.hobbyClass * 12;
@@ -514,7 +538,12 @@ var ENGINE = (function (D) {
 
       // ---- 大人生活 ----
       e.living = adultMonthly * adults * 12 + (C.utilBase + C.utilPerPerson * persons) * 12;
-      e.travel = s.travel === 'abroad' ? C.travel.abroadPerPerson * persons : s.travel === 'domestic' ? C.travel.domestic : 0;
+      e.travel = s.travel === 'abroad' ? C.travel.abroadPerPerson * persons : s.travel === 'custom' ? s.travelCost * persons : s.travel === 'domestic' ? C.travel.domestic : 0;
+      e.other = s.extraMonthly * 12;
+      // 既有貸款（信貸等）的本息
+      var dPay = 0;
+      if (dBal > 1 && t < s.debtYears) { for (var dm2 = 0; dm2 < 12 && dBal > 1; dm2++) { var di = dBal * dMr, dp = Math.min(dMp, dBal + di); dPay += dp; dBal -= dp - di; } }
+      e.debt = dPay / Math.pow(1 + infl, t);
       if (ageA < 60) e.elder = (+s.elder || 0) * 12;
       if (s.elderCare && ageA >= 50 && ageA < 60) e.elder += C.elderCareMonthly * 12;
 
@@ -595,6 +624,7 @@ var ENGINE = (function (D) {
       }
 
       var carDebt = 0; carPays.forEach(function (cp) { carDebt += cp.amt * cp.left; });
+      var debtBalReal = Math.max(0, dBal) / Math.pow(1 + infl, t);
       // ---- 稅與保費 ----
       var depsA = 0, depsB = 0;
       var primaryA = gA >= gB;
@@ -635,7 +665,7 @@ var ENGINE = (function (D) {
         t: t, year: D.BASE_YEAR + t, ageA: ageA, ageB: ageB, kids: kAges, events: events,
         gA: gA, gB: gB, gross: gross, si: si, tax: tax, transfers: transfers, tr: tr, gift: gift, interest: interest,
         net: netIncome, exp: e, expTotal: expTotal, Sstart: Sstart, S: S, rooms: rooms, renting: renting, principal: principal,
-        homeValue: homeValue, loanBal: loanBalReal, carDebt: carDebt, netWorth: S + homeValue - loanBalReal - carDebt
+        homeValue: homeValue, loanBal: loanBalReal, carDebt: carDebt, debtBal: debtBalReal, netWorth: S + homeValue - loanBalReal - carDebt - debtBalReal
       });
     }
 
@@ -648,7 +678,7 @@ var ENGINE = (function (D) {
     var repayT = -1; if (minS < 0) for (var ri = minT + 1; ri < years.length; ri++) if (years[ri].S >= 0) { repayT = ri; break; }
     var verdict = minS < 0 ? (endS >= 0 ? 'fail' : 'broke') : minRaise >= buffer ? 'pass' : 'tight';
     var raiseYears = nK ? win.filter(function (y) { return y.t >= t0; }) : win;
-    var avgCons = sum(raiseYears.map(function (y) { return y.expTotal - y.exp.housingOnce - y.exp.debtInterest - y.exp.elder - y.principal; })) / Math.max(1, raiseYears.length);
+    var avgCons = sum(raiseYears.map(function (y) { return y.expTotal - y.exp.housingOnce - y.exp.debtInterest - y.exp.debt - y.exp.elder - y.principal; })) / Math.max(1, raiseYears.length);
     var yNow = years[0];
     var yBirth = years[Math.min(t0, years.length - 1)];
     var at65 = years.filter(function (y) { return y.ageA === 64; })[0] || years[years.length - 1];
@@ -726,7 +756,7 @@ var ENGINE = (function (D) {
     var s = normalize(raw.__norm ? strip0(raw) : raw);
     // zero：存款當成 0（最「乾淨」的版本，留作研究用）；否則以同齡平均存款計（夫妻合計），統計顯示用這個
     s.savings = zero ? 0 : Math.round(typicalSavings(s.ageA) + (s.partner ? typicalSavings(s.ageB) : 0));
-    s.giftOnce = 0; s.giftMonthly = 0;
+    s.giftOnce = 0; s.giftMonthly = 0; s.debtBal = 0;
     if (s.housing === 'own') { s.housing = 'buy'; s.buyWhen = 'now'; s.build = 'used'; s.loan = DEFAULTS.loan; s.reno = DEFAULTS.reno; }
     s.carHave = 0;
     s.jobA = { industry: 'all', pr: 50 }; s.jobB = { industry: 'all', pr: 50 };
@@ -822,7 +852,7 @@ var ENGINE = (function (D) {
     { id: 'noAbroad', label: '不出國留學', w: 2, ok: function (s) { return ['US', 'UK', 'JP'].indexOf(s.support) >= 0; }, f: function (s) { s.support = '22'; } },
     { id: 'noMaster', label: '只供養到大學畢業', w: 1, ok: function (s) { return s.support === '24'; }, f: function (s) { s.support = '22'; } },
     { id: 'frugal', label: '日常開銷再省一級', w: 3, ok: function (s) { return s.lifestyle !== 'frugal'; }, f: function (s) { s.lifestyle = s.lifestyle === 'comfy' ? 'normal' : 'frugal'; } },
-    { id: 'noTravel', label: '不出國旅遊', w: 1, ok: function (s) { return s.travel === 'abroad'; }, f: function (s) { s.travel = 'domestic'; } },
+    { id: 'noTravel', label: '不出國旅遊', w: 1, ok: function (s) { return s.travel === 'abroad' || s.travel === 'custom'; }, f: function (s) { s.travel = 'domestic'; } },
     { id: 'elderHalf', label: '孝親費減半', w: 4, ok: function (s) { return s.elder >= 5000; }, f: function (s) { s.elder = Math.round(s.elder / 2); } },
     { id: 'noCenter', label: '不住月子中心，請家人幫忙', w: 1, ok: function (s) { return s.postpartum === 'center'; }, f: function (s) { s.postpartum = 'family'; } }
   ];
@@ -918,7 +948,7 @@ var ENGINE = (function (D) {
   return {
     DEFAULTS: DEFAULTS, normalize: normalize, simulate: simulate, full: full, atPR: atPR, threshold: threshold, curve: curve,
     compromises: compromises, maxKids: maxKids, waitAge: waitAge, timeMachine: timeMachine, eraRel: eraRel, withEra: withEra,
-    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR, standardOf: standardOf, thStd: thStd, ownPayments: ownPayments, carSpec: carSpec, thTyp: thTyp, typicalSavings: typicalSavings,
+    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR, standardOf: standardOf, thStd: thStd, ownPayments: ownPayments, debtPayment: debtPayment, carSpec: carSpec, thTyp: thTyp, typicalSavings: typicalSavings,
     householdIncomePR: householdIncomePR, householdExpensePR: householdExpensePR, supportEndAge: supportEndAge,
     districtMult: districtMult, rentFor: rentFor, houseSize: houseSize, incomeTax: incomeTax, clone: clone, MOVE_TO: MOVE_TO
   };
