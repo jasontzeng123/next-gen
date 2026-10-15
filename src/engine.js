@@ -650,6 +650,22 @@ var ENGINE = (function (D) {
     return full(s);
   }
   // 門檻 PR：雙方（或未知的一方）收入 PR 需要多少，存款才不跌破 0
+  // 「標準門檻」：只看養育標準本身要多少收入。把個人的家底與處境統一：存款 0、沒有家人資助、
+  // 兩人都以「不分產業」計、只看門檻（不填收入）、進階假設用預設值；其餘（縣市、幾歲生、生幾個、住法、學校……）照填。
+  // 分享統計用它來比較大家的標準，不受各自存款、資助與產業影響。
+  function standardOf(raw) {
+    var s = normalize(raw.__norm ? strip0(raw) : raw);
+    s.savings = 0; s.giftOnce = 0; s.giftMonthly = 0;
+    s.jobA = { industry: 'all', pr: 50 }; s.jobB = { industry: 'all', pr: 50 };
+    s.incomeMode = 'threshold';
+    s.adv = clone(DEFAULTS.adv);
+    delete s.__norm;
+    var n = normalize(s); n.__norm = true;
+    return n;
+  }
+  function strip0(s) { var x = clone(s); delete x.__norm; return x; }
+  function thStd(raw) { var t = threshold(standardOf(raw), { quick: true }); return t.pr == null ? 100 : t.pr; }
+
   function thresholdSettings(s, p, who) {
     var x = clone(s); x.__norm = true;
     if (who === 'A' || who === 'both') { x.jobA.pr = p; x.jobA.mode = 'pr'; }
@@ -827,7 +843,7 @@ var ENGINE = (function (D) {
   return {
     DEFAULTS: DEFAULTS, normalize: normalize, simulate: simulate, full: full, atPR: atPR, threshold: threshold, curve: curve,
     compromises: compromises, maxKids: maxKids, waitAge: waitAge, timeMachine: timeMachine, eraRel: eraRel, withEra: withEra,
-    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR,
+    grossAt: grossAt, prFromSalary: prFromSalary, overallPR: overallPR, wageRatio: wageRatio, ageFactor: ageFactor, thAllPR: thAllPR, standardOf: standardOf, thStd: thStd,
     householdIncomePR: householdIncomePR, householdExpensePR: householdExpensePR, supportEndAge: supportEndAge,
     districtMult: districtMult, rentFor: rentFor, houseSize: houseSize, incomeTax: incomeTax, clone: clone, MOVE_TO: MOVE_TO
   };
