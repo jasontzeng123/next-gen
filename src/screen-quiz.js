@@ -183,7 +183,7 @@
       if (q.subs) q.subs.forEach(function (sq) {
         if (sq.when && !sq.when(s)) return;
         if (!isSeen(q)) return;
-        if (sq.input) { pickGroup(body, sq.title, sq.key, sq.options, { input: sq.input }); return; }
+        if (sq.input) { pickGroup(body, sq.title, sq.key, sq.options, { input: sq.input, sub: sq.hint }); return; }
         var grp = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, sq.title));
         var chips = h('div', { class: 'chips', role: 'radiogroup' });
         sq.options.forEach(function (o) {
@@ -202,6 +202,14 @@
         var cur = getv(s, f.key);
         f.options.forEach(function (o) { chips.appendChild(chipEl(o, cur === o.v, function () { A.set(f.key, o.v); refresh(); }, s, f.key + ':' + String(o.v))); });
         grp.appendChild(chips); body.appendChild(grp);
+        // 選了「自己選」之後出現的加減器（例如幾歲買房）
+        var st = f.stepper;
+        if (st && st.when(s)) {
+          var sv = s[st.key], smin = st.min(s), smax = st.max(s);
+          var box = h('div', { class: 'steppers', style: { marginTop: '10px' } });
+          box.appendChild(stepper(st.label, sv, st.unit, smin, smax, function (v) { A.set(st.key, v); refresh(); }, st.sub ? st.sub(s) : '', st.key));
+          grp.appendChild(box);
+        }
       });
     }
     function renderElder() {
@@ -488,17 +496,24 @@
       }
       var w = function (v) { return v ? U.wan(v) : '沒有'; };
       group('你們目前的存款', 'savings', [0, 300000, 500000, 1000000, 2000000, 5000000], function (v) { return v ? U.wan(v) : '0'; });
-      group('長輩一次性資助', 'giftOnce', [0, 500000, 1000000, 3000000, 5000000], w, A.s.housing === 'buy' ? '買房時給（頭期款）' : '現在給');
-      var grp = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, '長輩每月資助'));
-      var chips = h('div', { class: 'chips' });
-      [0, 5000, 10000, 20000].forEach(function (v) { chips.appendChild(chipEl({ label: v ? U.sep(v) + ' 元' : '沒有' }, A.s.giftMonthly === v, function () { A.set('giftMonthly', v); refresh(); }, A.s, 'gm:' + v)); });
-      grp.appendChild(chips); body.appendChild(grp);
-      if (A.s.giftMonthly) {
-        var g2 = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, '持續幾年？'));
-        var ch2 = h('div', { class: 'chips' });
-        [5, 10, 20].forEach(function (y) { ch2.appendChild(chipEl({ label: y + ' 年' }, A.s.giftYears === y, function () { A.set('giftYears', y); refresh(); }, A.s, 'gy:' + y)); });
-        g2.appendChild(ch2); body.appendChild(g2);
+      // 還在繳的貸款（不含房貸）：信貸、學貸、車貸等
+      var hasDebt = A.s.debtBal > 0;
+      var dg = h('div', { class: 'subq' }, h('div', { class: 'subq-title' }, '有沒有還在繳的貸款？', h('span', { class: 'xs muted' }, '信貸、學貸、車貸等，不含房貸')));
+      var dc = h('div', { class: 'chips', role: 'radiogroup' });
+      dc.appendChild(chipEl({ label: '沒有' }, !hasDebt, function () { A.set('debtBal', 0); refresh(); }, A.s, 'debt:0'));
+      dc.appendChild(chipEl({ label: '有' }, hasDebt, function () { if (!(A.s.debtBal > 0)) A.set('debtBal', 500000); refresh(); }, A.s, 'debt:1'));
+      dg.appendChild(dc); body.appendChild(dg);
+      if (hasDebt) {
+        pickGroup(body, '貸款還剩多少？', 'debtBal', [300000, 500000, 1000000, 2000000, 3000000].map(function (v) { return { v: v, label: U.wan(v) }; }), { input: { unit: '萬', factor: 10000, decimals: 1, confirmAt: 1000 } });
+        pickGroup(body, '貸款利率？', 'debtRate', [0.02, 0.03, 0.04, 0.06].map(function (v) { return { v: v, label: +(v * 100).toFixed(2) + '%' }; }), { input: { unit: '%', factor: 0.01, decimals: 3, max: 20 } });
+        pickGroup(body, '還要繳幾年？', 'debtYears', [1, 2, 3, 5, 7].map(function (y) { return { v: y, label: y + ' 年' }; }), { input: { unit: '年', factor: 1, max: 30 } });
+        body.appendChild(h('div', { class: 'card', style: { marginTop: '14px' } },
+          h('p', { class: 'sm', html: '每月約繳 <b>' + U.sep(Math.round(ENGINE.debtPayment(A.s) / 100) * 100) + ' 元</b>，' + A.s.debtYears + ' 年後繳完（本息平均攤還）。' }),
+          h('p', { class: 'xs muted', style: { marginTop: '6px' } }, '和繳款單差很多的話，調整上面的金額或利率。')));
       }
+      group('長輩一次性資助', 'giftOnce', [0, 500000, 1000000, 3000000, 5000000], w, A.s.housing === 'buy' ? '買房時給（頭期款）' : '現在給');
+      pickGroup(body, '長輩每月資助', 'giftMonthly', [0, 5000, 10000, 20000, 30000, 50000].map(function (v) { return { v: v, label: v ? U.sep(v) + ' 元' : '沒有' }; }), { input: { unit: '元', factor: 1, confirmAt: 200000 } });
+      if (A.s.giftMonthly) pickGroup(body, '持續幾年？', 'giftYears', [5, 10, 20].map(function (y) { return { v: y, label: y + ' 年' }; }), { input: { unit: '年', factor: 1, max: 40 } });
     }
   };
 
@@ -538,7 +553,7 @@
       box.appendChild(h('p', {}, '分享後，其他人會在題目旁看到「大家怎麼選」，你也能在報告裡看到自己在所有分享者中的位置。'));
       box.appendChild(h('ul', {},
         h('li', {}, '會分享：縣市與區域、孩子數、每一題的選擇、收入 PR（四捨五入到 5）、年齡區間（每 5 歲一組）、審查結果。'),
-        h('li', {}, '不會分享：姓名、帳號資料、確切年齡、確切年薪與存款金額。'),
+        h('li', {}, '不會分享：姓名、帳號資料、確切年齡、確切年薪、存款與貸款金額。'),
         h('li', {}, '只會分享這次送出的答案。之後修改或在報告裡調整設定都不會覆蓋，除非你在報告裡按「更新」。'),
         h('li', {}, COMM.st.backend === 'web' ? '隨時可以在報告頁取消分享，資料會刪除（請用同一台裝置的同一個瀏覽器）。' : '隨時可以在報告頁取消分享，資料會刪除。')));
       box.appendChild(h('div', { class: 'actions' },

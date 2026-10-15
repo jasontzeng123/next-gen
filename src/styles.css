@@ -445,6 +445,10 @@ p { margin: 0; }
 .prow .mini-step { display: flex; align-items: center; gap: 8px; }
 .prow .mini-step button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--rule); background: var(--sheet); line-height: 1; }
 .prow .mini-step b { min-width: 2.4em; text-align: center; font-variant-numeric: tabular-nums; }
+.prow .mini-step b { white-space: nowrap; }
+.prow .pnum { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.prow .pnum .input { flex: 0 1 7.5em; min-width: 5em; }
+.prow .xs.muted { margin-top: 3px; line-height: 1.4; }
 .changed-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pen); display: inline-block; margin-left: 6px; }
 
 .drawer-btn { display: none; }

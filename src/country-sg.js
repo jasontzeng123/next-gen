@@ -190,8 +190,8 @@
       var fee = intl ? c.intl : priv ? c.privateFees : ({ es: 650, jh: 800, sh: 900 })[level];
       var extra = 0;
       if (level === 'es') {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        extra = (s.after !== 'none' ? c.studentCare * 12 : 0) + hobbies * c.hobby * 12 + (c.cram[s.cram] || 0) * 0.5 * 11; // 小學也很多人補習
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        extra = (/^anqin/.test(s.after) ? c.studentCare * 12 : 0) + hobbies * c.hobby * 12 + (c.cram[s.cram] || 0) * 0.5 * 11; // 小學也很多人補習
       } else extra = (c.cram[s.cram] || 0) * 11;
       return fee + extra;
     },

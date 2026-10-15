@@ -217,8 +217,8 @@
       var fee = intl ? c.intl : priv ? c.privSchool : level === 'es' ? 150 : 450; // 公立：家長自願費、校外教學、文具與筆電分攤
       var extra = 0;
       if (level === 'es') {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        if (s.after !== 'none' && !intl) {
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        if (/^anqin/.test(s.after) && !intl) {
           // 課後照顧（BSO）每月約 70 小時（含學校假期），也有托育補助
           var H = 70 * 12, first = !(x.kAges || []).some(function (b) { return b >= 0 && b < 4; }) && !x.y.bso;
           x.y.bso = (x.y.bso || 0) + 1;

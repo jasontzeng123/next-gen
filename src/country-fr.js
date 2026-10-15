@@ -280,8 +280,8 @@
       var fee = intl ? c.intlFee : priv ? C.privSchool[level] * c.privFactor + MEALS * c.privMeal + C.supplies[level] : MEALS * P.meal + C.supplies[level];
       var extra = 0;
       if (level === 'es') {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        var after = (s.after !== 'none' && !priv && !intl) ? 10 * P.etude + CL_DAYS * P.day : 0;
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        var after = (/^anqin/.test(s.after) && !priv && !intl) ? 10 * P.etude + CL_DAYS * P.day : 0;
         extra = after + hobbies * C.hobbyClass * 12;
       } else {
         // 家教一年 10 個月，扣 50% 到府服務稅額抵減

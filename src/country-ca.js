@@ -228,9 +228,9 @@
       var fee = intl ? c.intl : priv ? c.privateFees : (level === 'es' ? 300 : 600);
       var extra = 0;
       if (level === 'es') {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
         var care = 0;
-        if (s.after !== 'none') care = a < 6 ? c.jkCare * 10 : c.afterSchool * 10 + c.camp;
+        if (/^anqin/.test(s.after)) care = a < 6 ? c.jkCare * 10 : c.afterSchool * 10 + c.camp;
         addDC(x, care);
         extra = care + hobbies * c.hobby * 12;
       } else extra = (c.cram[s.cram] || 0) * 10;

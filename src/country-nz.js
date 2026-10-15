@@ -198,8 +198,8 @@
       var fee = intl ? c.intl : priv ? c.privSchool : level === 'es' ? 600 : level === 'jh' ? 800 : 1200; // 公立：學校募款、制服、文具與筆電、NCEA 報名
       var extra = 0;
       if (level === 'es') {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        extra = (s.after !== 'none' ? c.oscar : 0) + hobbies * c.hobby * 12;
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        extra = (/^anqin/.test(s.after) ? c.oscar : 0) + hobbies * c.hobby * 12;
       } else extra = (c.cram[s.cram] || 0) * 10;
       return fee + extra;
     },

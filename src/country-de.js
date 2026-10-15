@@ -225,8 +225,8 @@
       var fee = intl ? c.intl : (priv ? c.privSchool * 12 : 0) + (level === 'es' ? 150 + c.schoolLunch * 11 : 400);
       var extra = 0;
       if (level === 'es') {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        var hort = s.after !== 'none' && !intl ? (c.hort[Math.min(Math.max(a - 6, 0), 3)] || 0) * 12 + 300 : 0; // 另加假期營隊約 300
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        var hort = /^anqin/.test(s.after) && !intl ? (c.hort[Math.min(Math.max(a - 6, 0), 3)] || 0) * 12 + 300 : 0; // 另加假期營隊約 300
         addDC(x, hort);
         extra = hort + hobbies * c.hobby * 12;
       } else extra = (c.cram[s.cram] || 0) * 11;

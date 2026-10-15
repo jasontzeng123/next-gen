@@ -212,8 +212,8 @@
       var fee = intl ? c.intl : priv ? c.privateFees[level] : (level === 'es' ? 800 : 1500);
       var extra = 0;
       if (level === 'es') {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        var oshc = s.after !== 'none' ? c.oshc * (1 - ccsRate(famInc(x), false)) : 0; // 學齡托育也有補助（每小時上限 13.30，課後每天約 45 元未超過）
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        var oshc = /^anqin/.test(s.after) ? c.oshc * (1 - ccsRate(famInc(x), false)) : 0; // 學齡托育也有補助（每小時上限 13.30，課後每天約 45 元未超過）
         extra = oshc + hobbies * c.hobby * 12;
       } else extra = (c.cram[s.cram] || 0) * 10;
       return fee + extra;

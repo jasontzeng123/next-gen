@@ -188,6 +188,10 @@ var COMM = (function () {
     if (!DL || !DL[s.county]) delete d.district;
     if (s.kids < 2) delete d.spacing;
     if (s.support === '18') { delete d.uni; delete d.uniAway; }
+    // 自己填的標準（四捨五入，不分享確切數字）：幾歲買房、每人每年旅遊費用、每月其他固定支出
+    if (s.housing === 'buy' && s.buyWhen === 'age') d.buyAge = s.buyAge;
+    if (s.travel === 'custom') d.travelCost = Math.round(s.travelCost / 10000) * 10000;
+    d.extraMonthly = Math.round((s.extraMonthly || 0) / 1000) * 1000;
     d.ageBand = Math.floor(s.ageA / 5) * 5;
     d.birthAge = s.firstBirthAge;
     d.indA = s.jobA.industry; d.indB = s.partner ? s.jobB.industry : null;

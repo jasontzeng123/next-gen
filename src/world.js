@@ -148,7 +148,7 @@ var WORLD = (function (E, D) {
       ls[k] = { industry: 'all', pr: pr };
     });
     var f = wageFactor(K);
-    ['savings', 'giftOnce', 'giftMonthly', 'elder'].forEach(function (k) { ls[k] = Math.round((+tw[k] || 0) * f); });
+    ['savings', 'giftOnce', 'giftMonthly', 'elder', 'travelCost', 'extraMonthly', 'debtBal'].forEach(function (k) { ls[k] = Math.round((+tw[k] || 0) * f); });
     if (K.localize) K.localize(ls, tw);
     return E.normalize(ls);
   }
@@ -158,7 +158,7 @@ var WORLD = (function (E, D) {
   var CAT = {
     housing: function (t) { return t.housing + t.housingOnce; },
     kids: function (t) { return t.kidsBirth + t.kidsCare + t.kidsEdu + t.kidsLife; },
-    living: function (t) { return t.living + t.travel + t.elder; },
+    living: function (t) { return t.living + t.travel + t.elder + (t.other || 0); },
     transport: function (t) { return t.transport; }
   };
   function breakdown(r) {

@@ -9,6 +9,7 @@ cases={
  'rent-th-single': {'county':'KHH','housing':'rent','partner':False,'incomeMode':'threshold','kids':1,'ageA':30,'firstBirthAge':33},
  'save80': {'county':'KHH','housing':'buy','partner':True,'incomeMode':'full','kids':2,'ageA':25,'ageB':25,'firstBirthAge':31,'jobA':{'industry':'all','pr':60},'jobB':{'industry':'all','pr':60},'savings':0,'adv':{'saveRate':0.8}},
  'own-car': {'county':'NTPC','housing':'own','ownBal':8000000,'ownRate':0.0215,'ownYears':30,'ownGrace':2,'partner':True,'incomeMode':'full','kids':2,'ageA':30,'ageB':30,'firstBirthAge':32,'jobA':{'industry':'all','pr':60},'jobB':{'industry':'all','pr':60},'transport':'custom','carPrice':1500000,'carLife':8,'carHave':5,'parking':'rent'},
+ 'debt-extra': {'county':'TXG','housing':'buy','buyWhen':'age','buyAge':36,'partner':True,'incomeMode':'full','kids':2,'ageA':29,'ageB':31,'firstBirthAge':31,'jobA':{'industry':'all','pr':65},'jobB':{'industry':'all','pr':50},'debtBal':800000,'debtRate':0.032,'debtYears':7,'extraMonthly':4500,'travel':'custom','travelCost':90000,'care':'self','after':'art3','giftMonthly':80000,'giftYears':15,'adv':{'returnRate':0.025,'bankRate':0.026}},
  'broke': {'county':'TPE','housing':'buy','partner':True,'incomeMode':'full','kids':3,'ageA':26,'ageB':26,'firstBirthAge':27,'jobA':{'industry':'all','pr':20},'jobB':{'industry':'all','pr':20},'savings':0}
 }
 seen={k:True for k in ['country','county','family','ages','plan','room','housing','buy','postpartum','care','leave','preschool','school','after','cram','uni','support','transport','lifestyle','travel','elder','mode','jobA','jobB','money']}
@@ -28,7 +29,7 @@ with sync_playwright() as p:
         rows=list(csv.DictReader(io.StringIO('\n'.join(lines[hi:]))))
         n=lambda v: float(v) if v not in ('',None) else 0.0
         bad=0; prevEnd=None
-        expk=[k for k in rows[0] if k in ('住房（房租，或房貸本息＋管理費＋房屋稅）','買房一次付清（頭期款、稅費、裝潢）','大人的生活費（含水電）','生產與坐月子','0–2 歲托育','教育（幼兒園到大學、補習才藝）','孩子的生活費','交通','孝親費','旅遊','沒存下來的結餘（其他花費）','借款利息')]
+        expk=[k for k in rows[0] if k in ('住房（房租，或房貸本息＋管理費＋房屋稅）','買房一次付清（頭期款、稅費、裝潢）','大人的生活費（含水電）','生產與坐月子','0–2 歲托育','教育（幼兒園到大學、補習才藝）','孩子的生活費','交通','孝親費','旅遊','其他固定支出（寵物、興趣等）','其他貸款還款（信貸、學貸等）','沒存下來的結餘（其他花費）','借款利息')]
         for r in rows:
             if abs(n(r['年初存款'])+n(r['可用收入合計'])-n(r['支出合計'])-n(r['年底存款']))>3: bad+=1
             if abs(sum(n(r[k]) for k in expk)-n(r['支出合計']))>len(expk): bad+=1

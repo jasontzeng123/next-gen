@@ -240,8 +240,8 @@
       var fee = intl ? c.intlSchool : priv ? c.privateTuition[level] : c.schoolPublic;
       var extra = 0;
       if (level === 'es' || a < 13) {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        var after = s.after !== 'none' ? c.afterSchool * 12 : 0;
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        var after = /^anqin/.test(s.after) ? c.afterSchool * 12 : 0;
         addDC(x, after);
         extra = after + hobbies * c.hobby * 12;
       }

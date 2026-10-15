@@ -207,8 +207,8 @@
       var fee = 0, extra = 0;
       if (level === 'es') {
         fee = intl ? C.intlSchool : s.school === 'private' ? C.elementaryPrivate : C.elementaryPublic;
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        var after = (s.after !== 'none' && !(s.school === 'private' || intl)) ? c.afterSchool * 12 : 0;
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        var after = (/^anqin/.test(s.after) && !(s.school === 'private' || intl)) ? c.afterSchool * 12 : 0;
         extra = after + hobbies * C.hobbyClass * 12;
       } else {
         fee = intl ? C.intlSchool : level === 'jh' ? (priv ? C.juniorPrivate : C.juniorPublic)

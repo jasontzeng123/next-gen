@@ -72,10 +72,11 @@ var QS = (function () {
     {
       id: 'buy', part: 2, type: 'multi', when: function (s) { return s.housing === 'buy'; }, title: '買房的細節', hint: '頭期款以房價兩成計算，另加約 2.5% 的仲介、代書、稅費與裝潢費。',
       fields: [
-        { key: 'buyWhen', title: '什麼時候買？', options: [{ v: 'now', label: '現在就買' }, { v: 'beforeKid', label: '第一胎出生前一年' }, { v: 'beforeSchool', label: '老大上小學前' }] },
+        { key: 'buyWhen', title: '什麼時候買？', options: [{ v: 'now', label: '現在就買' }, { v: 'beforeKid', label: '第一胎出生前一年' }, { v: 'beforeSchool', label: '老大上小學前' }, { v: 'age', label: '自己選幾歲買', sub: function (s) { return s.buyWhen === 'age' ? '你 ' + s.buyAge + ' 歲時' : ''; } }],
+          stepper: { when: function (s) { return s.buyWhen === 'age'; }, key: 'buyAge', label: '你幾歲時買？', unit: '歲', min: function (s) { return s.ageA; }, max: function () { return 64; }, sub: function (s) { return s.buyAge === s.ageA ? '今年就買' : (2026 + s.buyAge - s.ageA) + ' 年，再過 ' + (s.buyAge - s.ageA) + ' 年'; } } },
         { key: 'build', title: '買新的還是中古的？', options: [{ v: 'used', label: '中古屋', sub: function (s) { return '每坪約 ' + priceRef(s, 2, 'used').ppp.toFixed(1) + ' 萬'; } }, { v: 'new', label: '新成屋或預售屋', sub: function (s) { return '每坪約 ' + priceRef(s, 2, 'new').ppp.toFixed(1) + ' 萬'; } }] },
         { key: 'adv.bankRate', title: '一般房貸利率？', when: function (s) { return s.loan === 'bank'; }, options: [{ v: 0.02, label: '2.0%' }, { v: 0.022, label: '2.2%' }, { v: 0.025, label: '2.5%', sub: '五大銀行約 2.2–2.5%' }, { v: 0.028, label: '2.8%' }, { v: 0.03, label: '3.0%' }] },
-        { key: 'loan', title: '房貸怎麼貸？', options: [{ v: 'qingan', label: '新青安', sub: '40 年，前 5 年只繳利息' }, { v: 'qinganNoGrace', label: '新青安，不用寬限期', sub: '40 年，第一年就還本金' }, { v: 'bank', label: '一般房貸', sub: '30 年，利率約 2.5%' }] },
+        { key: 'loan', title: '房貸怎麼貸？', options: [{ v: 'qingan', label: '新青安', sub: '40 年，前 5 年只繳利息' }, { v: 'qinganNoGrace', label: '新青安，不用寬限期', sub: '40 年，第一年就還本金' }, { v: 'bank', label: '一般房貸', sub: function (s) { return '30 年，利率約 ' + +(s.adv.bankRate * 100).toFixed(2) + '%'; } }] },
         { key: 'reno', title: '裝潢預算？', options: [{ v: 'basic', label: '簡單整理', sub: '每坪約 2 萬' }, { v: 'light', label: '輕裝修', sub: '每坪約 5 萬' }, { v: 'full', label: '完整裝潢', sub: '每坪約 8 萬' }] }
       ],
       note: function (s) {
@@ -112,6 +113,7 @@ var QS = (function () {
         { v: 'grandPaid', label: '長輩幫忙帶，每月給帶孫費', sub: '可領育兒津貼 5,000 元', ref: function () { return '約 <b>1.1 萬/月</b>'; } },
         { v: 'grandFree', label: '長輩幫忙帶，不用給錢', sub: '可領育兒津貼 5,000 元', ref: function () { return '<b>0 元</b>'; } },
         { v: 'helper', label: '請外籍家庭幫傭', sub: '2026 年 4 月起，家有 12 歲以下孩子即可申請', ref: function () { return '約 <b>3.1 萬/月</b>'; } },
+        { v: 'self', label: '自己帶，不用辭職', sub: '例如在家工作、工時有彈性；可領育兒津貼 5,000 元', ref: function () { return '<b>0 元</b>'; } },
         { v: 'quit', label: '其中一人辭職，在家自己帶', sub: '少一份薪水，也少了年資', ref: function () { return '<b>少一份收入</b>'; }, when: function (s) { return s.partner; } }
       ],
       subs: [
@@ -159,7 +161,9 @@ var QS = (function () {
         { v: 'none', label: '不上，下課自己帶' },
         { v: 'anqin', label: '上安親班', ref: function (s) { return '約 <b>' + m(D.byCounty(D.ANQIN, s.county)) + '</b>'; } },
         { v: 'anqin1', label: '安親班＋1 項才藝', sub: '例如游泳、鋼琴、美術、程式', ref: function (s) { return '約 <b>' + m(D.byCounty(D.ANQIN, s.county) + 3000) + '</b>'; } },
-        { v: 'anqin3', label: '安親班＋3 項才藝', ref: function (s) { return '約 <b>' + m(D.byCounty(D.ANQIN, s.county) + 9000) + '</b>'; } }
+        { v: 'anqin3', label: '安親班＋3 項才藝', ref: function (s) { return '約 <b>' + m(D.byCounty(D.ANQIN, s.county) + 9000) + '</b>'; } },
+        { v: 'art1', label: '不上安親班，上 1 項才藝', sub: '下課有人帶，只上才藝課', ref: function () { return '約 <b>' + m(3000) + '</b>'; } },
+        { v: 'art3', label: '不上安親班，上 3 項才藝', ref: function () { return '約 <b>' + m(9000) + '</b>'; } }
       ],
       note: function (s) { return (s.school === 'private' || s.school === 'intl') ? '讀私立或國際學校時，課後照顧多半由學校安排，這裡只計才藝班。' : '才藝班每項以每月 3,000 元估算。'; }
     },
@@ -218,15 +222,25 @@ var QS = (function () {
         { v: 'normal', label: '一般', sub: '和多數家庭差不多', ref: function (s) { return '大人 <b>' + m(adultMonthly(s, 'normal')) + '</b>'; } },
         { v: 'comfy', label: '寬裕一點', sub: '常外食，偶爾犒賞自己', ref: function (s) { return '大人 <b>' + m(adultMonthly(s, 'comfy')) + '</b>'; } }
       ],
-      note: function (s) { var k = C.childLife[s.lifestyle]; return '孩子的生活費（飲食、衣物、用品、醫療、零用錢）依年齡約每月 <b>' + U.sep(6000 * k) + '–' + U.sep(11000 * k) + ' 元</b>，0–2 歲含奶粉尿布約 ' + U.sep(7000 * k) + ' 元。' + county(s).name + '的物價係數依主計總處各縣市每人消費支出換算。'; }
+      subs: [
+        { key: 'extraMonthly', title: '每個月還有其他固定支出嗎？', hint: '例如寵物、興趣、保險，整個家庭合計', input: { unit: '元', factor: 1, confirmAt: 100000 },
+          options: [{ v: 0, label: '沒有' }, { v: 2000, label: '2,000 元' }, { v: 3000, label: '3,000 元' }, { v: 5000, label: '5,000 元' }, { v: 10000, label: '1 萬' }] }
+      ],
+      note: function (s) { var k = C.childLife[s.lifestyle]; return (s.extraMonthly > 0 ? '另加每月其他固定支出 <b>' + U.sep(s.extraMonthly) + ' 元</b>（一直算到孩子獨立）。' : '') + '孩子的生活費（飲食、衣物、用品、醫療、零用錢）依年齡約每月 <b>' + U.sep(6000 * k) + '–' + U.sep(11000 * k) + ' 元</b>，0–2 歲含奶粉尿布約 ' + U.sep(7000 * k) + ' 元。' + county(s).name + '的物價係數依主計總處各縣市每人消費支出換算。'; }
     },
     {
       id: 'travel', part: 2, key: 'travel', title: '家庭旅遊呢？',
       options: [
         { v: 'none', label: '不特別安排' },
         { v: 'domestic', label: '每年國內小旅行', ref: function () { return '約 <b>3 萬/年</b>'; } },
-        { v: 'abroad', label: '每年出國一次', ref: function () { return '每人約 <b>3 萬/年</b>'; } }
-      ]
+        { v: 'abroad', label: '每年出國一次', ref: function () { return '每人約 <b>3 萬/年</b>'; } },
+        { v: 'custom', label: '自己填旅遊預算', sub: function (s) { return s.travel === 'custom' ? '每人每年約 ' + U.wan(s.travelCost) : '例如每年出國兩次以上'; }, ref: function (s) { return s.travel === 'custom' ? '每人約 <b>' + U.wan(s.travelCost) + '/年</b>' : ''; } }
+      ],
+      subs: [
+        { key: 'travelCost', when: function (s) { return s.travel === 'custom'; }, title: '每人每年的旅遊費用？', hint: '機票、住宿、吃喝都算進去；孩子出生後也算一人', input: { unit: '萬', factor: 10000, decimals: 1, confirmAt: 100 },
+          options: [{ v: 30000, label: '3 萬' }, { v: 50000, label: '5 萬' }, { v: 80000, label: '8 萬' }, { v: 120000, label: '12 萬' }] }
+      ],
+      note: function (s) { return s.travel === 'custom' ? '全家每年約 <b>' + U.wan(s.travelCost * ((s.partner ? 2 : 1) + s.kids)) + '</b>（' + ((s.partner ? 2 : 1) + s.kids) + ' 人，孩子出生後才算進去）。' : ''; }
     },
     { id: 'elder', part: 2, type: 'elder', title: function (s) { return s.partner ? '每個月給雙方父母多少孝親費？' : '每個月給父母多少孝親費？'; }, hint: function (s) { return '2021 年調查：上班族平均每人每月給 8,742 元。' + (s.partner ? '這裡填夫妻合計，' : '') + '計算到你約 60 歲。'; } },
 
@@ -239,7 +253,7 @@ var QS = (function () {
     },
     { id: 'jobA', part: 3, type: 'job', who: 'A', title: function (s) { return s.incomeMode === 'full' ? '你的工作與收入' : '你在哪個產業工作？'; } },
     { id: 'jobB', part: 3, type: 'job', who: 'B', when: function (s) { return s.partner; }, title: function (s) { return s.incomeMode === 'full' ? '伴侶的工作與收入' : '伴侶在哪個產業工作？'; } },
-    { id: 'money', part: 3, type: 'money', title: '目前的存款，以及長輩的資助', hint: '存款以每年 1% 的實質報酬計算；不夠用時，以每年 3% 的成本借款。' }
+    { id: 'money', part: 3, type: 'money', title: '存款、貸款，以及長輩的資助', hint: function (s) { var p = function (v) { return +(v * 100).toFixed(2) + '%'; }; return '存款以每年 ' + p(s.adv.returnRate) + ' 的實質報酬計算；不夠用時，以每年 ' + p(s.adv.borrowRate) + ' 的成本借款（報告的「調整設定」可以改）。'; } }
   ];
 
   function visible(s) { return LIST.filter(function (q) { return !q.when || q.when(s); }); }

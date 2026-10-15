@@ -182,8 +182,8 @@
       var fee = intl ? c.intl : priv ? c.privSchool : 2500;
       var extra = 0;
       if (level === 'es') {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        extra = (s.after !== 'none' && a < 8 ? c.nitzanim * 10 : 0) + hobbies * c.hobby * 12;
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        extra = (/^anqin/.test(s.after) && a < 8 ? c.nitzanim * 10 : 0) + hobbies * c.hobby * 12;
       } else extra = (c.cram[s.cram] || 0) * 10;
       return fee + extra;
     },

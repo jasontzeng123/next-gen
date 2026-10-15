@@ -272,8 +272,8 @@
       var fee = intl ? c.intl : priv ? c.priv[level] : c.pub[level];
       var extra = 0;
       if (level === 'es') {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        var after = (s.after !== 'none' && !(s.school === 'private' || intl)) ? c.afterSchool * 12 : 0;
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        var after = (/^anqin/.test(s.after) && !(s.school === 'private' || intl)) ? c.afterSchool * 12 : 0;
         extra = after + hobbies * c.hobby * 12;
       } else {
         extra = (c.cram[s.cram] || 0) * 12;

@@ -261,8 +261,8 @@
       var fee, extra;
       if (level === 'es') {
         fee = intl ? C.intlSchool : s.school === 'private' ? C.esPrivate : C.esPublic;
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        var after = (s.after !== 'none' && !(s.school === 'private' || intl)) ? C.esAfter * c.cramMult * 12 : 0;
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        var after = (/^anqin/.test(s.after) && !(s.school === 'private' || intl)) ? C.esAfter * c.cramMult * 12 : 0;
         // 國小私教育費的平均已含約 1 項藝體才藝，所以「＋1 項」不再另加、「＋3 項」只加 2 項
         extra = after + Math.max(0, hobbies - (after ? 1 : 0)) * C.hobbyClass * 12;
       } else {

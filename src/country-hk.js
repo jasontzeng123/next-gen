@@ -179,8 +179,8 @@
       var fee = intl ? c.intl : priv ? c.dss : 5000;
       var extra = 0;
       if (level === 'es') {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        extra = (s.after !== 'none' ? c.afterSchool * 11 : 0) + hobbies * c.hobby * 12;
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        extra = (/^anqin/.test(s.after) ? c.afterSchool * 11 : 0) + hobbies * c.hobby * 12;
       } else extra = (c.cram[s.cram] || 0) * 11;
       return fee + extra;
     },

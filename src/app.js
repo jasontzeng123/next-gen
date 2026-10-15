@@ -21,6 +21,8 @@ var APP = (function () {
   function strip(s) { var o = JSON.parse(JSON.stringify(s)); delete o.__norm; return o; }
   A.strip = strip;
   A.set = function (key, val) {
+    // 改成「自己選幾歲買」時，從原本選的時間點開始（不會突然跳到別的年紀）
+    if (key === 'buyWhen' && val === 'age' && A.s.buyWhen !== 'age') { try { var hs = ENGINE.simulate(A.s).house; A.s.buyAge = A.s.ageA + (hs ? hs.tb : 0); } catch (e) { /* 用預設 */ } }
     if (key.indexOf('.') > 0) { var p = key.split('.'); A.s[p[0]][p[1]] = val; }
     else A.s[key] = val;
     A.s = ENGINE.normalize(strip(A.s));
@@ -53,8 +55,9 @@ var APP = (function () {
   A.getComp = function () { if (!A.comp) { var s = ENGINE.normalize(strip(A.s)); s.__norm = true; A.comp = ENGINE.compromises(s); } return A.comp; };
 
   // ---------- 存檔 ----------
-  var EXP_KEYS = ['county', 'district', 'partner', 'ageA', 'ageB', 'firstBirthAge', 'kids', 'spacing', 'room', 'housing', 'buyWhen', 'build', 'loan', 'reno', 'postpartum', 'leave', 'care', 'quitWho', 'quitUntil', 'preschool', 'school', 'after', 'cram', 'uni', 'uniAway', 'support', 'transport', 'lifestyle', 'travel', 'elder', 'elderCare'];
-  var INC_KEYS = ['incomeMode', 'jobA', 'jobB', 'savings', 'giftOnce', 'giftMonthly', 'giftYears'];
+  var EXP_KEYS = ['county', 'district', 'partner', 'ageA', 'ageB', 'firstBirthAge', 'kids', 'spacing', 'room', 'housing', 'buyWhen', 'build', 'loan', 'reno', 'postpartum', 'leave', 'care', 'quitWho', 'quitUntil', 'preschool', 'school', 'after', 'cram', 'uni', 'uniAway', 'support', 'transport', 'lifestyle', 'travel', 'elder', 'elderCare',
+    'buyAge', 'parking', 'ownBal', 'ownRate', 'ownYears', 'ownGrace', 'carPrice', 'carLife', 'carHave', 'travelCost', 'extraMonthly'];
+  var INC_KEYS = ['incomeMode', 'jobA', 'jobB', 'savings', 'giftOnce', 'giftMonthly', 'giftYears', 'debtBal', 'debtRate', 'debtYears'];
   A.EXP_KEYS = EXP_KEYS; A.INC_KEYS = INC_KEYS;
   function pick(s, keys) { var o = {}; keys.forEach(function (k) { if (s && s[k] !== undefined) o[k] = JSON.parse(JSON.stringify(s[k])); }); return o; }
   A.pick = pick;

@@ -224,8 +224,8 @@
       var fee = intl ? c.intl : (level === 'es' ? 500 : 1500); // 公立與 friskola 免學費、午餐免費；只算雜費
       var extra = 0;
       if (level === 'es') {
-        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3 }[s.after] || 0;
-        var fri = s.after !== 'none' && a < 10 ? maxtaxa(x, k, 'fri') * 12 : 0; // 課後照顧到 9 歲（3 年級）
+        var hobbies = { none: 0, anqin: 0, anqin1: 1, anqin3: 3, art1: 1, art3: 3 }[s.after] || 0;
+        var fri = /^anqin/.test(s.after) && a < 10 ? maxtaxa(x, k, 'fri') * 12 : 0; // 課後照顧到 9 歲（3 年級）
         extra = fri + hobbies * c.hobby * 12;
       } else extra = (c.cram[s.cram] || 0) * 10;
       return fee + extra;
