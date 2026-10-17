@@ -101,7 +101,11 @@ APP.screens.method = function (main) {
     '本試算不含：意外與重大疾病、失業期間、資產投資的大起大落、遺產與贈與、房價上漲帶來的資產增值（預設實質房價不變；買房者的報告會另外顯示房屋淨值）。'
   ]));
 
-  if (typeof WORLD !== 'undefined' && ENGINE.countries().length > 1) {
+  // 各國資料第一次用到時才下載（網站版）：先放一個位置，載入後補上
+  var wbox = h('div');
+  inn.appendChild(wbox);
+  function worldPart(inn) {
+    if (!(typeof WORLD !== 'undefined' && ENGINE.countries().length > 1)) return;
     inn.appendChild(h('h2', { id: 'world' }, '七之一、換到別的國家（試算版）'));
     inn.appendChild(p('實驗室的「地圖」切到「世界」，會把你的每個選擇換成當地最接近的做法（例如準公共托育換成東京的認可保育所），用同一套逐年試算，找出在當地需要的收入排名。'));
     inn.appendChild(ul([
@@ -118,6 +122,8 @@ APP.screens.method = function (main) {
     });
     inn.appendChild(wsrc);
   }
+  if (APP.worldReady()) worldPart(wbox);
+  else APP.loadWorld(function (ok) { if (ok && wbox.isConnected) worldPart(wbox); });
 
   inn.appendChild(h('h2', {}, COMM.st.backend === 'local' ? '八、資料與隱私' : '八、匿名資料與隱私'));
   if (COMM.st.backend !== 'local') inn.appendChild(p('只有在你同意後，才會分享你的設定。分享的內容是：縣市與區域、孩子數、每一題的選擇、收入 PR（四捨五入到 5）、年齡區間（每 5 歲一組）、審查結果。不會分享姓名、帳號資料、確切年齡、確切年薪、存款與貸款金額。你可以在報告頁隨時取消分享，資料會刪除。你的存檔只有你自己看得到。'));

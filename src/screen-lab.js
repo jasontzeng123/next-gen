@@ -10,6 +10,7 @@
   function pal() { return U.cvd() ? PAL.cvd : PAL.normal; }
   function heatIdx(pr) { if (pr == null) return 5; for (var i = 0; i < BINS.length; i++) if (pr <= BINS[i].max) return i; return 5; }
   function heat(pr) { return pal()[heatIdx(pr)]; }
+  A.heatPR = function (pr) { return heat(pr); };
   function heats() { var p = pal(); return BINS.map(function (b, i) { return { max: b.max, t: b.t, c: p[i] }; }); }
   function onDark(c) { var p = pal(); return c === p[0] || c === p[4] || c === p[5]; }
   var VKEYS = ['pass', 'tight', 'fail', 'broke'];
@@ -127,7 +128,18 @@
       h('button', { type: 'button', 'aria-pressed': L.metric === 'th' ? 'true' : 'false', onclick: function () { L.metric = 'th'; A.go('lab', { keepScroll: true }); } }, '門檻 PR'),
       h('button', { type: 'button', 'aria-pressed': L.metric === 'v' ? 'true' : 'false', onclick: function () { L.metric = 'v'; A.go('lab', { keepScroll: true }); } }, '用你們的收入')));
     left.appendChild(ctrl);
-    if (L.level === 'world' && typeof WUI !== 'undefined') { worldView(left, right, s); return; }
+    if (L.level === 'world') {
+      if (A.worldReady()) { worldView(left, right, s); return; }
+      // 網站版：各國資料第一次用到時才下載
+      var wst = h('p', { class: 'sm muted', 'aria-live': 'polite' }, '正在載入各國資料…');
+      left.appendChild(wst);
+      A.loadWorld(function (ok) {
+        if (!wst.isConnected) return;
+        if (ok) A.go('lab', { keepScroll: true });
+        else wst.textContent = '各國資料暫時載入不了，請檢查網路後再試一次。';
+      });
+      return;
+    }
     var status = h('p', { class: 'sm muted', 'aria-live': 'polite' }, '計算各縣市中…');
     var mapBox = h('div', { class: 'twmap-wrap' });
     left.appendChild(h('h2', { style: { fontSize: '20px', marginBottom: '4px' } }, L.metric === 'th' ? '同樣的標準，在哪裡養得起？' : '同樣的收入，搬到哪裡會核准？'));
@@ -316,7 +328,7 @@
         markers: function () { return marks; },
         onHover: function (c, x, y) {
           if (!c) { tip.classList.remove('on'); return; }
-          tip.textContent = c.a3 === 'TWN' ? '台灣・你選的' + tw.name + ' ' + WUI.prText(tw.pr) : A3INV[c.a3] ? c.n + '・點城市看比較' : c.n + '・資料建置中';
+          tip.textContent = c.a3 === 'TWN' ? '台灣・你選的' + tw.name + ' ' + WUI.prText(tw.pr) : A3INV[c.a3] ? c.n + '・點城市看比較' : c.n + '・沒有資料';
           placeTip(x, y);
         },
         onHoverMarker: function (m, x, y) { var r = byKey(m.id); tip.textContent = WUI.cityName(r) + '・' + WUI.prText(r.pr); placeTip(x, y); },
@@ -327,6 +339,8 @@
         onPickMarker: function (m) { select(m.id, false, true); }
       });
       drawList(); drawDetail();
+      // 從報告的地球點城市進來：手機版直接捲到那個城市的比較
+      if (A.opts && A.opts.worldFocus && L.wsel && window.matchMedia('(max-width: 920px)').matches) { A.opts.worldFocus = false; detail.scrollIntoView({ behavior: 'auto', block: 'start' }); }
     });
   }
 

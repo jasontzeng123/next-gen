@@ -32,7 +32,7 @@ var QS = (function () {
   var PARTS = { 1: { name: '起點', full: '第一部分　起點' }, 2: { name: '養育標準', full: '第二部分　你心中的養育標準' }, 3: { name: '家庭收入', full: '第三部分　家庭收入' } };
 
   var LIST = [
-    { id: 'country', part: 1, type: 'globe', title: '你在哪個國家養孩子？', hint: '拖曳轉動地球，點選你所在的國家。第一版開放台灣，其他國家的資料正在建置。' },
+    { id: 'country', part: 1, type: 'globe', title: '你在哪個國家養孩子？', hint: '這份試算以台灣的房價、薪資、補助與稅制計算。填完後，報告裡可以看看同樣的標準，搬到其他國家要多少收入。' },
     { id: 'county', part: 1, type: 'county', title: function (s) { return (s.partner ? '你們' : '你') + '住在哪個縣市？'; }, hint: '房價、租金、物價和縣市補助都不一樣。點地圖或從清單選擇。' },
     {
       id: 'family', part: 1, key: 'partner', title: '誰會一起養這個孩子？',

@@ -154,8 +154,20 @@ var Globe = (function () {
       return best;
     }
     var raf = 0, last = 0, alive = true;
+    // 看不到時不畫（報告頁往下捲走之後，不用一直轉、耗電）；畫布被移出頁面就自動停掉
+    var vis = true, wasConn = false, io = null;
+    try {
+      io = new IntersectionObserver(function (es) {
+        vis = es[es.length - 1].isIntersecting;
+        if (vis && alive && !raf) { last = 0; raf = requestAnimationFrame(loop); }
+      });
+      io.observe(canvas);
+    } catch (e) { io = null; }
+    function stop() { alive = false; cancelAnimationFrame(raf); raf = 0; clearTimeout(st.wheelTimer); ro.disconnect(); mo.disconnect(); if (io) io.disconnect(); }
     function loop(ts) {
       if (!alive) return;
+      if (canvas.isConnected) wasConn = true; else if (wasConn) { stop(); return; }
+      if (!vis) { raf = 0; return; }
       var dt = last ? Math.min(50, ts - last) : 16; last = ts;
       if (st.anim) {
         var a = st.anim, k = Math.min(1, (ts - a.t0) / a.dur), e = a.ease === 'out' ? 1 - Math.pow(1 - k, 3) : k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
@@ -284,7 +296,9 @@ var Globe = (function () {
         st.auto = false;
       },
       select: function (a3) { st.sel = a3; },
-      destroy: function () { alive = false; cancelAnimationFrame(raf); clearTimeout(st.wheelTimer); ro.disconnect(); mo.disconnect(); },
+      // 經緯度在畫布上的位置（看不到的那一面回傳 null）；測試與工具提示用
+      project: function (lon, lat) { var p = fwd(lon, lat); return p[2] > 0 ? [p[0], p[1]] : null; },
+      destroy: stop,
       redraw: draw
     };
   }

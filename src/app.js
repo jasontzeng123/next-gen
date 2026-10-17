@@ -54,6 +54,23 @@ var APP = (function () {
   };
   A.getComp = function () { if (!A.comp) { var s = ENGINE.normalize(strip(A.s)); s.__norm = true; A.comp = ENGINE.compromises(s); } return A.comp; };
 
+  // ---------- 各國資料（換到其他國家的比較）：網站版需要時才下載 ----------
+  A.worldReady = function () { return typeof WUI !== 'undefined' && typeof WORLD !== 'undefined'; };
+  var worldWait = null;
+  A.loadWorld = function (cb) {
+    if (A.worldReady()) { cb(true); return; }
+    var src = window.TWKIDS && window.TWKIDS.worldSrc;
+    if (!src) { cb(false); return; }
+    if (worldWait) { worldWait.push(cb); return; }
+    worldWait = [cb];
+    var done = function (ok) { var w = worldWait; worldWait = null; w.forEach(function (f) { U.safe(function () { f(ok && A.worldReady()); }, 'world-load'); }); };
+    var sc = document.createElement('script');
+    sc.src = src; sc.async = true;
+    sc.onload = function () { done(true); };
+    sc.onerror = function () { done(false); };
+    document.head.appendChild(sc);
+  };
+
   // ---------- 存檔 ----------
   var EXP_KEYS = ['county', 'district', 'partner', 'ageA', 'ageB', 'firstBirthAge', 'kids', 'spacing', 'room', 'housing', 'buyWhen', 'build', 'loan', 'reno', 'postpartum', 'leave', 'care', 'quitWho', 'quitUntil', 'preschool', 'school', 'after', 'cram', 'uni', 'uniAway', 'support', 'transport', 'lifestyle', 'travel', 'elder', 'elderCare',
     'buyAge', 'parking', 'ownBal', 'ownRate', 'ownYears', 'ownGrace', 'carPrice', 'carLife', 'carHave', 'travelCost', 'extraMonthly'];

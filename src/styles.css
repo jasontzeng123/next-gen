@@ -309,6 +309,9 @@ p { margin: 0; }
 .globe-tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--sheet); font-size: 12.5px; padding: 4px 9px; border-radius: 4px; white-space: nowrap; transform: translate(-50%, -130%); opacity: 0; transition: opacity .12s; }
 .globe-tip.on { opacity: 1; }
 .globe-hint { text-align: center; font-size: 13px; color: var(--ink-3); }
+.rglobe { max-width: 380px; touch-action: pan-y; }   /* 報告頁：上下滑照常捲動頁面，左右拖曳才轉地球 */
+.rglobe-note { position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%); font-size: 12.5px; color: var(--ink-2); background: var(--sheet); padding: 3px 10px; border-radius: 999px; box-shadow: 0 0 0 1px var(--rule); white-space: nowrap; }
+.rglobe-act { display: flex; justify-content: center; margin-top: 6px; }
 .country-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; }
 .country-list .chip[disabled] { opacity: .55; cursor: not-allowed; }
 .twmap-wrap { position: relative; max-width: 440px; margin: 0 auto; }

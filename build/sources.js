@@ -12,6 +12,24 @@ const esc = t => String(t).replace(/\|/g, '\\|');
 const keys = Object.keys(D.SOURCES);
 const count = { '政府機關': 0, '新聞媒體': 0, '民間整理': 0, '其他': 0 };
 const rows = keys.map(k => { const s = D.SOURCES[k], c = kind(s.u); count[c]++; return `| \`${k}\` | ${esc(s.t)} | ${esc(s.d)} | ${c} | [連結](${s.u}) |`; });
+// 換到其他國家的比較：各國模組裡的來源（每個數字的出處寫在 research/countries/ 的筆記裡）
+function worldMd() {
+  let E;
+  try {
+    E = require('../src/engine.js'); require('../src/world.js');
+    fs.readdirSync(path.join(__dirname, '..', 'src')).filter(f => /^country-[a-z]+\.js$/.test(f)).forEach(f => require('../src/' + f));
+  } catch (e) { return ''; }
+  const ids = E.countries().filter(c => c !== 'TW');
+  if (!ids.length) return '';
+  let n = 0;
+  const parts = ids.map(cid => { const K = E.country(cid); const list = (K.sources || []).map(sr => { n++; return `- [${esc(sr[0])}](${sr[1]})`; }); return `### ${K.name}\n\n${list.join('\n')}\n`; });
+  return `## 換到其他國家的比較（${ids.length} 個國家、${n} 個主要來源）
+
+報告與實驗室裡「換到其他國家」的比較用到的主要來源。每個數字的出處、年份與推估方式（標示 OFFICIAL、DERIVED、ESTIMATE 等），寫在 \`research/countries/\` 各國的筆記與 \`src/country-*.js\` 的註解裡。
+
+${parts.join('\n')}
+`;
+}
 const md = `# 資料來源清單
 
 這份清單由 \`src/data.js\` 自動產生，和網站實際使用的來源一致。共 ${keys.length} 個來源：政府機關 ${count['政府機關']} 個、新聞媒體 ${count['新聞媒體']} 個、民間整理 ${count['民間整理']} 個。
@@ -24,6 +42,7 @@ const md = `# 資料來源清單
 | --- | --- | --- | --- | --- |
 ${rows.join('\n')}
 
+${worldMd()}
 ---
 
 發現數字有誤或過時？請到 [GitHub Issues](https://github.com/jasontzeng123/next-gen/issues/new) 回報，附上正確的來源連結會更好。

@@ -280,18 +280,19 @@
       var picked = h('p', { class: 'sm', style: { textAlign: 'center', marginTop: '6px' } });
       body.appendChild(picked);
       var list = h('div', { class: 'country-list' });
-      list.appendChild(chipEl({ label: '台灣', sub: '已開放' }, true, function () { selectTW(); }, s, 'c:TW'));
-      ['日本', '韓國', '新加坡', '美國', '德國', '瑞典'].forEach(function (n) { list.appendChild(h('button', { class: 'chip', type: 'button', disabled: true }, n, h('small', {}, '建置中'))); });
+      list.appendChild(chipEl({ label: '台灣', sub: '本試算以台灣計算' }, true, function () { selectTW(); }, s, 'c:TW'));
+      // 報告裡可以比較的國家（各國主要城市）
+      var HAS = ' JPN KOR FRA CHN USA GBR DEU SWE CAN AUS SGP HKG ITA ESP ISR NLD NZL CHE ';
       body.appendChild(list);
       var g = Globe.create(cv, {
         lon: 100, lat: 20, zoom: 1, midZoom: 1.6, selected: 'TWN',
         onHover: function (c, x, y) {
           if (!c) { tip.classList.remove('on'); return; }
-          tip.textContent = c.a3 === 'TWN' ? '台灣・點選進入' : c.n + '・資料建置中';
+          tip.textContent = c.a3 === 'TWN' ? '台灣・點選進入' : HAS.indexOf(' ' + c.a3 + ' ') >= 0 ? c.n + '・填完後可在報告裡比較' : c.n;
           tip.style.left = x / cv.clientWidth * 100 + '%'; tip.style.top = y / cv.clientHeight * 100 + '%';
           tip.classList.add('on');
         },
-        onPick: function (c) { if (c.a3 === 'TWN') selectTW(); else { picked.textContent = c.n + '的資料還在建置中，第一版先開放台灣。'; } }
+        onPick: function (c) { if (c.a3 === 'TWN') selectTW(); else { picked.textContent = '這份試算以台灣計算。' + (HAS.indexOf(' ' + c.a3 + ' ') >= 0 ? '填完後，報告裡可以看看同樣的標準搬到' + c.n + '要多少收入。' : ''); } }
       });
       var prevC = A.cleanup; A.cleanup = function () { g.destroy(); if (prevC) prevC(); };
       setTimeout(function () { g.flyTo(121, 23.7, 1.6, 1800); }, 400);

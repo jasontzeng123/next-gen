@@ -229,6 +229,7 @@
       mainCol.appendChild(spendSection(view, s));
       mainCol.appendChild(compSection(res, th, s));
       mainCol.appendChild(crowdSection());
+      mainCol.appendChild(worldSection(s));
       mainCol.appendChild(saveSection(res, th, s));
       window.scrollTo(0, y);
     }
@@ -794,6 +795,81 @@
     var res = s.incomeMode === 'full' ? ENGINE.full(s) : ENGINE.atPR(s, 50);
     return COMM.buildDoc(s, res, th);
   }
+  // ---------- 換到其他國家：只放一顆可以拖曳的地球（城市依門檻 PR 著色），詳細比較在實驗室 ----------
+  var A3INV = { JPN: 'JP', KOR: 'KR', FRA: 'FR', CHN: 'CN', USA: 'US', GBR: 'UK', DEU: 'DE', SWE: 'SE', CAN: 'CA', AUS: 'AU', SGP: 'SG', HKG: 'HK', ITA: 'IT', ESP: 'ES', ISR: 'IL', NLD: 'NL', NZL: 'NZ', CHE: 'CH' };
+  function goWorldLab(key) {
+    var name = '';
+    if (key && typeof WUI !== 'undefined') { var p = key.split(':'), K = ENGINE.country(p[0]); name = K && K.CITY && K.CITY[p[1]] ? K.CITY[p[1]].name : ''; }
+    U.modal(function (box, close) {
+      box.appendChild(h('h3', {}, '要到實驗室看全球比較嗎？'));
+      box.appendChild(h('p', {}, '實驗室會用這份報告的設定，比較' + (name ? '在' + name + '和' : '在') + '各國主要城市養孩子需要多少收入，以及錢都花到哪裡。'));
+      box.appendChild(h('div', { class: 'actions' },
+        h('button', { class: 'btn ghost', onclick: close }, '留在報告'),
+        h('button', { class: 'btn', onclick: function () {
+          close();
+          var L = A.lab || (A.lab = {});
+          L.tab = 'map'; U.store.set('labTab', 'map'); L.level = 'world'; L.exp = 'current'; L.inc = 'current'; L.wsel = key || null;
+          A.go('lab', { worldFocus: !!key });
+        } }, '前往實驗室')));
+    });
+  }
+  function worldSection(s) {
+    var sec = h('section', { class: 'rsec', id: 'sec-world' });
+    sec.appendChild(h('div', { class: 'rsec-k num' }));
+    sec.appendChild(h('h2', {}, '換到其他國家呢？'));
+    sec.appendChild(h('p', { class: 'rsec-lede' }, '同樣的標準，搬到其他國家要多少收入？拖曳轉動地球，城市越綠越容易、越紅越難。'));
+    var cv = h('canvas', { width: 360, height: 360, role: 'img', 'aria-label': '可以拖曳的地球：各國主要城市依需要的收入 PR 著色，點城市可以到實驗室看詳細比較' });
+    var tip = h('div', { class: 'globe-tip' }), note = h('div', { class: 'rglobe-note', 'aria-live': 'polite' }, '');
+    var gw = h('div', { class: 'globe-wrap rglobe' }, cv, tip, note);
+    sec.appendChild(gw);
+    sec.appendChild(h('div', { class: 'rglobe-act' }, h('button', { type: 'button', class: 'btn ghost', onclick: function () { goWorldLab(null); } }, U.icon('lab'), '到實驗室看全球比較')));
+    var marks = [], rows = null, globe = null, started = false;
+    function placeTip(x, y) { tip.style.left = x / gw.clientWidth * 100 + '%'; tip.style.top = y / gw.clientHeight * 100 + '%'; tip.classList.add('on'); }
+    function byKey(k) { for (var i = 0; rows && i < rows.length; i++) if (WUI.key(rows[i]) === k) return rows[i]; return null; }
+    function start() {
+      if (started || !gw.isConnected) return; started = true;
+      var twCol = U.cssVar('--seal');
+      globe = Globe.create(cv, {
+        lon: 121, lat: 22, zoom: 1, midZoom: 1.6, auto: true, selected: 'TWN',
+        colorFor: function (a3) { return a3 === 'TWN' ? twCol : rows && A3INV[a3] ? U.cssVar('--ink-2') : null; },
+        markers: function () { return marks; },
+        onHover: function (c, x, y) {
+          if (!c) { tip.classList.remove('on'); return; }
+          if (c.a3 === 'TWN') tip.textContent = '台灣・' + (rows ? rows[0].name + ' ' + WUI.prText(rows[0].pr) : '你選的縣市');
+          else tip.textContent = A3INV[c.a3] ? c.n + '・點城市看比較' : c.n;
+          placeTip(x, y);
+        },
+        onHoverMarker: function (m, x, y) { var r = byKey(m.id); if (!r) return; tip.textContent = WUI.cityName(r) + '・' + WUI.prText(r.pr); placeTip(x, y); },
+        onPick: function (c) { var cid = A3INV[c.a3]; if (cid && rows) goWorldLab(cid + ':' + ENGINE.country(cid).cities[0]); },
+        onPickMarker: function (m) { goWorldLab(m.id); }
+      });
+      A.reportGlobe = globe;
+      note.textContent = '正在載入各國資料…';
+      A.loadWorld(function (ok) {
+        if (!gw.isConnected) return;
+        if (!ok) { note.textContent = '各國資料暫時載入不了'; return; }
+        note.textContent = '正在試算各國城市…';
+        WUI.rows(s, function (i, n) { if (gw.isConnected) note.textContent = '正在試算各國城市…（' + i + '／' + n + '）'; }, function (all, err) {
+          if (!gw.isConnected) return;
+          if (err || !all) { note.textContent = '這部分暫時算不出來'; return; }
+          rows = all; note.textContent = ''; note.hidden = true;
+          twCol = A.heatPR(all[0].pr);
+          marks = all.filter(function (r) { return r.cid !== 'TW'; }).map(function (r) {
+            var c = WUI.COORD[r.city];
+            return { id: WUI.key(r), lon: c[0], lat: c[1], color: A.heatPR(r.pr), label: WUI.cityName(r, true), sel: false };
+          });
+        });
+      });
+    }
+    // 捲到附近才開始（各國資料要另外下載、34 個城市要逐一試算）
+    U.task(function () {
+      if (typeof IntersectionObserver === 'undefined') return start();
+      var io = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); start(); } }, { rootMargin: '400px 0px' });
+      io.observe(sec);
+    }, 'world-globe');
+    return sec;
+  }
+
   function crowdSection() {
     var sec = h('section', { class: 'rsec', id: 'sec-crowd' });
     sec.appendChild(h('div', { class: 'rsec-k num' }));

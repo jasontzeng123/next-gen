@@ -4,8 +4,13 @@
 // 用法：node build/build.js
 const fs = require('fs'), path = require('path');
 const R = p => fs.readFileSync(path.join(__dirname, '..', 'src', p), 'utf8');
-const js = ['data.js', 'geo.js', 'popgrid.js', 'engine.js', 'world.js', 'country-jp.js', 'country-kr.js', 'country-fr.js', 'country-cn.js', 'country-us.js', 'country-uk.js', 'country-de.js', 'country-se.js', 'country-ca.js', 'country-au.js', 'country-sg.js', 'country-hk.js', 'country-it.js', 'country-es.js', 'country-il.js', 'country-nl.js', 'country-nz.js', 'country-ch.js', 'util.js', 'people.js', 'community.js', 'globe.js', 'twmap.js', 'charts.js', 'questions.js', 'app.js', 'screen-cover.js', 'screen-notice.js', 'screen-quiz.js', 'screen-result.js', 'screen-world.js', 'screen-lab.js', 'screen-method.js']
-  .map(f => '/* ---- ' + f + ' ---- */\n' + R(f).replace(/\nif \(typeof module !== ['"]undefined['"]\) module\.exports = [A-Z]+;\s*$/m, '\n')).join('\n');
+const join = list => list.map(f => '/* ---- ' + f + ' ---- */\n' + R(f).replace(/\nif \(typeof module !== ['"]undefined['"]\) module\.exports = [A-Z]+;\s*$/m, '\n')).join('\n');
+// 主程式：打開網站就需要的部分
+const CORE = ['data.js', 'geo.js', 'popgrid.js', 'engine.js', 'util.js', 'people.js', 'community.js', 'globe.js', 'twmap.js', 'charts.js', 'questions.js', 'app.js', 'screen-cover.js', 'screen-notice.js', 'screen-quiz.js', 'screen-result.js', 'screen-lab.js', 'screen-method.js'];
+// 各國資料：只有看「換到其他國家」時才用到。網站版另存一個檔案，需要時才下載；Artifact 版直接放在同一個檔案裡
+const WORLDJS = ['world.js', 'country-jp.js', 'country-kr.js', 'country-fr.js', 'country-cn.js', 'country-us.js', 'country-uk.js', 'country-de.js', 'country-se.js', 'country-ca.js', 'country-au.js', 'country-sg.js', 'country-hk.js', 'country-it.js', 'country-es.js', 'country-il.js', 'country-nl.js', 'country-nz.js', 'country-ch.js', 'screen-world.js'];
+const coreJs = join(CORE), worldJs = join(WORLDJS);
+const js = coreJs + '\n' + worldJs;
 // CSS 大括號必須成對（避免一處錯誤讓後面的樣式全部失效）
 (function () { const css = R('styles.css'); let d = 0; for (const ch of css) { if (ch === '{') d++; else if (ch === '}') { d--; if (d < 0) throw new Error('styles.css: 多了一個 }'); } } if (d !== 0) throw new Error('styles.css: 有 ' + d + ' 個 { 沒有關閉'); })();
 const BUILD = new Date().toISOString().slice(0, 16);
@@ -40,6 +45,13 @@ const FONTS_WEB = `<link rel="preconnect" href="https://fonts.googleapis.com">
 const SCRIPT = `<script>
 ${probe}
 ${js}
+APP.start();
+</script>`;
+// 網站版：主程式內嵌，各國資料另存成 world.<內容雜湊>.js（內容變了檔名就變，不會讀到舊的快取）
+const WORLD_FILE = 'world.' + require('crypto').createHash('sha256').update(worldJs).digest('hex').slice(0, 10) + '.js';
+const SCRIPT_WEB = `<script>
+${probe}
+${coreJs}
 APP.start();
 </script>`;
 // claude.ai Artifact 版：發佈時平台會補上 <html><head> 外框
@@ -92,11 +104,11 @@ ${FONTS_WEB}
 <style>
 ${R('styles.css')}
 </style>
-<script>window.TWKIDS = ${JSON.stringify({ target: 'web', siteUrl: site, repoUrl: REPO, sb: sb })};</script>
+<script>window.TWKIDS = ${JSON.stringify({ target: 'web', siteUrl: site, repoUrl: REPO, sb: sb, worldSrc: WORLD_FILE })};</script>
 </head>
 <body>
 ${APPBODY}
-${SCRIPT}
+${SCRIPT_WEB}
 </body>
 </html>
 `;
@@ -104,6 +116,17 @@ ${SCRIPT}
   const out = path.join(__dirname, '..');
   fs.mkdirSync(out, { recursive: true });
   fs.writeFileSync(path.join(out, 'index.html'), web);
+  // 各國資料檔：保留最近 3 個版本（剛更新時，瀏覽器快取裡的舊網頁仍找得到它要的那一份）
+  fs.writeFileSync(path.join(out, WORLD_FILE), '/* 你有資格生下一代嗎？各國資料（由 build/build.js 產生） */\n' + worldJs + '\n');
+  fs.readdirSync(out).filter(f => /^world\.[0-9a-f]{10}\.js$/.test(f) && f !== WORLD_FILE)
+    .map(f => ({ f, t: fs.statSync(path.join(out, f)).mtimeMs })).sort((a, b) => b.t - a.t).slice(2)
+    .forEach(x => fs.unlinkSync(path.join(out, x.f)));
+  // 測試用：test/web.html 旁邊也放一份（測試直接開本機檔案）
+  const tdir = path.join(__dirname, '..', 'test');
+  if (fs.existsSync(tdir)) {
+    fs.readdirSync(tdir).filter(f => /^world\.[0-9a-f]{10}\.js$/.test(f)).forEach(f => fs.unlinkSync(path.join(tdir, f)));
+    fs.copyFileSync(path.join(out, WORLD_FILE), path.join(tdir, WORLD_FILE));
+  }
   fs.writeFileSync(path.join(out, 'favicon.svg'), SEAL);
   fs.writeFileSync(path.join(out, '.nojekyll'), '');
   // 免費方案閒置一週會暫停：每 3 天讀一次資料庫（publishable key 本來就公開在網頁裡）
@@ -125,7 +148,7 @@ jobs:
             -d '{"p_limit":1}' > /dev/null
 `);
   }
-  console.log('index.html', (Buffer.byteLength(web) / 1024).toFixed(1) + ' KB', sb ? '（已連上 Supabase）' : '（尚未設定 Supabase：本機模式）');
+  console.log('index.html', (Buffer.byteLength(web) / 1024).toFixed(1) + ' KB', sb ? '（已連上 Supabase）' : '（尚未設定 Supabase：本機模式）', '｜' + WORLD_FILE, (Buffer.byteLength(worldJs) / 1024).toFixed(1) + ' KB');
 }
 
 // 資料來源清單（docs/資料來源.md）
