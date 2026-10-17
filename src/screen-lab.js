@@ -340,7 +340,8 @@
       });
       drawList(); drawDetail();
       // 從報告的地球點城市進來：手機版直接捲到那個城市的比較
-      if (A.opts && A.opts.worldFocus && L.wsel && window.matchMedia('(max-width: 920px)').matches) { A.opts.worldFocus = false; detail.scrollIntoView({ behavior: 'auto', block: 'start' }); }
+      // 等這一頁畫完、捲回頂端之後再捲（同步捲動會被換頁時的「回到頂端」蓋掉）
+      if (A.opts && A.opts.worldFocus && L.wsel && window.matchMedia('(max-width: 920px)').matches) { A.opts.worldFocus = false; setTimeout(function () { if (detail.isConnected) detail.scrollIntoView({ behavior: U.reduceMotion() ? 'auto' : 'smooth', block: 'start' }); }, 120); }
     });
   }
 

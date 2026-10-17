@@ -240,6 +240,8 @@ var Globe = (function () {
       }
       var g = inv(e.clientX - rect.left, e.clientY - rect.top);
       var v = g ? cell(g[0], g[1]) : 0;
+      // 手機上手指拖曳時不顯示提示框（只有滑鼠移過去才顯示；手指點一下就是選取）
+      if (e.pointerType && e.pointerType !== 'mouse') { st.hover = 0; return; }
       st.hover = v;
       if (typeof nearMarker === 'function') {
         var mk = nearMarker(e.clientX - rect.left, e.clientY - rect.top);

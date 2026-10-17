@@ -867,7 +867,7 @@ button.wd-li:hover { background: var(--sheet-2); }
   </footer>
 </div>
 <script>
-window.__diag = { t0: Date.now(), build: '2026-10-17T04:55', timer: false, mc: false, raf: false, errors: [] };
+window.__diag = { t0: Date.now(), build: '2026-10-17T05:16', timer: false, mc: false, raf: false, errors: [] };
 setTimeout(function () { window.__diag.timer = true; }, 30);
 try { var __mc = new MessageChannel(); __mc.port1.onmessage = function () { window.__diag.mc = true; }; __mc.port2.postMessage(0); } catch (e) {}
 try { requestAnimationFrame(function () { window.__diag.raf = true; }); } catch (e) {}
@@ -3115,6 +3115,8 @@ var Globe = (function () {
       }
       var g = inv(e.clientX - rect.left, e.clientY - rect.top);
       var v = g ? cell(g[0], g[1]) : 0;
+      // 手機上手指拖曳時不顯示提示框（只有滑鼠移過去才顯示；手指點一下就是選取）
+      if (e.pointerType && e.pointerType !== 'mouse') { st.hover = 0; return; }
       st.hover = v;
       if (typeof nearMarker === 'function') {
         var mk = nearMarker(e.clientX - rect.left, e.clientY - rect.top);
@@ -6530,7 +6532,8 @@ APP.screens.notice = function (main) {
       });
       drawList(); drawDetail();
       // 從報告的地球點城市進來：手機版直接捲到那個城市的比較
-      if (A.opts && A.opts.worldFocus && L.wsel && window.matchMedia('(max-width: 920px)').matches) { A.opts.worldFocus = false; detail.scrollIntoView({ behavior: 'auto', block: 'start' }); }
+      // 等這一頁畫完、捲回頂端之後再捲（同步捲動會被換頁時的「回到頂端」蓋掉）
+      if (A.opts && A.opts.worldFocus && L.wsel && window.matchMedia('(max-width: 920px)').matches) { A.opts.worldFocus = false; setTimeout(function () { if (detail.isConnected) detail.scrollIntoView({ behavior: U.reduceMotion() ? 'auto' : 'smooth', block: 'start' }); }, 120); }
     });
   }
 

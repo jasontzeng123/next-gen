@@ -53,6 +53,8 @@ with sync_playwright() as p:
     ok('lab world view with Tokyo selected', pg.evaluate("[APP.screen, APP.lab.tab, APP.lab.level, APP.lab.wsel]") == ['lab', 'map', 'world', 'JP:tokyo'])
     det = pg.inner_text('.wd-detail-box') if pg.query_selector('.wd-detail-box') else ''
     ok('detail shows Tokyo: ' + det[:24].replace('\n', ' '), '東京' in det)
+    top = pg.evaluate("document.querySelector('.wd-detail-box').getBoundingClientRect().top")
+    ok('phone scrolls to the Tokyo detail (top %d)' % top, -10 < top < 200)
     pg.screenshot(path=ROOT + '/test/shots/rglobe-lab.png')
     # 回到報告：地球還在、不用重新下載
     pg.go_back(); pg.wait_for_timeout(2000)
