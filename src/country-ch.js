@@ -110,10 +110,14 @@
         cons: 1.08, health: 450,
         // 刊登租金：2.5 房約 2,820、3.5 房約 3,436，每 ㎡ 每年中位數 497（2025）［SECONDARY］；舊約低很多，取 33／㎡／月＋雜費［ESTIMATE］
         rentM2: 33, nk: 3, rentSize: [60, 80, 100, 120], rentAdj: 1.0,
-        price: 16500, priceNew: 19000, // 每 ㎡（8002 區公寓平均 19,865）［SECONDARY／ESTIMATE］
+        price: 19500, priceNew: 22500, // 每 ㎡：全市公寓約 20,100–20,260（neho／Lookmove 2026-09），8002 區 19,865［SECONDARY］；新成屋 ×1.15［ESTIMATE］
         closing: 0.005, stweg: 4.5, propTax: 0, // 蘇黎世州沒有房屋移轉稅與房屋稅［OFFICIAL］
         park: 65, tpass: 90,
-        kita: { full: 135, min: 13, lo: 25000, hi: 110000 }, // 托育每天全額與最低自付、依「計算所得」補助的區間［SECONDARY／ESTIMATE］
+        kita: { full: 120, min: 12, lo: 25000, hi: 110000 }, // 市府補助的托育：每天最高 120、最低 12（familienleben.ch 引市府，2026）［SECONDARY］；補助區間［ESTIMATE］
+        // 保費補助（IPV，蘇黎世州 2026）：區域 1 平均保費的 70%（大人每年 7,680、孩子 1,848），
+        // 扣掉「計算所得」的 10.5%（已婚）或 8.4%（單身）；一家四口的所得上限約 12.7 萬（zh.ch 2025-09、SVA Zürich）［OFFICIAL］
+        // 19–25 歲的年輕人以大人的 0.7 倍估計［ESTIMATE］
+        ipv: { share: 0.70, adult: 7680, child: 1848, young: 5380, pctM: 0.105, pctS: 0.084 },
         hort: { full: 50, min: 8 },                         // 午餐＋課後照顧（Tagesschule／Hort）每天［ESTIMATE］
         privKg: 25000, biliKg: 30000, privSchool: 25000, intl: 35000,
         hobby: 80, cram: { none: 0, some: 250, full: 600 },
@@ -126,7 +130,7 @@
         price: 8800, priceNew: 10500, // 3018 區公寓平均 7,763（較便宜的區）［SECONDARY／ESTIMATE］
         closing: 0.023, stweg: 4.0, propTax: 0.001, // 房屋移轉稅 1.8%＋公證；房屋稅約 0.1%［ESTIMATE］
         park: 40, tpass: 85,
-        kita: { full: 120, min: 15, lo: 43000, hi: 170000 }, // 托育券：家庭所得 17 萬以下可領，最少自付每天 7［OFFICIAL 門檻；其餘 ESTIMATE］
+        kita: { full: 120, min: 15, lo: 49000, hi: 170000 }, // 托育券：2026-08 起所得 4.9 萬以下全額（原 4.3 萬）、17 萬以下可領［OFFICIAL 門檻；其餘 ESTIMATE］
         hort: { full: 45, min: 8 },
         privKg: 22000, biliKg: 26000, privSchool: 22000, intl: 30000,
         hobby: 70, cram: { none: 0, some: 220, full: 550 },
@@ -292,7 +296,13 @@
       // 健保：保費＋自負額，扣掉保費補助（約為「計算所得」14% 以上的部分，簡化）［ESTIMATE］
       var adults = married ? 2 : 1, prem = adults * c.health * 12, share = adults * HEALTH.share;
       kids.forEach(function (a) { prem += (a < 19 ? HEALTH.child : HEALTH.young) * 12; share += a < 19 ? 150 : 400; });
-      var ipv = (x.S || 0) > 150000 ? 0 : Math.max(0, 0.85 * prem - 0.14 * Math.max(0, y));
+      var ipv;
+      if (c.ipv) {
+        // 有州的公式（蘇黎世）：參考保費 × 比例 − 計算所得 × 自付比例
+        var I = c.ipv, ref = adults * I.adult;
+        kids.forEach(function (a) { ref += a < 19 ? I.child : I.young; });
+        ipv = (x.S || 0) > 150000 ? 0 : Math.min(prem, Math.max(0, I.share * ref - (married ? I.pctM : I.pctS) * Math.max(0, y)));
+      } else ipv = (x.S || 0) > 150000 ? 0 : Math.max(0, 0.85 * prem - 0.14 * Math.max(0, y));
       si += prem + share - ipv;
       // 職業退休金：買房前累積（員工＋雇主），買第一間房那年可提領，最多房價 1 成（扣約 7% 提領稅）
       if (x.tr && s.housing === 'buy') {

@@ -74,7 +74,8 @@
         mgmt: 1.2, propTax: 0.0015,
         closing: { used: 0.06, new: 0.1075 }, // 移轉稅 6%；新成屋增值稅 10%＋印花 0.75%［OFFICIAL 稅率］
         reg: [[13362, 0.085], [19004, 0.107], [35425, 0.128], [57320, 0.174], [Infinity, 0.205]], // 馬德里自治區級距［ESTIMATE：2025 值］
-        birthDed: 721.70, // 馬德里出生扣抵（出生當年起 3 年）［ESTIMATE］
+        // 馬德里出生扣抵：每位 721.70，出生當年起 3 年；稅基 30,930（單獨）／37,322.20（合併）以下［OFFICIAL，2026-10 核對］
+        birthDed: [721.70, 721.70, 721.70], birthLim: { single: [30930, 30930], joint: [37322, 37322], family: 61860 },
         park: 100, tpass: 35,
         careFree: true, carePriv: 500, nanny: 1350, meals: 110,
         privFees: { es: 1800, jh: 1800, sh: 2000 }, priv2: 8000, intl: 12000,
@@ -84,12 +85,14 @@
       valencia: {
         id: 'valencia', name: '瓦倫西亞', short: '瓦倫西亞', capital: false,
         cons: 0.97,
-        rentM2: 14, rentSize: [55, 75, 95, 120], rentAdj: 1.0, // ［ESTIMATE：刊登約 15.5］
-        price: 2900, priceNew: 3600, // 2026 年漲約 5%［SECONDARY］；每 ㎡［ESTIMATE］
+        rentM2: 14.7, rentSize: [55, 75, 95, 120], rentAdj: 1.0, // 刊登每 ㎡ 16.3（idealista 2026-07）× 0.9，和台灣 591 × 0.9 同規則［SECONDARY／DERIVED］
+        price: 3100, priceNew: 3850, // 刊登 3,378（2026-05）–3,485（2026-07），成交約低 10%［SECONDARY／DERIVED］
         mgmt: 1.0, propTax: 0.002,
-        closing: { used: 0.10, new: 0.115 },
-        reg: [[12000, 0.09], [22000, 0.12], [32000, 0.15], [42000, 0.175], [52000, 0.20], [62000, 0.225], [72000, 0.25], [100000, 0.265], [150000, 0.275], [200000, 0.285], [Infinity, 0.295]], // ［ESTIMATE］
-        birthDed: 300,
+        closing: { used: 0.09, new: 0.114 }, // 2026-06 起移轉稅 9%、印花 1.4%（Ley 5/2025）［OFFICIAL］
+        reg: [[12000, 0.088], [22000, 0.12], [32000, 0.15], [42000, 0.175], [52000, 0.20], [62000, 0.225], [72000, 0.25], [100000, 0.265], [150000, 0.275], [200000, 0.285], [Infinity, 0.2935]], // 2026 最低 8.80%、最高 29.35%（Ley 5/2026），中間各級［ESTIMATE：2025 值］
+        // 瓦倫西亞出生扣抵（Ley 5/2025）：第 1／2／3 胎起 600／750／900，出生當年起 3 年；
+        // 稅基 27,000（單獨）／44,000（合併）以下全額，到 30,000／47,000 遞減到 0［OFFICIAL，2026-10 核對：原本 300 少算］
+        birthDed: [600, 750, 900], birthLim: { single: [27000, 30000], joint: [44000, 47000] },
         park: 70, tpass: 30,
         careFree: true, carePriv: 400, nanny: 1250, meals: 100,
         privFees: { es: 1500, jh: 1500, sh: 1700 }, priv2: 6500, intl: 10000,
@@ -231,7 +234,19 @@
       var u3 = kids.filter(function (a) { return a < 3; }).length, mom = s.partner ? (gB > 0 ? gB : gA) : gA;
       if (mom > 0 && u3) tx -= 1200 * u3 + Math.min(1000 * u3, x.y.dc || 0);
       if (kids.length >= 3 && gA + gB > 0) tx -= 1200;
-      if (u3 && gA + gB > 0 && gA + gB <= 60000) tx -= c.birthDed * u3; // 自治區出生扣抵（3 歲內，所得上限［ESTIMATE］）
+      // 自治區出生扣抵：3 歲內的孩子依胎次；稅基（工作收入扣社保與 2,000）超過上限就沒有，上下限之間遞減
+      if (u3 && gA + gB > 0) {
+        var bA = gA > 0 ? Math.max(0, gA - SS_EE * Math.min(gA, SS_MAX) - 2000) : 0, bB = gB > 0 ? Math.max(0, gB - SS_EE * Math.min(gB, SS_MAX) - 2000) : 0;
+        // 夫妻可以分開申報（各拿一半、各自看單獨上限）或合併申報（看合併上限），取比較有利的
+        var L = c.birthLim, fac = function (b, lim) { return b <= lim[0] ? 1 : b >= lim[1] ? 0 : (lim[1] - b) / (lim[1] - lim[0]); }, f;
+        if (!s.partner) f = fac(bA, L.single);
+        else {
+          var indiv = 0.5 * fac(bA, L.single) + 0.5 * fac(bB, L.single);
+          if (L.family && bA + bB > L.family) indiv = 0;
+          f = Math.max(indiv, fac(bA + bB, L.joint));
+        }
+        kids.slice().sort(function (p, q) { return q - p; }).forEach(function (a, i) { if (a < 3) tx -= f * c.birthDed[Math.min(i, 2)]; });
+      }
       return { si: pa.si + pb.si, tax: tx };
     }
   };

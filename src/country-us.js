@@ -28,7 +28,7 @@
     single: [[12000, 0.03078], [25000, 0.03762], [50000, 0.03819], [Infinity, 0.03876]]
   };
   var SS_BASE = 184500; // 社會安全稅薪資上限（2026）§3.2［NEWS］
-  var RATE = 0.067;     // 30 年固定房貸利率（Freddie Mac，2026-09）§4.4［OFFICIAL］
+  var RATE = 0.074;     // 30 年固定房貸利率（Freddie Mac PMMS 2026-10-08、10-15 都是 7.40%；9 月初 6.71%）§4.4［OFFICIAL］
 
   var K = {
     id: 'US', name: '美國', cur: 'USD', curName: '美元', flag: '🇺🇸',
@@ -76,6 +76,7 @@
       nyc: {
         id: 'nyc', name: '紐約市', short: '紐約', capital: true,
         // 每人消費：紐約都會區 91,520 ÷ 2.5 人 vs 全國 77,907 ÷ 2.5 人（2023–24）＝ 1.175 §5.2［OFFICIAL］
+        // 和台灣縣市同一種算法（含住房的每人消費 ÷ 全國，再取 0.75 次方）；扣掉個人保險與退休提撥後是 1.17，差不多
         cons: 1.18,
         // 新簽約要價（StreetEasy 全市中位數）：2 房 4,800（2026-08）［SECONDARY］；3 房 4,995（2026-02）× 同期 2 房漲幅 ≈ 5,400；
         // 1 房依全市中位數 4,200 推估 3,900；4 房約 3 房 × 1.25［DERIVED／ESTIMATE］§4.1
@@ -135,13 +136,14 @@
     // ---------- 生活與養育成本 ----------
     COST: {
       // 每位大人每月日常開銷。各國同一個規則：「每人消費支出（不含住房與水電）× 0.716」。
-      // 美國：2024 每戶消費 78,535 −住房與水電約 20,300 −健保保費 4,055（另外計算）＝ 54,180 ÷ 2.5 人 × 0.716 ÷ 12
-      // ≈ 1,293（2024）× 物價 1.056 ≈ 1,365［DERIVED］§5.1
-      adultBase: 1365, consNational: 1, consExp: 0.75,
+      // 美國：2024 CE 每戶支出 78,535 −住房與水電 21,053 −健保保費 4,055（另外計算）
+      // −個人保險與退休提撥 9,797（社安稅與退休金，不是消費；台灣的消費支出也不含）＝ 43,630 ÷ 2.4 人 × 0.716 ÷ 12
+      // ≈ 1,085（2024）× 物價 1.056 ≈ 1,145［DERIVED］§5.1（2026-10 核對：原本沒扣退休提撥，高估約 19%）
+      adultBase: 1145, consNational: 1, consExp: 0.75,
       lifestyle: { frugal: 0.7, normal: 1.0, comfy: 1.4 },
       childLife: { frugal: 0.65, normal: 1.0, comfy: 1.6 },
       // 孩子每月生活費：沿用台灣「孩子／大人」的比例（0.50／0.43／0.54／0.71／0.79）× 美國的大人開銷［ESTIMATE］
-      child: [[0, 683], [2, 587], [6, 737], [12, 969], [18, 1078]],
+      child: [[0, 573], [2, 492], [6, 618], [12, 813], [18, 905]],
       utilBase: 120, utilPerPerson: 80, // 水電瓦斯、網路與手機：每戶約 4,700／年（2.5 人）［ESTIMATE］
       premSingle: 1530, premCouple: 4900, premFamily: 7260, // 員工自付健保保費：單人 1,440、家庭 6,850（2025）× 1.06［OFFICIAL＋DERIVED］§5.3；夫妻方案［ESTIMATE］
       gearFirst: { frugal: 1500, normal: 3000, comfy: 6000 }, gearLater: 1000, // 嬰兒用品［ESTIMATE］
@@ -325,7 +327,7 @@
       }
       // 聯邦：標準扣除或逐項扣除（房貸利息＋州稅與房屋稅，州地方稅上限 4 萬，所得超過 50 萬遞減）
       var propTax = x.ly >= 0 && x.house ? (x.house.tax || 0) : 0;
-      var saltCap = Math.max(10000, 40000 - 0.3 * Math.max(0, agi - 500000));
+      var saltCap = Math.max(10000, 40400 - 0.3 * Math.max(0, agi - 505000)); // 2026：上限 40,400、門檻 505,000（每年 +1%）
       var mort = x.ly >= 0 ? (x.mortInt || 0) * Math.min(1, 750000 / Math.max(1, x.loanBalReal || 0)) : 0;
       var itemized = mort + Math.min(saltCap, stTax + propTax);
       var ti = Math.max(0, agi - Math.max(FED_STD[status], itemized));

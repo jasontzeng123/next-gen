@@ -315,7 +315,7 @@
       all = rows;
       if (L.wsel && !byKey(L.wsel)) L.wsel = null;
       var tw = all[0], twCol = heat(tw.pr), hi = U.cssVar('--ink-2');
-      status.textContent = '顏色是門檻收入 PR，以各國全國同年齡的受僱者計算。';
+      status.textContent = '顏色是門檻收入 PR：和那個國家全國同年齡的全職受僱者比（不是只跟那個城市比）。';
       marks = all.filter(function (r) { return r.cid !== 'TW'; }).map(function (r) {
         var c = WUI.COORD[r.city];
         return { id: WUI.key(r), lon: c[0], lat: c[1], color: heat(r.pr), label: WUI.cityName(r, true), sel: L.wsel === WUI.key(r) };

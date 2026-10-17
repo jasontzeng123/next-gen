@@ -109,12 +109,12 @@ var WUI = (function () {
       h('span', {}, '你選的' + tw.name + '：' + prText(tw.pr))));
     var n = People.count(r.pr);
     box.appendChild(h('figure', { class: 'wd-pp' },
-      People.svg(r.pr, { n: n, label: '每 100 個同齡受僱者，有 ' + n + ' 個收入養得起' }),
-      h('figcaption', {}, '每 100 個當地同齡受僱者，有 ', h('b', {}, String(n)), ' 個收入養得起')));
+      People.svg(r.pr, { n: n, label: '每 100 個' + (r.cid === 'TW' ? '台灣' : K.name + '全國') + '同齡全職受僱者，有 ' + n + ' 個收入養得起' }),
+      h('figcaption', {}, '每 100 個' + (r.cid === 'TW' ? '台灣' : K.name + '全國') + '同齡全職受僱者，有 ', h('b', {}, String(n)), ' 個收入養得起')));
     // 需要的年薪
     if (r.pr != null && r.pr > 1) {
       var sal = r.who === 'B' ? r.salaryB : r.salaryA;
-      box.appendChild(h('p', { class: 'wd-line' }, (both ? '每人' : '') + '年薪要約 ', h('b', {}, money(sal, K)), '（' + twd(sal, K) + '），是當地同齡中位數的 ' + (r.ratio ? r.ratio.toFixed(1) : '—') + ' 倍。'));
+      box.appendChild(h('p', { class: 'wd-line' }, (both ? '每人' : '') + '年薪要約 ', h('b', {}, money(sal, K)), '（' + twd(sal, K) + '），是' + (r.cid === 'TW' ? '台灣' : K.name + '全國') + '同齡中位數的 ' + (r.ratio ? r.ratio.toFixed(1) : '—') + ' 倍。'));
     } else if (r.pr == null) box.appendChild(h('p', { class: 'wd-line' }, '收入再高也不夠。'));
     else box.appendChild(h('p', { class: 'wd-line' }, '幾乎任何收入都夠。'));
     if (full && r.verdict) {

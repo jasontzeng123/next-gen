@@ -15,7 +15,7 @@
   // ---------- 制度參數（2026）§3 ----------
   var IRPEF = [[28000, 0.23], [50000, 0.33], [Infinity, 0.43]];          // ［NEWS：2026 年預算法］
   var INPS_EE = 0.0949;                                                  // 員工社會保險（9.19% 年金＋0.3%）［OFFICIAL］
-  var AUU = { max: 203.8, min: 58.3, lo: 17468.51, hi: 46582.71, dual: 34.9, third: [97.5, 17.5] }; // 單一兒童津貼（每月）［NEWS；第二收入與第三胎加給 ESTIMATE］
+  var AUU = { max: 203.8, min: 58.3, lo: 17468.51, hi: 46582.71, dual: 34.9, third: [99.10, 17.5] }; // 單一兒童津貼（每月；INPS 2026-01-30 第 7 號通函）［OFFICIAL；第三胎加給下限 ESTIMATE］
 
   function tax(n, br) { var t = 0, lo = 0; for (var i = 0; i < br.length && n > lo; i++) { t += (Math.min(n, br[i][0]) - lo) * br[i][1]; lo = br[i][0]; } return t; }
   // 一個人的 IRPEF＋地方附加稅（依收入級距）＋勞動稅楔減免
@@ -81,13 +81,13 @@
       rome: {
         id: 'rome', name: '羅馬', short: '羅馬', capital: true,
         cons: 1.06, // 中部家庭支出略高於全國［ESTIMATE］
-        // 刊登租金每 ㎡ 18.7（2026 上半年）［SECONDARY］，新簽約約 17［ESTIMATE］；1–4 房 50／75／95／120 ㎡
-        rentM2: 17, rentSize: [50, 75, 95, 120], rentAdj: 1.0,
+        // 刊登租金每 ㎡ 19.2（idealista 2026 Q3）× 0.9 ≈ 17.3（和台灣 591 × 0.9 同規則）［SECONDARY／DERIVED］；1–4 房 50／75／95／120 ㎡
+        rentM2: 17.3, rentSize: [50, 75, 95, 120], rentAdj: 1.0,
         price: 3500, priceNew: 4400, // 刊登價 3,826，成交約低 8%［DERIVED］；新建約高 25%［ESTIMATE］§4.2
         mgmt: 2.2, // 公寓管理費（每 ㎡ 每月）［ESTIMATE］
         addReg: [[15000, 0.0173], [28000, 0.0273], [Infinity, 0.0333]], addCom: 0.009, // 拉齊奧大區、羅馬市附加稅［ESTIMATE］
         park: 80, tpass: 35, // 羅馬大眾運輸月票 35［OFFICIAL］
-        nidoMax: 560, nidoPriv: 650, mensa: 80,
+        nidoMax: 440, nidoPriv: 650, mensa: 60, // 市立托嬰最高每月 440（ISEE 5 萬以上），餐費每年最多約 720［SECONDARY，2026-10 核對］
         after: 1800, privFees: { es: 3500, jh: 4500, sh: 5500 }, intl: 15000,
         hobby: 60, cram: { none: 0, some: 120, full: 350 },
         doula: 1000, nurse: 2400
@@ -95,7 +95,7 @@
       turin: {
         id: 'turin', name: '杜林', short: '杜林', capital: false,
         cons: 1.08, // 西北區家庭支出高於全國［ESTIMATE］
-        rentM2: 11.5, rentSize: [50, 75, 95, 120], rentAdj: 1.0, // ［ESTIMATE］
+        rentM2: 12.2, rentSize: [50, 75, 95, 120], rentAdj: 1.0, // 刊登每 ㎡ 13.5（idealista 2026 Q3）× 0.9［SECONDARY／DERIVED］
         price: 1950, priceNew: 2800, // 2026 上半年漲 8.3%［SECONDARY］；每 ㎡［ESTIMATE］
         mgmt: 2.0,
         addReg: [[15000, 0.0162], [28000, 0.0213], [50000, 0.0275], [Infinity, 0.0332]], addCom: 0.008, // 皮埃蒙特大區、杜林市［ESTIMATE］
@@ -179,7 +179,9 @@
       var I = isee(x), f = U.clamp((AUU.hi - I) / (AUU.hi - AUU.lo), 0, 1);
       var base = AUU.min + (AUU.max - AUU.min) * f;
       if (a >= 18) base *= 0.49; // 18–20 歲（在學）約一半
-      var m = base * (a === 0 ? 1.5 : 1) + ((x.gA > 0 && x.s.partner && x.gB > 0) ? AUU.dual * f : 0) + (k >= 2 ? AUU.third[1] + (AUU.third[0] - AUU.third[1]) * f : 0);
+      // 未滿 1 歲加 5 成；有 3 個以上孩子時，1–2 歲也加 5 成；4 個以上孩子的家庭每月另加 150（算在老大）［OFFICIAL］
+      var m = base * (a === 0 || (a < 3 && x.s.kids >= 3) ? 1.5 : 1) + ((x.gA > 0 && x.s.partner && x.gB > 0) ? AUU.dual * f : 0) + (k >= 2 ? AUU.third[1] + (AUU.third[0] - AUU.third[1]) * f : 0);
+      if (k === 0 && x.s.kids >= 4) m += 150;
       return m * 12;
     },
     care: function (x, cs, k, a, careMonths) {

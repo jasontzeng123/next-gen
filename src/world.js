@@ -101,12 +101,14 @@ var WORLD = (function (E, D) {
   /* ---------- 買房（台灣以外共用） ----------
      國家模組提供：
        COST.houseSize[房間數]（㎡）、COST.reno[等級]（每 ㎡）、COST.closing{ used, new }（占房價比例）、COST.homeInsurance（每年）
-       城市：price / priceNew（每 ㎡）、mgmt（每 ㎡ 每月）、propTax（占房價比例，每年）、parkBuy（可省略）
+       城市：price / priceNew（每 ㎡）、priceRooms{房數: 每 ㎡}（可省略）、mgmt（每 ㎡ 每月）、propTax（占房價比例，每年）、parkBuy（可省略）
        loanPlan(x, total) → { parts: [{ amt, rate 或 rates, years, grace, label }], note }  */
   function stdHousePlan(x) {
     var s = x.s, K = x.K, C = x.C, c = x.c, tb = x.tb, rooms = x.roomsFinal;
     var size = C.houseSize[rooms];
-    var ppsm = (s.build === 'new' ? c.priceNew : c.price) * x.dm;
+    // priceRooms：某些房數另有每 ㎡ 價格（例如 4 房是獨立屋，比公寓貴）；新成屋照同樣比例加價
+    var pr = c.priceRooms && c.priceRooms[rooms];
+    var ppsm = (s.build === 'new' ? (pr ? Math.max(c.priceNew, pr * c.priceNew / c.price) : c.priceNew) : (pr || c.price)) * x.dm;
     var price = ppsm * size;
     var parking = x.hasCar && s.parking === 'buy' ? (c.parkBuy || 0) : 0;
     var total = price + parking;

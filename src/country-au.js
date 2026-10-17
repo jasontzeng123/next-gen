@@ -14,7 +14,7 @@
   // ---------- 制度參數（2026–27）§3 ----------
   var BR = [[18200, 0], [45000, 0.15], [135000, 0.30], [190000, 0.37], [Infinity, 0.45]]; // ［NEWS：15% 級距 2026-07 起］
   var CCS = { full: 88520, zero: 538520, capDay: 15.19, capSchool: 13.30, second: 372000 }; // 托育補助［NEWS］
-  var FTB = { a12: 6139.30, a13: 7989.85, base: 1971, supp: 970.90, free: 69131, hi: 123078, b5: 5223.15, b18: 3646.35, bSupp: 478.15, bPrimary: 120000, bFree: 7100 }; // ［SECONDARY］
+  var FTB = { a12: 6139.30, a13: 7989.85, base: 1971, supp: 970.90, free: 69131, hi: 123078, b5: 5223.15, b18: 3646.35, bSupp: 478.15, bPrimary: 124327, bFree: 7154 }; // B 部分主要收入上限 124,327、次要收入免計 7,154（2025–26）［SECONDARY，2026-10 核對］
   var PPL_WEEK = 1004.70; // 育兒假給付每週（26 週，伴侶保留 4 週）［OFFICIAL］
 
   function tax(n, br) { var t = 0, lo = 0; for (var i = 0; i < br.length && n > lo; i++) { t += (Math.min(n, br[i][0]) - lo) * br[i][1]; lo = br[i][0]; } return t; }
@@ -88,7 +88,7 @@
         id: 'sydney', name: '雪梨', short: '雪梨', capital: false, state: 'NSW',
         cons: 1.08, // ［ESTIMATE］
         // 不吃緊租屋所需年收入（Domain 2025）：獨棟 135,200、公寓 130,000 → 週租約 780／750，2026 +5.5%；各房數［DERIVED／ESTIMATE］§4.1
-        rent: [2820, 3420, 3900, 4770], rentAdj: 1.0,
+        rent: [2820, 3420, 3600, 4400], rentAdj: 1.0, // 2026-10 核對：獨棟週租中位數 835（Domain 2026 Q3）→ 3 房約 830／週；4 房同比例［SECONDARY／DERIVED］
         // 中位數（2026-09）：獨棟 1,466,060、公寓 867,597［SECONDARY：Cotality］→ 每 ㎡ 約 9,500（含土地）［DERIVED／ESTIMATE］§4.2
         price: 9500, priceNew: 11000, hgsCap: 1500000,
         propTax: 0.0012, mgmt: 3.5, homeIns: 1500, // 市政費、公寓管理費（每 ㎡ 每月，平均）［ESTIMATE］
@@ -102,7 +102,7 @@
         id: 'melbourne', name: '墨爾本', short: '墨爾本', capital: false, state: 'VIC',
         cons: 1.0,
         // 不吃緊租屋所需年收入：獨棟 100,533、公寓 99,667 → 週租約 580／575，2026 +5.5%［DERIVED／ESTIMATE］
-        rent: [2170, 2600, 2770, 3290], rentAdj: 1.0,
+        rent: [2170, 2600, 2600, 3090], rentAdj: 1.0, // 2026-10 核對：獨棟、公寓週租都約 600（2026 Q3），3 房約 600／週［SECONDARY／DERIVED］
         // 中位數（2026-09）：獨棟 915,119、公寓 624,740［SECONDARY］→ 每 ㎡ 約 6,000［DERIVED／ESTIMATE］
         price: 6000, priceNew: 7000, hgsCap: 950000,
         propTax: 0.0022, mgmt: 3.0, homeIns: 1400,
@@ -245,7 +245,7 @@
     leavePay: function (g, ind, months, nb, x, who) {
       var both = x.s.leave === 'both' && x.s.partner;
       var hh = incomeAt(x, 'A', x.t) + incomeAt(x, 'B', x.t);
-      if (g > 172000 && hh > 357000) return 0; // 所得門檻（個人與家庭都超過才不能領）［ESTIMATE：2025–26 值 × 物價］
+      if (g > 186487 && hh > 386525) return 0; // 所得門檻 2025–26：個人 186,487、家庭 386,525（兩者都超過才不能領）［OFFICIAL，2026-10 核對］
       var weeks = Math.min(months * 52 / 12, both ? 13 : 22);
       return weeks * PPL_WEEK * 0.85 * nb;
     },

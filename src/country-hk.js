@@ -14,7 +14,8 @@
 
   // ---------- 制度參數（2026/27 課稅年度）§3 ----------
   var PROG = [[50000, 0.02], [100000, 0.06], [150000, 0.10], [200000, 0.14], [Infinity, 0.17]]; // ［OFFICIAL］
-  var BASIC = 132000, MARRIED = 264000, CHILD = 140000; // 子女免稅額 2026/27 起 14 萬［OFFICIAL：財政預算案］
+  // 2026/27 起：基本免稅額 14.5 萬、已婚 29 萬；子女 14 萬，出生後兩個課稅年度都可再加一份［OFFICIAL：財政預算案，2026-10 核對］
+  var BASIC = 145000, MARRIED = 290000, CHILD = 140000;
   var MPF_MAX = 18000;
 
   function tax(n, br) { var t = 0, lo = 0; for (var i = 0; i < br.length && n > lo; i++) { t += (Math.min(n, br[i][0]) - lo) * br[i][1]; lo = br[i][0]; } return t; }
@@ -81,7 +82,7 @@
         ccc: 6000, ccPrivate: 10000, kgWhole: 1500, kgPrivate: 6000, kgIntl: 9000, // 托兒所與幼稚園每月［ESTIMATE］
         afterSchool: 2500, dss: 60000, intl: 200000, // 補習社託管（每月）；直資、國際學校（每年）［ESTIMATE］
         hobby: 800, cram: { none: 0, some: 2000, full: 5000 },
-        uniFee: 44500, // 教資會資助學士學費（每年）［ESTIMATE］
+        uniFee: 49500, // 教資會資助學士學費：2025/26 44,500、2026/27 47,000、2027/28 49,500（政府新聞處 2024-06）［OFFICIAL］
         doula: 15000, nurse: 30000 // 陪月員（26 天）［ESTIMATE］
       }
     },
@@ -223,7 +224,7 @@
     taxes: function (x) {
       var s = x.s, gA = x.gA || 0, gB = s.partner ? x.gB || 0 : 0;
       var kids = (x.atHome || []).filter(function (a) { return a < 25; }).length;
-      var nb = (x.kAges || []).filter(function (a) { return a === 0; }).length; // 出生年度另加一份子女免稅額
+      var nb = (x.kAges || []).filter(function (a) { return a === 0 || a === 1; }).length; // 出生年度與下一年度各另加一份子女免稅額
       var childAllow = CHILD * (kids + nb);
       // 住宅租金或居所貸款利息扣除（有子女每年最多 12 萬，否則 10 萬），算給收入較高的一方
       var housing = x.renting ? (x.rentM || 0) * 12 : (x.mortInt || 0);

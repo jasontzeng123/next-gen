@@ -65,9 +65,10 @@
         id: 'osaka', name: '大阪市', short: '大阪',
         cons: 1.0,
         rent: [73000, 115000, 170000, 210000, 255000], // §13.3.1［ESTIMATE］
-        // 中古大樓每 ㎡：近畿レインズ 2026-07 成交，中心 6 區平均 5,826 萬／56.25㎡ ≈ 104 萬、其他 18 區 2,935 萬（面積未公布，
-        // 以約 62㎡ 推約 47 萬）§14.4［OFFICIAL＋DERIVED］；「一般地區」取兩者之間 60 萬［ESTIMATE］
-        price: 600000,
+        // 中古大樓每 ㎡：近畿レインズ 2026-07 成交，中心 6 區平均 5,826 萬／56.25㎡ ≈ 104 萬（192 件）、其他 18 區 2,935 萬（233 件，
+        // 面積未公布，以約 62㎡ 推約 47 萬）§14.4［OFFICIAL＋DERIVED］；依成交件數加權的全市平均約 71 萬
+        //（東京用 23 區全體平均，大阪也用全市平均；2026-10 核對：原本 60 萬偏低約 15%）［DERIVED］
+        price: 710000,
         priceNew: 1160000,  // 新成屋每 ㎡（2025）［OFFICIAL］
         mgmt: 420, propTax: 0.0025,
         park: 15000,        // 大阪市月租車位：未查到［ESTIMATE］
@@ -105,7 +106,7 @@
       grandPaid: 0, helper: 0,  // grandPaid 依兩地薪資換算（prep）；外籍幫傭在日本改用認證保育所
       kgPublic: 70000, kgQuasi: 78000, kgPrivate: 190000, kgIntl: 1306000, kgFreeCap: 25700, // §7.1、§13.4.3
       elementaryPublic: 82000, elementaryPrivate: 1107700,
-      juniorPublic: 150000, juniorPrivate: 1137000,
+      juniorPublic: 186000, juniorPrivate: 1137000, // 公立國中：學校費用 150,747＋營養午餐 35,667（文科省 2023；2026 年的午餐補助只到國小）［OFFICIAL，2026-10 核對］
       seniorPublic: 233000, seniorPrivateFee: 766490, // 私立高中學校費用，扣學費補助前 §7.2
       intlSchool: 2700000, // 國際學校（ASIJ 2017 年 240 萬，加上漲幅）［ESTIMATE］
       hobbyClass: 8000,    // 每項才藝每月［ESTIMATE］

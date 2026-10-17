@@ -117,6 +117,7 @@
         rent: [1450, 1850, 2250, 2800], rentAdj: 1.0,
         // 基準價：公寓 291,400、連棟 412,400、獨立屋 739,400（2026-09）［NEWS：CREB］→ 每 ㎡ 約 3,900［DERIVED］
         price: 3900, priceNew: 4800,
+        priceRooms: { 4: 5280 }, // 4 房是獨立屋：基準價 739,400 ÷ 140 ㎡［DERIVED，2026-10 核對：原本用公寓的每 ㎡ 價，低估約 26%］
         propTax: 0.0068, condo: 5, homeIns: 1500, // 冰雹多，保費較高［ESTIMATE］
         ltt: 'none',
         park: 75, tpass: 118,
@@ -296,7 +297,7 @@
       if (n) {
         var i = Math.min(n, 4) - 1, red = afni <= CCB.t1 ? 0 : afni <= CCB.t2 ? CCB.r1[i] * (afni - CCB.t1) : CCB.r1[i] * (CCB.t2 - CCB.t1) + CCB.r2[i] * (afni - CCB.t2);
         add += Math.max(0, CCB.u6 * u6 + CCB.o6 * o6 - red);
-        if (prov === 'ON') add += Math.max(0, 1762 * n - 0.08 * Math.max(0, afni - 26364)); // 安大略兒童津貼［ESTIMATE：2025 年金額 × 1.02］
+        if (prov === 'ON') add += Math.max(0, 1762 * n - 0.08 * Math.max(0, afni - 26890)); // 安大略兒童津貼：2025–26 年 1,727／26,364，金額與門檻都 × 1.02［ESTIMATE］
         else if (prov === 'AB') { // 亞伯達兒童與家庭福利金：基本部分＋工作部分［NEWS 金額；遞減率 ESTIMATE］
           var base = 1529 + 764 * (n - 1), work = [782, 1494, 1920, 2061][i];
           add += Math.max(0, base - 0.06 * Math.max(0, afni - 28116));

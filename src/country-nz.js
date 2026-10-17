@@ -104,12 +104,13 @@
 
     // ---------- 生活與養育成本 ----------
     COST: {
-      // 每位大人每月日常開銷：Stats NZ 2023 每戶每週約 1,597.5 −住房與水電 398 = 1,199.5 ÷ 每戶約 2.65 人 × 52 ÷ 12 ≈ 1,961
-      // × 物價 2023→2026 約 1.09 × 0.716 ≈ 1,530，取 1,500［DERIVED／ESTIMATE］§5
-      adultBase: 1500, consNational: 1, consExp: 0.75,
+      // 每位大人每月日常開銷：Stats NZ 2023 每戶每週約 1,597.5 −住房與水電 398 = 1,199.5；
+      // 其中「其他支出」含房貸利息（有房貸的家庭每週 330.8，攤到所有家庭約 110），利息不是消費，扣掉 → 約 1,089.5
+      // ÷ 每戶約 2.65 人 × 52 ÷ 12 × 物價 2023→2026 約 1.09 × 0.716 ≈ 1,390［DERIVED／ESTIMATE］§5（2026-10 核對：原本 1,500 含房貸利息）
+      adultBase: 1390, consNational: 1, consExp: 0.75,
       lifestyle: { frugal: 0.7, normal: 1.0, comfy: 1.4 },
       childLife: { frugal: 0.65, normal: 1.0, comfy: 1.6 },
-      child: [[0, 750], [2, 645], [6, 810], [12, 1065], [18, 1185]], // 台灣「孩子／大人」比例 × 紐西蘭大人開銷［ESTIMATE］
+      child: [[0, 695], [2, 598], [6, 751], [12, 987], [18, 1098]], // 台灣「孩子／大人」比例 × 紐西蘭大人開銷［ESTIMATE］
       utilBase: 150, utilPerPerson: 45, // 電、網路、水（租金不含）［ESTIMATE］
       gearFirst: { frugal: 1500, normal: 3000, comfy: 6000 }, gearLater: 1000,
       postpartumFamily: 300,  // 公費助產士照護免費［OFFICIAL 制度］
