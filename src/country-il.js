@@ -15,10 +15,10 @@
   // ---------- 制度參數 §3 ----------
   // 2026 級距：其餘凍結在 2025 值，但 20% 級距放寬到 228,000、31% 到 301,200（2026 預算）［SECONDARY：PwC］
   var BR = [[84120, 0.10], [120720, 0.14], [228000, 0.20], [301200, 0.31], [560280, 0.35], [721560, 0.47], [Infinity, 0.50]];
-  var POINT = 242 * 12;            // 每個稅額點數每年抵稅［ESTIMATE：2025 值凍結］
+  var POINT = 242 * 12;            // 每個稅額點數每年抵稅：每月 242（2024–2026 凍結）［SECONDARY：PwC，2026-10 核對］
   var NI_LO = 90264, NI_HI = 608340; // 國民保險＋健保：平均工資 60% 以下 4.27%、以上 12.17%，上限［ESTIMATE］
-  var ALLOW = [173, 219, 219, 219, 173]; // 兒童津貼（每月，依胎次）［ESTIMATE：2025 值］
-  var GRANT = [2069, 931, 621];          // 生育補助［ESTIMATE］
+  var ALLOW = [173, 219, 219, 219, 173]; // 兒童津貼（每月，依胎次；2026-01 起）［OFFICIAL：國民保險局，2026-10 核對］
+  var GRANT = [2103, 946, 631];          // 生育補助 2026［OFFICIAL：國民保險局，2026-10 核對］
 
   function tax(n, br) { var t = 0, lo = 0; for (var i = 0; i < br.length && n > lo; i++) { t += (Math.min(n, br[i][0]) - lo) * br[i][1]; lo = br[i][0]; } return t; }
   function person(g, points) {
@@ -41,7 +41,7 @@
     ],
     notes: [
       '以色列是已開發國家中生育率最高的（約 2.9），宗教與家庭文化是重要原因。',
-      '個人課稅；每人有基本「稅額點數」，母親多半個點，6 歲以下的孩子讓父母各多 1.5–2.5 點，所得稅很快被抵掉。',
+      '個人課稅；每人有基本「稅額點數」，母親多半個點，6 歲以下的孩子讓父母各多 2.5–4.5 點，所得稅很快被抵掉。',
       '國民保險＋健保稅：平均工資 6 成以下 4.27%、以上 12.17%；強制退休金員工自付 6%。',
       '3 歲起幼兒園免學費（下午班另付）；0–2 歲托育很貴，低收入有補助。',
       '產假 15 週全薪（國民保險給付）。孩子 18–20 歲服兵役，父母負擔較輕。',
@@ -66,7 +66,8 @@
         id: 'telaviv', name: '特拉維夫', short: '特拉維夫', capital: false,
         cons: 1.12,
         // 統計局平均：3 房 7,004、4 房 8,739（2025 Q3）［SECONDARY］＋ 2026 約 3%；以色列房數含客廳（2 臥＝3 房）
-        rent: [5500, 7200, 9000, 11500], rentAdj: 1.0,
+        // 2026-10 核對：統計局 2025 Q2（1–2／2.5–3／3.5–4／4.5–6 房）5,364／6,976／8,671／10,953，含續約；× 約 1.05（成長＋新租約比續約貴）［OFFICIAL＋ESTIMATE］
+        rent: [5630, 7330, 9100, 11500], rentAdj: 1.0,
         arnona: 90, vaad: 250, // 市政稅（每 ㎡ 每年，租屋也要付）、大樓管理費（每月）［ESTIMATE］
         price: 60000, priceNew: 68000, // 每 ㎡［ESTIMATE］
         size: [55, 75, 100, 120],
@@ -79,7 +80,7 @@
       haifa: {
         id: 'haifa', name: '海法', short: '海法', capital: false,
         cons: 0.95,
-        rent: [2600, 3200, 4050, 4900], rentAdj: 1.0, // 3 房 3,082、4 房 3,937（2025 Q3）［SECONDARY］
+        rent: [2550, 3200, 4100, 5570], rentAdj: 1.0, // 統計局 2025 Q2：2,428／3,049／3,902／5,301 × 約 1.05［OFFICIAL＋ESTIMATE，2026-10 核對：原本 5 房 4,900 偏低］
         arnona: 70, vaad: 180,
         price: 20000, priceNew: 25000,
         size: [55, 75, 100, 120],
@@ -214,11 +215,15 @@
       return weeks * Math.min(g / 52, 1730 * 7) * 0.85 * nb;
     },
 
-    // 稅：每人 2.25 點，母親多 0.5 點；孩子出生那年父母各 1.5 點、1–5 歲各 2.5 點；6–17 歲母親 1 點、18 歲 0.5 點
+    // 稅：每人 2.25 點，母親多 0.5 點；孩子的點數（父母各自，2026）：出生那年 2.5、1–2 歲 4.5、3 歲 3.5、4–5 歲 2.5、
+    // 6–17 歲母親 2、父親 1，18 歲母親 0.5［SECONDARY：Kol Zchut 引稅務局 2026 手冊，2026-10 核對；原本 1.5／2.5／2.5／1 偏少］
     taxes: function (x) {
       var s = x.s, gA = x.gA || 0, gB = s.partner ? x.gB || 0 : 0;
       var kids = x.kAges || [], both = 0, mom = 0.5;
-      kids.forEach(function (a) { if (a === 0) both += 1.5; else if (a <= 5) both += 2.5; else if (a <= 17) mom += 1; else if (a === 18) mom += 0.5; });
+      kids.forEach(function (a) {
+        if (a === 0) both += 2.5; else if (a <= 2) both += 4.5; else if (a === 3) both += 3.5; else if (a <= 5) both += 2.5;
+        else if (a <= 17) { both += 1; mom += 1; } else if (a === 18) mom += 0.5;
+      });
       var momIsB = s.partner && gB > 0;
       var pa = person(gA, 2.25 + both + (momIsB ? 0 : mom)), pb = person(gB, 2.25 + both + (momIsB ? mom : 0));
       return { si: pa.si + pb.si, tax: pa.tax + pb.tax };

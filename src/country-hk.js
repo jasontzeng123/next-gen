@@ -46,12 +46,12 @@
       ['最優惠利率與 HIBOR（The Standard）', 'https://www.thestandard.com.hk/finance/article/319048/Hong-Kong-lenders-keep-prime-rate-unchanged-at-5-percent']
     ],
     notes: [
-      '薪俸稅：累進稅率（2%–17%）與標準稅率 15% 取低者；基本免稅額 13.2 萬、子女免稅額每名 14 萬；有子女時住宅租金或房貸利息每年最多扣 12 萬。',
+      '薪俸稅：累進稅率（2%–17%）與標準稅率 15% 取低者；2026/27 起基本免稅額 14.5 萬、子女免稅額每名 14 萬（2026-09-16 以後出生的第 2 胎起 16 萬），出生後兩個年度都可再加一份；有子女時住宅租金或房貸利息每年最多扣 12 萬。',
       '強積金員工自付 5%（每月最多 1,500），算在社保。',
       '0–2 歲資助托兒名額很少，多數雙薪家庭請外籍家庭傭工（最低工資 5,220＋膳食津貼 1,236）。',
       '幼稚園教育計劃：半日免費，全日每月約 1,500 起。',
-      '新生嬰兒獎勵金 2 萬元只適用 2026 年 10 月 24 日前出生的嬰兒（政府檢討中），模型沒有算。',
-      '「新建案」選項算成居屋（家庭月入 7 萬以下、約市價 5 成多、要抽籤）；超過收入上限改買一手私樓。'
+      '新生嬰兒獎勵金：2026 年施政報告延長 3 年（到 2029 年），每名 2 萬、第 2 胎起 3 萬；2029 年以後出生的沒有算。',
+      '「新建案」選項算成居屋（白表家庭月入 6 萬以下、市價 7 折、面積 52 ㎡ 以內、要抽籤）；超過收入上限或需要更大的房子，改買一手私樓。'
     ],
 
     // ---------- 薪資（全體僱員，月薪 × 12.5）§2 ----------
@@ -76,7 +76,9 @@
         // 私樓租金（實用面積每呎約 36 元，2026 年創新高）：1 房 28 ㎡、2 房 40 ㎡、3 房 58 ㎡、4 房 80 ㎡［ESTIMATE］§4.1
         rent: [11000, 15500, 21500, 30000], rentAdj: 1.0,
         // 二手實用面積每呎約 13,000（2026 年樓價年升約 11%）→ 每 ㎡ 約 140,000；一手私樓約 183,000；居屋約 90,000［ESTIMATE］§4.2
-        price: 140000, priceNew: 183000, hos: 90000,
+        price: 140000, priceNew: 183000,
+        // 居屋 2025（2026-04／05 申請）：市值 7 折，26.1–52.0 ㎡、約 150–480 萬，平均約 278 萬 → 每 ㎡ 約 7 萬［OFFICIAL＋DERIVED，2026-10 核對：原本 9 萬］
+        hos: 70000, hosMaxSize: 52,
         mgmt: 38, propTax: 0.0018, // 管理費（每 ㎡ 每月）、差餉與地租（占樓價）［ESTIMATE］
         park: 3500, tpass: 700, // 車位月租；八達通交通費每人每月［ESTIMATE］
         ccc: 6000, ccPrivate: 10000, kgWhole: 1500, kgPrivate: 6000, kgIntl: 9000, // 托兒所與幼稚園每月［ESTIMATE］
@@ -154,7 +156,9 @@
     birth: function (x, k) {
       var s = x.s, C = x.C, c = x.c, ls = s.lifestyle;
       var pp = s.postpartum === 'center' || s.postpartum === 'nanny' ? c.nurse : C.postpartumFamily;
-      return { cost: (k === 0 ? C.gearFirst[ls] : C.gearLater) + pp + (ls === 'comfy' ? 90000 : ls === 'normal' ? 8000 : 2000), grant: 0, local: 0 }; // 寬裕：私家醫院套餐
+      // 新生嬰兒獎勵：每名 2 萬，2026 年施政報告延長 3 年（到 2029 年 10 月），第 2 胎起 3 萬［OFFICIAL＋NEWS，2026-10 核對；第 2 胎起的起算日以 2027 年出生計］
+      var y = 2026 + (x.t || 0), grant = y <= 2029 ? (k >= 1 && y >= 2027 ? 30000 : 20000) : 0;
+      return { cost: (k === 0 ? C.gearFirst[ls] : C.gearLater) + pp + (ls === 'comfy' ? 90000 : ls === 'normal' ? 8000 : 2000), grant: grant, local: 0 }; // 寬裕：私家醫院套餐
     },
     allowance: function () { return 0; },
     care: function (x, cs, k, a, careMonths) {
@@ -192,10 +196,11 @@
       var r = Math.min(Math.max(rooms, 1), 4);
       return c.rent[r - 1] * rentMult * (c.rentAdj || 1) * K.COST.rentFactor;
     },
-    // 居屋：家庭月入 7 萬以下，用居屋價；否則一手私樓。印花稅、代理佣金 1%、律師費 §4.3
+    // 居屋：白表家庭月入 6 萬以下（資產 123 萬以下）、而且需要的面積居屋有（52 ㎡ 以內），用居屋價；否則一手私樓。
+    // 印花稅、代理佣金 1%、律師費 §4.3［OFFICIAL 收入上限，2026-10 核對：原本 7 萬］
     housePlan: function (x) {
       var C = x.C, c = x.c, s = x.s, inc = (incomeAt(x, 'A', x.tb) + incomeAt(x, 'B', x.tb)) / 12;
-      var hos = s.build === 'new' && inc <= 70000, keep = c.priceNew;
+      var hos = s.build === 'new' && inc <= 60000 && (x.C.houseSize[x.roomsFinal] || 99) <= (c.hosMaxSize || 99), keep = c.priceNew;
       if (hos) c.priceNew = c.hos;
       var h;
       try { h = WD.stdHousePlan(x); } finally { c.priceNew = keep; }
@@ -207,7 +212,7 @@
     // 按揭：一般 7 成；樓價 1,000 萬以下首置可用按揭保險到 9 成；居屋擔保到 95%；供款不超過收入 50%，30 年 §4.4
     loanPlan: function (x, total) {
       var s = x.s, tb = x.tb, inc = incomeAt(x, 'A', tb) + incomeAt(x, 'B', tb);
-      var hos = s.build === 'new' && inc / 12 <= 70000;
+      var hos = s.build === 'new' && inc / 12 <= 60000 && (x.C.houseSize[x.roomsFinal] || 99) <= (x.c.hosMaxSize || 99);
       var ltv = hos ? 0.95 : total <= 10000000 ? 0.9 : 0.7;
       var amt = Math.max(0, Math.min(total * ltv, 0.5 * inc / ann(RATE, 30)));
       return { parts: [{ amt: amt, rate: RATE, years: 30, grace: 0, label: hos ? '居屋按揭（房委會擔保）' : '按揭（H 按）' }], note: amt < total * ltv - 1 ? '供款不能超過收入 50%' : '' };
@@ -224,8 +229,12 @@
     taxes: function (x) {
       var s = x.s, gA = x.gA || 0, gB = s.partner ? x.gB || 0 : 0;
       var kids = (x.atHome || []).filter(function (a) { return a < 25; }).length;
-      var nb = (x.kAges || []).filter(function (a) { return a === 0 || a === 1; }).length; // 出生年度與下一年度各另加一份子女免稅額
-      var childAllow = CHILD * (kids + nb);
+      // 子女免稅額：每名 14 萬；出生年度與下一年度各另加一份；2026-09-16 以後出生的第 2 胎起每份 16 萬（這裡以 2027 年起出生計）［OFFICIAL：稅務局］
+      var y = 2026 + (x.t || 0), childAllow = 0;
+      (x.atHome || []).filter(function (a) { return a < 25; }).slice().sort(function (p, q) { return q - p; }).forEach(function (a, i) {
+        var amt = i >= 1 && y - a >= 2027 ? 160000 : CHILD;
+        childAllow += amt * (a <= 1 ? 2 : 1);
+      });
       // 住宅租金或居所貸款利息扣除（有子女每年最多 12 萬，否則 10 萬），算給收入較高的一方
       var housing = x.renting ? (x.rentM || 0) * 12 : (x.mortInt || 0);
       var hd = Math.min(housing, kids ? 120000 : 100000);

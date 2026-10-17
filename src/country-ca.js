@@ -97,7 +97,8 @@
         id: 'toronto', name: '多倫多', short: '多倫多', capital: false, prov: 'ON',
         cons: 1.08, // ［ESTIMATE］
         // 刊登租金中位數（2026-07）：1 房 2,150、2 房 2,600、3 房 3,380［SECONDARY］；4 房（連棟屋）［ESTIMATE］§4.1
-        rent: [2150, 2600, 3380, 4200], rentAdj: 1.0,
+        // 2026-10 核對：刊登價 × 0.9（和台灣同規則），對照 CMHC 2025 新租客租金 2,073／2,547／2,893［OFFICIAL＋DERIVED］
+        rent: [2000, 2450, 3050, 3790], rentAdj: 1.0,
         // 公寓平均成交 640,248、連棟 922,445、半獨立 1,207,884（2026-09，多倫多市）［OFFICIAL：TRREB］→ 每 ㎡ 約 8,500；預售新建約 12,000［DERIVED／ESTIMATE］§4.2
         price: 8500, priceNew: 12000,
         propTax: 0.0075, condo: 7, homeIns: 600, // 地價稅率、管理費（每 ㎡ 每月）［ESTIMATE］
@@ -114,7 +115,7 @@
         id: 'calgary', name: '卡加利', short: '卡加利', capital: false, prov: 'AB',
         cons: 1.02,
         // 1 房 1,442（2026-09，年減 5.3%）［SECONDARY］；其他［ESTIMATE］
-        rent: [1450, 1850, 2250, 2800], rentAdj: 1.0,
+        rent: [1400, 1750, 2050, 2550], rentAdj: 1.0, // 2026-10 核對：統計局 2026 Q2 刊登 1,550／1,890／2,180 × 0.9 附近；CMHC 2 房新租客 1,836［OFFICIAL＋DERIVED］
         // 基準價：公寓 291,400、連棟 412,400、獨立屋 739,400（2026-09）［NEWS：CREB］→ 每 ㎡ 約 3,900［DERIVED］
         price: 3900, priceNew: 4800,
         priceRooms: { 4: 5280 }, // 4 房是獨立屋：基準價 739,400 ÷ 140 ㎡［DERIVED，2026-10 核對：原本用公寓的每 ㎡ 價，低估約 26%］

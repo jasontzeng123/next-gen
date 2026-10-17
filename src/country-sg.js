@@ -26,11 +26,25 @@
     if (age <= 60) return { ee: 0.18, er: 0.16, oa: 0.12 };
     return { ee: 0.125, er: 0.125, oa: 0.035 };
   }
+  var Y0 = 2026;
   // 托育補助：基本補助（雙薪）＋額外補助（家庭月收入 12,000 以下，越低越多）§6.2［OFFICIAL 金額；額外補助的形狀 ESTIMATE］
-  function careNet(fee, basic, asMax, inc) {
-    var as = inc >= 12000 ? 0 : asMax * Math.min(1, (12000 - inc) / 9000);
+  // 2027-01 起額外補助的家庭收入上限提高到 15,000，新增的 12,001–15,000 這一級每月只多補約 80（全日托育）［OFFICIAL：2026 預算案］
+  function asOf(asMax, inc, x, infant) {
+    if (inc < 12000) return asMax * Math.min(1, (12000 - inc) / 9000);
+    if (Y0 + (x.t || 0) >= 2027 && inc < 15000) return infant ? 120 : 80;
+    return 0;
+  }
+  // afterBasic：扣掉基本補助後、還沒扣額外補助的月費
+  function careNet(afterBasic, asMax, inc, x, infant) {
     var minCo = U.clamp(3 + (inc - 3000) / 9000 * 97, 3, 100);
-    return Math.max(minCo, fee - basic - as);
+    return Math.max(minCo, afterBasic - asOf(asMax, inc, x, infant));
+  }
+  // 政府支持的托育中心：2028 起分階段降價，2030 年起全日托育每月 150、嬰兒托育 300（額外補助之前）［OFFICIAL：2026 國慶群眾大會］
+  function capAfterBasic(x, infant, c) {
+    var y = Y0 + (x.t || 0), now = infant ? c.infant - 600 : c.cc - 300, tgt = Math.min(now, infant ? 300 : 150);
+    if (y <= 2027) return now;
+    if (y >= 2030) return tgt;
+    return now + (tgt - now) * (y - 2027) / 3;
   }
 
   var K = {
@@ -51,8 +65,8 @@
       '只算新加坡公民家庭（可申請組屋與各項補助）。',
       '公積金：員工自付 20%（雇主另付 17%），其中約 23% 進普通帳戶，可付組屋頭期款與房貸；租屋時不能用，錢鎖在帳戶裡。',
       '所得稅很低：年薪 6 萬多約只繳 1,000 多元。',
-      '每個孩子有嬰兒花紅現金 11,000（第三胎起 13,000）＋兒童發展帳戶（政府撥款與 1:1 配對，用於托育）。',
-      '托育中心（政府指定業者）每月收費上限約 610，雙薪家庭每月至少補 300，收入較低補更多。',
+      '2027 年起出生的孩子適用新的「SG 育兒配套」：嬰兒禮金 10,000＋兒童發展帳戶 5,000 與配對最多 5,000；每個孩子 1–16 歲每年 2,000、17 歲另有 10,000 教育帳戶（2026 年出生的孩子仍領舊的嬰兒花紅，2027 年起也領每年 2,000）。',
+      '托育中心（政府指定業者）目前每月收費上限約 610，雙薪家庭每月至少補 300，收入較低補更多；2028 年起分階段降價，2030 年起全日托育每月 150、嬰兒托育 300（額外補助前）。',
       '買組屋：首購有購屋津貼（收入越低越多），組屋貸款利率 2.6%；新組屋（BTO）家庭月收入上限 16,000，實際要等 3–4 年才能入住（模型沒有算等待期）。',
       '買車要先標擁車證，新車約 18 萬新加坡幣。'
     ],
@@ -62,7 +76,8 @@
       // 2025 年全職受僱居民月收入中位數 5,000（不含雇主公積金，含 1/12 年終）［OFFICIAL via SECONDARY］× 12 × 2026 年約 1.04 ≈ 62,000［DERIVED］
       median: 62000,
       // 分位：P20 2,817（0.563）、P90 約 13,500（2.7）［OFFICIAL via SECONDARY］；其他以對數內插；高所得端很長［ESTIMATE］
-      q: [[10, 0.45], [20, 0.563], [25, 0.62], [30, 0.68], [40, 0.84], [50, 1], [60, 1.18], [70, 1.42], [75, 1.58], [80, 1.78], [90, 2.7], [95, 3.6]],
+      // 2026-10 核對：人力部 C10 表，月收入 2 萬以上占 4.7%，P95 約為中位數 3.9–4.0 倍（原 3.6）［OFFICIAL＋DERIVED］
+      q: [[10, 0.45], [20, 0.563], [25, 0.62], [30, 0.68], [40, 0.84], [50, 1], [60, 1.18], [70, 1.42], [75, 1.58], [80, 1.78], [90, 2.7], [95, 3.9]],
       paretoAlpha: 2.0,
       ageSpread: 0.85,
       // 年齡：各年齡收入中位數（25–29 歲 4,333、30–34 歲 5,417、35–39 歲 6,250、40–44 歲 6,750、45–49 歲 6,608、50–54 歲 5,958、55–59 歲 4,410）÷ 5,775［DERIVED］
@@ -153,16 +168,23 @@
       transport: { transit: '大眾運輸', scooter: '機車（擁車證較便宜）', used: '中古車（含剩餘擁車證）', new: '新車（含擁車證）', import: '進口車（含擁車證）' }
     },
 
-    // ---------- 生產：嬰兒花紅＋兒童發展帳戶（政府撥款＋1:1 配對）；第三胎起另有大家庭現金 §6.1 ----------
+    // ---------- 生產 §6.1 ----------
+    // 2026 年出生：嬰兒花紅（第 1–2 胎 11,000、第 3 胎起 13,000）＋兒童發展帳戶（政府撥款 5,000／10,000＋配對）
+    // 2027 年起出生（新制「SG 育兒配套」，2027-04-01 起出生適用；這裡以出生年份 2027 起算）：
+    // 嬰兒禮金 10,000＋兒童發展帳戶 5,000＋配對最多 5,000，不分胎次［OFFICIAL：population.gov.sg 2026-08，2026-10 核對］
     birth: function (x, k) {
       var s = x.s, C = x.C, c = x.c, ls = s.lifestyle, third = k >= 2;
       var pp = s.postpartum === 'center' || s.postpartum === 'nanny' ? c.nurse : C.postpartumFamily;
       x._ptr = (x._ptr || 0) + [5000, 10000, 20000][Math.min(k, 2)]; // 生育稅務回扣（可分年抵稅）
-      var bonus = third ? 13000 : 11000, cda = third ? 10000 + 12000 : 5000 + 6000;
-      return { cost: (k === 0 ? C.gearFirst[ls] : C.gearLater) + pp + (ls === 'comfy' ? 6000 : 1500), grant: bonus + cda, local: 0 }; // 公立醫院生產自付約 1,500，私立約 7,500
+      var grant = Y0 + (x.t || 0) >= 2027 ? 10000 + 5000 + 5000 : (third ? 13000 : 11000) + (third ? 10000 + 12000 : 5000 + 6000);
+      return { cost: (k === 0 ? C.gearFirst[ls] : C.gearLater) + pp + (ls === 'comfy' ? 6000 : 1500), grant: grant, local: 0 }; // 公立醫院生產自付約 1,500，私立約 7,500
     },
-    // 大家庭方案：第三胎起，前 6 年共 16,000 現金［NEWS／ESTIMATE］
-    allowance: function (x, k, a) { return k >= 2 && a < 6 ? 16000 / 6 : 0; },
+    // 2026：大家庭方案（第三胎起前 6 年共 16,000）。2027 起改成新制：每個孩子 1–16 歲每年 2,000 兒童津貼、17 歲那年 10,000 教育帳戶
+    //（已經出生的孩子也依年齡領；大家庭方案的津貼 2027 年起不再發）［OFFICIAL：population.gov.sg 2026-08］
+    allowance: function (x, k, a) {
+      if (Y0 + (x.t || 0) >= 2027) return a >= 1 && a <= 16 ? 2000 : a === 17 ? 10000 : 0;
+      return k >= 2 && a < 6 ? 16000 / 6 : 0;
+    },
     care: function (x, cs, k, a, careMonths) {
       var c = x.c, C = x.C;
       if (careMonths <= 0) return {};
@@ -170,7 +192,7 @@
       if (cs === 'quasi' || cs === 'public' || cs === 'private') {
         var inf = a === 0 ? 1 : a === 1 ? 0.5 : 0; // 18 個月以下算嬰兒托育
         var g = cs === 'private' ? c.ccPremium * (1 + 0.5 * inf) : c.infant * inf + c.cc * (1 - inf);
-        var net = inf * careNet(cs === 'private' ? c.ccPremium * 1.5 : c.infant, 600, 710, inc) + (1 - inf) * careNet(cs === 'private' ? c.ccPremium : c.cc, 300, 467, inc);
+        var net = inf * careNet(cs === 'private' ? c.ccPremium * 1.5 - 600 : capAfterBasic(x, true, c), 710, inc, x, true) + (1 - inf) * careNet(cs === 'private' ? c.ccPremium - 300 : capAfterBasic(x, false, c), 467, inc, x, false);
         fee = net * careMonths; sub = (g - net) * careMonths;
       } else if (cs === 'helper') x.helperMonths = Math.max(x.helperMonths || 0, careMonths); // 外籍幫傭（一個家庭一位）
       else if (cs === 'grandPaid') fee = C.grandPaid * careMonths;
@@ -180,7 +202,7 @@
       var c = x.c;
       if (ps === 'home') return {};
       var inc = famInc(x) / 12, g = ps === 'private' ? c.ccPremium : ps === 'bilingual' ? c.ccPremium * 1.15 : c.cc;
-      var net = careNet(g, 300, 467, inc);
+      var net = careNet(ps === 'private' || ps === 'bilingual' ? g - 300 : capAfterBasic(x, false, c), 467, inc, x, false);
       return { fee: net * 12, kg: (g - net) * 12 };
     },
     school: function (x, level, k, a) {

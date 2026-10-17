@@ -128,7 +128,11 @@
         cons: 1.0, health: 470,
         rentM2: 21, nk: 2.5, rentSize: [60, 80, 100, 120], rentAdj: 1.0, // 現有租約：3 房 1,338、4 房 1,666（2025-11）［OFFICIAL］；新約較高［ESTIMATE］
         price: 8800, priceNew: 10500, // 3018 區公寓平均 7,763（較便宜的區）［SECONDARY／ESTIMATE］
-        closing: 0.023, stweg: 4.0, propTax: 0.001, // 房屋移轉稅 1.8%＋公證；房屋稅約 0.1%［ESTIMATE］
+        // 房屋移轉稅 1.8%，自住（1 年內入住、住滿 2 年）前 80 萬免稅；公證約 0.5%；房屋稅約 0.1%［OFFICIAL 稅率與免稅額，2026-10 核對］
+        closing: 0.005, transferRate: 0.018, transferFree: 800000, stweg: 4.0, propTax: 0.001,
+        // 保費補助（IPV，伯恩州 2026 計算表）：「計算所得」＝調整後淨所得＋（資產 − 每人 17,000）× 5% − 社會扣除（已婚 13,000、孩子每名約 13,750）；
+        // 有孩子的家庭 45,000 以下（其他 35,000）可領；每位大人每月 221（9,000 以下）→ 33.5（45,000），孩子每名 119.30（區域 1）［OFFICIAL，2026-10 核對］
+        ipvBE: { adult: [[9000, 221], [17000, 147], [25000, 107], [35000, 67], [45000, 33.5]], child: 119.30, limKids: 45000, lim: 35000, dedCouple: 13000, dedKid: 13750 },
         park: 40, tpass: 85,
         kita: { full: 120, min: 15, lo: 49000, hi: 170000 }, // 托育券：2026-08 起所得 4.9 萬以下全額（原 4.3 萬）、17 萬以下可領［OFFICIAL 門檻；其餘 ESTIMATE］
         hort: { full: 45, min: 8 },
@@ -253,7 +257,7 @@
     },
     housePlan: function (x) {
       var c = x.c, h = WD.stdHousePlan(x);
-      h.closing = h.total * c.closing;
+      h.closing = h.total * c.closing + (c.transferRate || 0) * Math.max(0, h.total - (c.transferFree || 0));
       h.mgmt = c.stweg * h.size * 12; // 公寓管理費＋修繕基金
       h.tax = c.propTax * h.total;
       return h;
@@ -302,6 +306,11 @@
         var I = c.ipv, ref = adults * I.adult;
         kids.forEach(function (a) { ref += a < 19 ? I.child : I.young; });
         ipv = (x.S || 0) > 150000 ? 0 : Math.min(prem, Math.max(0, I.share * ref - (married ? I.pctM : I.pctS) * Math.max(0, y)));
+      } else if (c.ipvBE) {
+        var BE = c.ipvBE, minors = kids.filter(function (a) { return a < 18; }).length;
+        var rel = F - pa.si - pb.si - 6000 * earners - (married ? BE.dedCouple : 0) - BE.dedKid * minors + 0.05 * Math.max(0, (x.S || 0) - 17000 * (adults + kids.length));
+        var lim = minors ? BE.limKids : BE.lim;
+        ipv = rel > lim ? 0 : Math.min(prem, 12 * (adults * U.interp(BE.adult, Math.max(0, rel)) + minors * BE.child));
       } else ipv = (x.S || 0) > 150000 ? 0 : Math.max(0, 0.85 * prem - 0.14 * Math.max(0, y));
       si += prem + share - ipv;
       // 職業退休金：買房前累積（員工＋雇主），買第一間房那年可提領，最多房價 1 成（扣約 7% 提領稅）
